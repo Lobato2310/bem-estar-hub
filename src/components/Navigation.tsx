@@ -28,8 +28,11 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
-            <Heart className="h-8 w-8 text-primary" />
-            <h1 className="text-xl font-bold text-foreground">VidaSaudável</h1>
+            <img 
+              src="/lovable-uploads/34fcfefb-cf55-4161-a65f-3135e5cf6fb0.png" 
+              alt="MyFitLife Logo" 
+              className="h-8 w-auto"
+            />
           </div>
           
           <div className="hidden md:flex space-x-1">

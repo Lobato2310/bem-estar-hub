@@ -24,9 +24,12 @@ const HomeSection = ({ onNavigate }: HomeSectionProps) => {
     <div className="max-w-6xl mx-auto p-6 space-y-8">
       {/* Header de boas-vindas */}
       <div className="text-center space-y-4">
-        <div className="flex items-center justify-center space-x-3">
-          <Heart className="h-12 w-12 text-primary" />
-          <h1 className="text-4xl font-bold text-foreground">VidaSaudável</h1>
+        <div className="flex justify-center mb-4">
+          <img 
+            src="/lovable-uploads/34fcfefb-cf55-4161-a65f-3135e5cf6fb0.png" 
+            alt="MyFitLife Logo" 
+            className="h-16 w-auto"
+          />
         </div>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Sua jornada para uma vida mais saudável começa aqui. Conecte-se com profissionais especializados e alcance seus objetivos.
