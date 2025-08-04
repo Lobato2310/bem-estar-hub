@@ -5,8 +5,11 @@ import {
   Calculator, 
   ShoppingCart, 
   Brain,
-  Heart 
+  Heart,
+  LogOut
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 interface NavigationProps {
   activeTab: string;
@@ -14,6 +17,8 @@ interface NavigationProps {
 }
 
 const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
+  const { signOut } = useAuth();
+  
   const tabs = [
     { id: "home", label: "Início", icon: Heart },
     { id: "personal", label: "Personal", icon: Dumbbell },
@@ -35,7 +40,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
             />
           </div>
           
-          <div className="hidden md:flex space-x-1">
+          <div className="hidden md:flex items-center space-x-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -55,6 +60,15 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
                 </button>
               );
             })}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={signOut}
+              className="ml-4 text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
           </div>
         </div>
         
