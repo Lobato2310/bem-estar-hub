@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import HomeSection from "@/components/sections/HomeSection";
 import PersonalSection from "@/components/sections/PersonalSection";
@@ -8,9 +9,11 @@ import NutritionSection from "@/components/sections/NutritionSection";
 import CaloriesSection from "@/components/sections/CaloriesSection";
 import MarketSection from "@/components/sections/MarketSection";
 import PsychologySection from "@/components/sections/PsychologySection";
+import ProfessionalDashboard from "@/components/ProfessionalDashboard";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -20,7 +23,29 @@ const Index = () => {
     }
   }, [user, loading, navigate]);
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        setUserProfile(data);
+      }
+    };
+
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
+
   const renderSection = () => {
+    // Se o usuário for profissional, mostrar dashboard profissional na home
+    if (activeTab === "home" && userProfile?.user_type === "professional") {
+      return <ProfessionalDashboard />;
+    }
+
     switch (activeTab) {
       case "home":
         return <HomeSection onNavigate={setActiveTab} />;
