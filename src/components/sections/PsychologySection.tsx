@@ -168,7 +168,7 @@ const PsychologySection = () => {
       </Card>
 
       {/* Recursos de bem-estar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
           <div className="text-center space-y-4">
             <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
@@ -191,19 +191,6 @@ const PsychologySection = () => {
             <p className="text-muted-foreground">Acompanhe seu progresso e celebre vitórias</p>
             <Button variant="outline" className="w-full">
               Ver Todas
-            </Button>
-          </div>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
-          <div className="text-center space-y-4">
-            <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
-              <MessageSquare className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground">Chat de Apoio</h3>
-            <p className="text-muted-foreground">Conversa direta com seu psicólogo</p>
-            <Button variant="outline" className="w-full">
-              Iniciar Chat
             </Button>
           </div>
         </Card>
