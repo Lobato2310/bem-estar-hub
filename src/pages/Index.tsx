@@ -9,6 +9,7 @@ import NutritionSection from "@/components/sections/NutritionSection";
 import CaloriesSection from "@/components/sections/CaloriesSection";
 import MarketSection from "@/components/sections/MarketSection";
 import PsychologySection from "@/components/sections/PsychologySection";
+import MeasurementsSection from "@/components/sections/MeasurementsSection";
 import ProfessionalDashboard from "@/components/ProfessionalDashboard";
 
 const Index = () => {
@@ -53,6 +54,8 @@ const Index = () => {
         return <PersonalSection />;
       case "nutrition":
         return <NutritionSection />;
+      case "measurements":
+        return <MeasurementsSection />;
       case "calories":
         return <CaloriesSection />;
       case "market":

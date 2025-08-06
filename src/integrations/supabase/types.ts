@@ -14,6 +14,174 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_measurements: {
+        Row: {
+          arm: number | null
+          body_fat_percentage: number | null
+          chest: number | null
+          client_id: string
+          created_at: string
+          height: number | null
+          hip: number | null
+          id: string
+          measured_by: string | null
+          thigh: number | null
+          updated_at: string
+          waist: number | null
+          weight: number | null
+        }
+        Insert: {
+          arm?: number | null
+          body_fat_percentage?: number | null
+          chest?: number | null
+          client_id: string
+          created_at?: string
+          height?: number | null
+          hip?: number | null
+          id?: string
+          measured_by?: string | null
+          thigh?: number | null
+          updated_at?: string
+          waist?: number | null
+          weight?: number | null
+        }
+        Update: {
+          arm?: number | null
+          body_fat_percentage?: number | null
+          chest?: number | null
+          client_id?: string
+          created_at?: string
+          height?: number | null
+          hip?: number | null
+          id?: string
+          measured_by?: string | null
+          thigh?: number | null
+          updated_at?: string
+          waist?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      client_reports: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          professional_id: string
+          report_text: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          professional_id: string
+          report_text: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          professional_id?: string
+          report_text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      market_products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      motivational_phrases: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          phrase: string
+          professional_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          phrase: string
+          professional_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          phrase?: string
+          professional_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      nutrition_plans: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          meal_description: string | null
+          meal_time: string | null
+          meal_type: string
+          observations: string | null
+          professional_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          meal_description?: string | null
+          meal_time?: string | null
+          meal_type: string
+          observations?: string | null
+          professional_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          meal_description?: string | null
+          meal_time?: string | null
+          meal_type?: string
+          observations?: string | null
+          professional_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -41,6 +209,105 @@ export type Database = {
           updated_at?: string
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Relationships: []
+      }
+      psychology_goals: {
+        Row: {
+          client_id: string
+          created_at: string
+          goal_period: string | null
+          goal_text: string
+          id: string
+          professional_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          goal_period?: string | null
+          goal_text: string
+          id?: string
+          professional_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          goal_period?: string | null
+          goal_text?: string
+          id?: string
+          professional_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      psychology_sessions: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          professional_id: string
+          session_date: string
+          session_type: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          professional_id: string
+          session_date: string
+          session_type: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          professional_id?: string
+          session_date?: string
+          session_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      workout_plans: {
+        Row: {
+          client_id: string
+          created_at: string
+          exercise_name: string
+          id: string
+          professional_id: string
+          sets: string
+          updated_at: string
+          video_file_path: string | null
+          video_url: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          exercise_name: string
+          id?: string
+          professional_id: string
+          sets: string
+          updated_at?: string
+          video_file_path?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          exercise_name?: string
+          id?: string
+          professional_id?: string
+          sets?: string
+          updated_at?: string
+          video_file_path?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }

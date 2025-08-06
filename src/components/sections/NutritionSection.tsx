@@ -5,10 +5,10 @@ import { Apple, Scale, FileText, Calendar, TrendingUp, CheckCircle } from "lucid
 const NutritionSection = () => {
   const nutritionServices = [
     {
-      title: "Bioimpedância",
-      description: "Análise completa da composição corporal",
+      title: "Medidas",
+      description: "Acompanhamento de medidas corporais e progresso",
       icon: Scale,
-      status: "Agendar"
+      status: "Disponível"
     },
     {
       title: "Plano Alimentar",
