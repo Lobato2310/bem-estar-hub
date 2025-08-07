@@ -2,10 +2,37 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ShoppingCart, Package, Clock, Search, Plus, Minus, Truck } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const MarketSection = () => {
   const [cart, setCart] = useState<{[key: string]: number}>({});
+  const [products, setProducts] = useState([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('market_products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar produtos",
+        variant: "destructive"
+      });
+    }
+  };
 
   const categories = [
     { name: "Proteínas", icon: "🥩", color: "bg-red-100" },
@@ -14,15 +41,6 @@ const MarketSection = () => {
     { name: "Grãos", icon: "🌾", color: "bg-orange-100" },
     { name: "Laticínios", icon: "🥛", color: "bg-blue-100" },
     { name: "Suplementos", icon: "💊", color: "bg-purple-100" },
-  ];
-
-  const recommendedProducts = [
-    { id: "1", name: "Peito de Frango", price: 8.99, unit: "kg", category: "Proteínas", inDiet: true },
-    { id: "2", name: "Brócolis Orgânico", price: 4.50, unit: "kg", category: "Vegetais", inDiet: true },
-    { id: "3", name: "Batata Doce", price: 3.20, unit: "kg", category: "Vegetais", inDiet: true },
-    { id: "4", name: "Aveia em Flocos", price: 6.80, unit: "kg", category: "Grãos", inDiet: true },
-    { id: "5", name: "Ovo Caipira", price: 12.00, unit: "dúzia", category: "Proteínas", inDiet: true },
-    { id: "6", name: "Whey Protein", price: 89.90, unit: "unidade", category: "Suplementos", inDiet: false },
   ];
 
   const addToCart = (productId: string) => {
@@ -45,7 +63,7 @@ const MarketSection = () => {
   };
 
   const cartTotal = Object.entries(cart).reduce((total, [productId, quantity]) => {
-    const product = recommendedProducts.find(p => p.id === productId);
+    const product = products.find(p => p.id === productId);
     return total + (product ? product.price * quantity : 0);
   }, 0);
 
@@ -113,72 +131,77 @@ const MarketSection = () => {
         </div>
       </div>
 
-      {/* Produtos recomendados */}
+      {/* Produtos disponíveis */}
       <div className="space-y-6">
         <div className="flex items-center space-x-2">
           <Package className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-semibold text-foreground">Recomendados para sua Dieta</h2>
+          <h2 className="text-2xl font-semibold text-foreground">Produtos Disponíveis</h2>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recommendedProducts.map((product) => (
-            <Card key={product.id} className="p-4 hover:shadow-lg transition-all duration-300">
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground">{product.category}</p>
-                    {product.inDiet && (
-                      <span className="inline-block mt-1 px-2 py-1 bg-primary-light text-primary text-xs rounded-full">
-                        Na sua dieta
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-foreground">R$ {product.price.toFixed(2)}</p>
-                    <p className="text-sm text-muted-foreground">por {product.unit}</p>
-                  </div>
-                </div>
-
-                {cart[product.id] ? (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeFromCart(product.id)}
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="font-medium text-foreground w-8 text-center">
-                        {cart[product.id]}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addToCart(product.id)}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
+        {products.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <Card key={product.id} className="p-4 hover:shadow-lg transition-all duration-300">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground">{product.category}</p>
+                      {product.description && (
+                        <p className="text-xs text-muted-foreground mt-1">{product.description}</p>
+                      )}
                     </div>
-                    <p className="font-semibold text-primary">
-                      R$ {(product.price * cart[product.id]).toFixed(2)}
-                    </p>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-foreground">R$ {Number(product.price).toFixed(2)}</p>
+                    </div>
                   </div>
-                ) : (
-                  <Button 
-                    onClick={() => addToCart(product.id)}
-                    className="w-full"
-                    variant="outline"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar
-                  </Button>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
+
+                  {cart[product.id] ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeFromCart(product.id)}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="font-medium text-foreground w-8 text-center">
+                          {cart[product.id]}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addToCart(product.id)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <p className="font-semibold text-primary">
+                        R$ {(Number(product.price) * cart[product.id]).toFixed(2)}
+                      </p>
+                    </div>
+                  ) : (
+                    <Button 
+                      onClick={() => addToCart(product.id)}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum produto disponível</h3>
+            <p className="text-muted-foreground">Aguarde novos produtos serem adicionados pelos profissionais.</p>
+          </div>
+        )}
       </div>
 
       {/* Delivery Info */}
@@ -186,13 +209,13 @@ const MarketSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
           <div className="space-y-2">
             <Clock className="h-8 w-8 text-accent-foreground mx-auto" />
-            <h3 className="font-semibold text-accent-foreground">Entrega Rápida</h3>
-            <p className="text-sm text-accent-foreground/80">Em até 2 horas</p>
+            <h3 className="font-semibold text-accent-foreground">Entrega</h3>
+            <p className="text-sm text-accent-foreground/80">SEG à SEX das 09:00 às 19:00</p>
           </div>
           <div className="space-y-2">
             <Truck className="h-8 w-8 text-accent-foreground mx-auto" />
             <h3 className="font-semibold text-accent-foreground">Frete Grátis</h3>
-            <p className="text-sm text-accent-foreground/80">Pedidos acima de R$ 50</p>
+            <p className="text-sm text-accent-foreground/80">Pedidos acima de R$ 150,00</p>
           </div>
           <div className="space-y-2">
             <Package className="h-8 w-8 text-accent-foreground mx-auto" />
