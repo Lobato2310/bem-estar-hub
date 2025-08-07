@@ -119,6 +119,11 @@ const ProfessionalDashboard = () => {
       setMarketProducts(data || []);
     } catch (error) {
       console.error('Error fetching market products:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar produtos do mercado",
+        variant: "destructive"
+      });
     }
   };
 
@@ -292,6 +297,100 @@ const ProfessionalDashboard = () => {
       toast({
         title: "Erro",
         description: "Erro ao agendar sessão",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const savePsychologyGoal = async (goalText, goalPeriod) => {
+    if (!selectedClient || !user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('psychology_goals')
+        .insert({
+          client_id: selectedClient,
+          professional_id: user.id,
+          goal_text: goalText,
+          goal_period: goalPeriod
+        });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso",
+        description: "Meta quinzenal adicionada com sucesso!"
+      });
+    } catch (error) {
+      console.error('Error saving goal:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar meta",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveMotivationalPhrase = async (phrase) => {
+    if (!selectedClient || !user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('motivational_phrases')
+        .insert({
+          client_id: selectedClient,
+          professional_id: user.id,
+          phrase: phrase
+        });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso",
+        description: "Frase motivacional adicionada com sucesso!"
+      });
+    } catch (error) {
+      console.error('Error saving phrase:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar frase motivacional",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveClientReport = async (reportText) => {
+    if (!selectedClient || !user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('client_reports')
+        .insert({
+          client_id: selectedClient,
+          professional_id: user.id,
+          report_text: reportText
+        });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso",
+        description: "Relatório do cliente salvo com sucesso!"
+      });
+    } catch (error) {
+      console.error('Error saving report:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar relatório",
         variant: "destructive"
       });
     } finally {
@@ -715,16 +814,12 @@ const ProfessionalDashboard = () => {
                           </div>
                           <div>
                             <Label>Tipo de Sessão</Label>
-                            <Select name="sessionType" required>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Tipo de sessão" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="therapy">Terapia Individual</SelectItem>
-                                <SelectItem value="evaluation">Avaliação</SelectItem>
-                                <SelectItem value="followup">Acompanhamento</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <select name="sessionType" required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                              <option value="">Selecione o tipo de sessão</option>
+                              <option value="therapy">Terapia Individual</option>
+                              <option value="evaluation">Avaliação</option>
+                              <option value="followup">Acompanhamento</option>
+                            </select>
                           </div>
                           <div>
                             <Label>Observações</Label>
@@ -744,11 +839,35 @@ const ProfessionalDashboard = () => {
                     <CardTitle className="text-lg">Metas Quinzenais</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <Label>Nova Meta</Label>
-                      <Textarea placeholder="Descreva a meta quinzenal..." />
-                    </div>
-                    <Button>Adicionar Meta</Button>
+                    {selectedClient && (
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const form = e.target as HTMLFormElement;
+                        const formData = new FormData(form);
+                        const goalText = formData.get('goalText') as string;
+                        const goalPeriod = formData.get('goalPeriod') as string;
+                        savePsychologyGoal(goalText, goalPeriod);
+                        form.reset();
+                      }}>
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Nova Meta</Label>
+                            <Textarea name="goalText" placeholder="Descreva a meta quinzenal..." required />
+                          </div>
+                          <div>
+                            <Label>Período</Label>
+                            <select name="goalPeriod" defaultValue="quinzenal" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                              <option value="semanal">Semanal</option>
+                              <option value="quinzenal">Quinzenal</option>
+                              <option value="mensal">Mensal</option>
+                            </select>
+                          </div>
+                          <Button type="submit" disabled={isLoading}>
+                            {isLoading ? "Salvando..." : "Adicionar Meta"}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
                   </CardContent>
                 </Card>
                 
@@ -757,11 +876,26 @@ const ProfessionalDashboard = () => {
                     <CardTitle className="text-lg">Frases Motivacionais</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <Label>Nova Frase</Label>
-                      <Textarea placeholder="Digite uma frase motivacional..." />
-                    </div>
-                    <Button>Adicionar Frase</Button>
+                    {selectedClient && (
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const form = e.target as HTMLFormElement;
+                        const formData = new FormData(form);
+                        const phrase = formData.get('phrase') as string;
+                        saveMotivationalPhrase(phrase);
+                        form.reset();
+                      }}>
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Nova Frase</Label>
+                            <Textarea name="phrase" placeholder="Digite uma frase motivacional..." required />
+                          </div>
+                          <Button type="submit" disabled={isLoading}>
+                            {isLoading ? "Salvando..." : "Adicionar Frase"}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
                   </CardContent>
                 </Card>
                 
@@ -770,11 +904,26 @@ const ProfessionalDashboard = () => {
                     <CardTitle className="text-lg">Relatório do Cliente</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <Label>Observações</Label>
-                      <Textarea placeholder="Atualize o relatório do cliente..." />
-                    </div>
-                    <Button>Salvar Relatório</Button>
+                    {selectedClient && (
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const form = e.target as HTMLFormElement;
+                        const formData = new FormData(form);
+                        const reportText = formData.get('reportText') as string;
+                        saveClientReport(reportText);
+                        form.reset();
+                      }}>
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Observações</Label>
+                            <Textarea name="reportText" placeholder="Atualize o relatório do cliente..." required />
+                          </div>
+                          <Button type="submit" disabled={isLoading}>
+                            {isLoading ? "Salvando..." : "Salvar Relatório"}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
                   </CardContent>
                 </Card>
               </div>
