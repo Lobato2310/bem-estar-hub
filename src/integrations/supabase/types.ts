@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_goals: {
+        Row: {
+          client_id: string
+          created_at: string
+          current_value: number | null
+          description: string | null
+          goal_type: string
+          id: string
+          is_active: boolean | null
+          target_date: string | null
+          target_value: number | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          goal_type: string
+          id?: string
+          is_active?: boolean | null
+          target_date?: string | null
+          target_value?: number | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          goal_type?: string
+          id?: string
+          is_active?: boolean | null
+          target_date?: string | null
+          target_value?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_measurements: {
         Row: {
           arm: number | null
@@ -86,6 +125,95 @@ export type Database = {
           professional_id?: string
           report_text?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      exercise_logs: {
+        Row: {
+          created_at: string
+          exercise_name: string
+          id: string
+          notes: string | null
+          reps_completed: number | null
+          sets_completed: number | null
+          updated_at: string
+          weight_used: number | null
+          workout_session_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_name: string
+          id?: string
+          notes?: string | null
+          reps_completed?: number | null
+          sets_completed?: number | null
+          updated_at?: string
+          weight_used?: number | null
+          workout_session_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise_name?: string
+          id?: string
+          notes?: string | null
+          reps_completed?: number | null
+          sets_completed?: number | null
+          updated_at?: string
+          weight_used?: number | null
+          workout_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_logs_workout_session_id_fkey"
+            columns: ["workout_session_id"]
+            isOneToOne: false
+            referencedRelation: "workout_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercises: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          difficulty_level: string | null
+          equipment: string | null
+          id: string
+          instructions: string | null
+          muscle_group: string | null
+          name: string
+          updated_at: string
+          video_file_path: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          difficulty_level?: string | null
+          equipment?: string | null
+          id?: string
+          instructions?: string | null
+          muscle_group?: string | null
+          name: string
+          updated_at?: string
+          video_file_path?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          difficulty_level?: string | null
+          equipment?: string | null
+          id?: string
+          instructions?: string | null
+          muscle_group?: string | null
+          name?: string
+          updated_at?: string
+          video_file_path?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }
@@ -308,6 +436,48 @@ export type Database = {
           updated_at?: string
           video_file_path?: string | null
           video_url?: string | null
+        }
+        Relationships: []
+      }
+      workout_sessions: {
+        Row: {
+          client_id: string
+          created_at: string
+          difficulty_level: number | null
+          duration_minutes: number | null
+          end_time: string | null
+          id: string
+          intensity_level: number | null
+          notes: string | null
+          start_time: string
+          updated_at: string
+          workout_plan_id: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          difficulty_level?: number | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          id?: string
+          intensity_level?: number | null
+          notes?: string | null
+          start_time?: string
+          updated_at?: string
+          workout_plan_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          difficulty_level?: number | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          id?: string
+          intensity_level?: number | null
+          notes?: string | null
+          start_time?: string
+          updated_at?: string
+          workout_plan_id?: string | null
         }
         Relationships: []
       }

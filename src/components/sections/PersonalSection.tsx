@@ -1,8 +1,26 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, Clock, Target, PlayCircle, Calendar, Trophy } from "lucide-react";
+import { Dumbbell, Clock, Target, PlayCircle, Calendar, Trophy, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import WorkoutTimer from "@/components/workout/WorkoutTimer";
+import WorkoutFeedbackDialog from "@/components/workout/WorkoutFeedbackDialog";
+import ClientGoalsDialog from "@/components/profile/ClientGoalsDialog";
+import ExerciseWeightDialog from "@/components/workout/ExerciseWeightDialog";
 
 const PersonalSection = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const [isWorkoutActive, setIsWorkoutActive] = useState(false);
+  const [currentWorkoutSession, setCurrentWorkoutSession] = useState<string | null>(null);
+  const [workoutDuration, setWorkoutDuration] = useState(0);
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [showGoalsDialog, setShowGoalsDialog] = useState(false);
+  const [showExerciseDialog, setShowExerciseDialog] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState("");
   const workoutTypes = [
     { 
       title: "Musculação", 
@@ -25,6 +43,131 @@ const PersonalSection = () => {
     completed: false
   };
 
+  const handleStartWorkout = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('workout_sessions')
+        .insert({
+          client_id: user.id,
+          start_time: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCurrentWorkoutSession(data.id);
+      setIsWorkoutActive(true);
+      toast({
+        title: "Treino iniciado!",
+        description: "Bom treino! Lembre-se de registrar os pesos dos exercícios."
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível iniciar o treino",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePauseWorkout = () => {
+    // Timer já gerencia o pause internamente
+  };
+
+  const handleStopWorkout = () => {
+    setShowFeedbackDialog(true);
+  };
+
+  const handleWorkoutFeedback = async (feedback: {
+    intensityLevel: number;
+    difficultyLevel: number;
+    notes: string;
+  }) => {
+    if (!currentWorkoutSession) return;
+
+    try {
+      const { error } = await supabase
+        .from('workout_sessions')
+        .update({
+          end_time: new Date().toISOString(),
+          duration_minutes: Math.round(workoutDuration / 60),
+          intensity_level: feedback.intensityLevel,
+          difficulty_level: feedback.difficultyLevel,
+          notes: feedback.notes
+        })
+        .eq('id', currentWorkoutSession);
+
+      if (error) throw error;
+
+      setIsWorkoutActive(false);
+      setCurrentWorkoutSession(null);
+      setWorkoutDuration(0);
+      setShowFeedbackDialog(false);
+      
+      toast({
+        title: "Treino finalizado!",
+        description: "Parabéns! Seu treino foi registrado com sucesso."
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível finalizar o treino",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleExerciseWeight = (exerciseName: string) => {
+    setSelectedExercise(exerciseName);
+    setShowExerciseDialog(true);
+  };
+
+  const handleSaveExerciseLog = async (data: {
+    exerciseName: string;
+    sets: number;
+    weight: number;
+    reps: number;
+    notes: string;
+  }) => {
+    if (!currentWorkoutSession) {
+      toast({
+        title: "Erro",
+        description: "Inicie um treino primeiro para registrar os exercícios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('exercise_logs')
+        .insert({
+          workout_session_id: currentWorkoutSession,
+          exercise_name: data.exerciseName,
+          sets_completed: data.sets,
+          weight_used: data.weight,
+          reps_completed: data.reps,
+          notes: data.notes
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Exercício registrado!",
+        description: `${data.exerciseName}: ${data.sets}x${data.reps} com ${data.weight}kg`
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível registrar o exercício",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
       {/* Header */}
@@ -37,6 +180,15 @@ const PersonalSection = () => {
           Treinos personalizados para alcançar seus objetivos
         </p>
       </div>
+
+      {/* Timer de treino */}
+      <WorkoutTimer
+        isActive={isWorkoutActive}
+        onStart={handleStartWorkout}
+        onPause={handlePauseWorkout}
+        onStop={handleStopWorkout}
+        onTimeUpdate={setWorkoutDuration}
+      />
 
       {/* Treino de hoje */}
       <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary-light/20 border-primary/20">
@@ -55,15 +207,29 @@ const PersonalSection = () => {
           <h3 className="text-lg font-medium text-foreground">{todayWorkout.title}</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {todayWorkout.exercises.map((exercise, index) => (
-              <div key={index} className="p-2 bg-background rounded-lg border">
-                <span className="text-sm text-foreground">{exercise}</span>
+              <div key={index} className="p-2 bg-background rounded-lg border group cursor-pointer hover:bg-accent transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-foreground">{exercise}</span>
+                  {isWorkoutActive && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleExerciseWeight(exercise)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-6 w-6"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
-          <Button className="w-full md:w-auto">
-            <PlayCircle className="h-4 w-4 mr-2" />
-            Iniciar Treino
-          </Button>
+          {!isWorkoutActive && (
+            <Button className="w-full md:w-auto" onClick={handleStartWorkout}>
+              <PlayCircle className="h-4 w-4 mr-2" />
+              Iniciar Treino
+            </Button>
+          )}
         </div>
       </Card>
 
@@ -129,9 +295,28 @@ const PersonalSection = () => {
           <p className="text-accent-foreground/80">
             Configure seu perfil e objetivos para receber treinos personalizados
           </p>
-          <Button>Configurar Perfil</Button>
+          <Button onClick={() => setShowGoalsDialog(true)}>Configurar Perfil</Button>
         </div>
       </Card>
+
+      {/* Dialogs */}
+      <WorkoutFeedbackDialog
+        isOpen={showFeedbackDialog}
+        onClose={() => setShowFeedbackDialog(false)}
+        onSubmit={handleWorkoutFeedback}
+      />
+
+      <ClientGoalsDialog
+        isOpen={showGoalsDialog}
+        onClose={() => setShowGoalsDialog(false)}
+      />
+
+      <ExerciseWeightDialog
+        isOpen={showExerciseDialog}
+        onClose={() => setShowExerciseDialog(false)}
+        exerciseName={selectedExercise}
+        onSubmit={handleSaveExerciseLog}
+      />
     </div>
   );
 };
