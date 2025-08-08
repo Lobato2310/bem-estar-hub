@@ -21,6 +21,7 @@ const ProfessionalDashboard = () => {
   const [workoutPlans, setWorkoutPlans] = useState([]);
   const [nutritionPlans, setNutritionPlans] = useState([]);
   const [marketProducts, setMarketProducts] = useState([]);
+  const [exercises, setExercises] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -47,6 +48,7 @@ const ProfessionalDashboard = () => {
     if (isAuthenticated) {
       fetchClients();
       fetchMarketProducts();
+      fetchExercises();
     }
   }, [isAuthenticated]);
 
@@ -122,6 +124,25 @@ const ProfessionalDashboard = () => {
       toast({
         title: "Erro",
         description: "Erro ao carregar produtos do mercado",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchExercises = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('exercises')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setExercises(data || []);
+    } catch (error) {
+      console.error('Error fetching exercises:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar exercícios",
         variant: "destructive"
       });
     }
@@ -398,6 +419,92 @@ const ProfessionalDashboard = () => {
     }
   };
 
+  const saveExercise = async (name, description, instructions, muscleGroup, equipment, difficultyLevel, videoFile = null) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      let videoPath = null;
+      let videoUrl = null;
+      
+      if (videoFile) {
+        const fileExt = videoFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('exercise-videos')
+          .upload(filePath, videoFile);
+        
+        if (uploadError) throw uploadError;
+        videoPath = filePath;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('exercise-videos')
+          .getPublicUrl(filePath);
+        videoUrl = publicUrl;
+      }
+      
+      const { error } = await (supabase as any)
+        .from('exercises')
+        .insert({
+          name,
+          description,
+          instructions,
+          muscle_group: muscleGroup,
+          equipment,
+          difficulty_level: difficultyLevel,
+          video_file_path: videoPath,
+          video_url: videoUrl,
+          created_by: user.id
+        });
+      
+      if (error) throw error;
+      
+      await fetchExercises();
+      toast({
+        title: "Sucesso",
+        description: "Exercício adicionado à biblioteca!"
+      });
+    } catch (error) {
+      console.error('Error saving exercise:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar exercício",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteExercise = async (exerciseId) => {
+    setIsLoading(true);
+    try {
+      const { error } = await (supabase as any)
+        .from('exercises')
+        .delete()
+        .eq('id', exerciseId);
+      
+      if (error) throw error;
+      
+      await fetchExercises();
+      toast({
+        title: "Sucesso",
+        description: "Exercício removido da biblioteca!"
+      });
+    } catch (error) {
+      console.error('Error deleting exercise:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover exercício",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="max-w-md mx-auto mt-20 p-6">
@@ -440,10 +547,14 @@ const ProfessionalDashboard = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="personal" className="flex items-center space-x-2">
             <Dumbbell className="h-4 w-4" />
             <span>Personal</span>
+          </TabsTrigger>
+          <TabsTrigger value="exercises" className="flex items-center space-x-2">
+            <Video className="h-4 w-4" />
+            <span>Exercícios</span>
           </TabsTrigger>
           <TabsTrigger value="nutrition" className="flex items-center space-x-2">
             <Apple className="h-4 w-4" />
@@ -563,6 +674,195 @@ const ProfessionalDashboard = () => {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Exercises Library Tab */}
+        <TabsContent value="exercises" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Biblioteca de Exercícios</CardTitle>
+              <p className="text-muted-foreground">Cadastre exercícios com vídeos para usar nos planos dos clientes</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Exercícios Cadastrados</h3>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Cadastrar Exercício
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Novo Exercício na Biblioteca</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const form = e.target as HTMLFormElement;
+                      const formData = new FormData(form);
+                      const name = formData.get('name') as string;
+                      const description = formData.get('description') as string;
+                      const instructions = formData.get('instructions') as string;
+                      const muscleGroup = formData.get('muscleGroup') as string;
+                      const equipment = formData.get('equipment') as string;
+                      const difficultyLevel = formData.get('difficultyLevel') as string;
+                      const videoFileEntry = formData.get('video') as File;
+                      const videoFile = videoFileEntry?.size > 0 ? videoFileEntry : null;
+                      saveExercise(name, description, instructions, muscleGroup, equipment, difficultyLevel, videoFile);
+                      form.reset();
+                    }} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Nome do Exercício</Label>
+                          <Input name="name" placeholder="Ex: Supino Reto com Halter" required />
+                        </div>
+                        <div>
+                          <Label>Grupo Muscular</Label>
+                          <Select name="muscleGroup" required>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o grupo muscular" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Peito">Peito</SelectItem>
+                              <SelectItem value="Costas">Costas</SelectItem>
+                              <SelectItem value="Pernas">Pernas</SelectItem>
+                              <SelectItem value="Ombros">Ombros</SelectItem>
+                              <SelectItem value="Braços">Braços</SelectItem>
+                              <SelectItem value="Core">Core</SelectItem>
+                              <SelectItem value="Cardio">Cardio</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Equipamento Necessário</Label>
+                          <Input name="equipment" placeholder="Ex: Halteres, Barra, Peso Corporal" />
+                        </div>
+                        <div>
+                          <Label>Nível de Dificuldade</Label>
+                          <Select name="difficultyLevel">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Nível de dificuldade" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Iniciante">Iniciante</SelectItem>
+                              <SelectItem value="Intermediário">Intermediário</SelectItem>
+                              <SelectItem value="Avançado">Avançado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label>Descrição do Exercício</Label>
+                        <Textarea 
+                          name="description" 
+                          placeholder="Breve descrição do exercício e seus benefícios..."
+                          rows={3}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label>Instruções de Execução</Label>
+                        <Textarea 
+                          name="instructions" 
+                          placeholder="Passo a passo detalhado de como executar o exercício..."
+                          rows={4}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label>Vídeo Demonstrativo</Label>
+                        <Input name="video" type="file" accept="video/*" />
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Carregue um vídeo demonstrativo do exercício (MP4, MOV, AVI)
+                        </p>
+                      </div>
+                      
+                      <Button type="submit" disabled={isLoading} className="w-full">
+                        {isLoading ? "Cadastrando..." : "Cadastrar na Biblioteca"}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              <div className="grid gap-4">
+                {exercises.map((exercise) => (
+                  <Card key={exercise.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium">{exercise.name}</h4>
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                              {exercise.muscle_group}
+                            </span>
+                            {exercise.difficulty_level && (
+                              <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
+                                {exercise.difficulty_level}
+                              </span>
+                            )}
+                          </div>
+                          {exercise.description && (
+                            <p className="text-sm text-muted-foreground mb-2">{exercise.description}</p>
+                          )}
+                          {exercise.equipment && (
+                            <p className="text-xs text-muted-foreground">
+                              <strong>Equipamento:</strong> {exercise.equipment}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex space-x-2 ml-4">
+                          {exercise.video_file_path && (
+                            <Button variant="outline" size="sm">
+                              <Video className="h-4 w-4 mr-2" />
+                              Ver Vídeo
+                            </Button>
+                          )}
+                          <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => deleteExercise(exercise.id)}
+                            disabled={isLoading}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      {exercise.instructions && (
+                        <div className="mt-3 pt-3 border-t">
+                          <details className="text-sm">
+                            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                              Ver instruções de execução
+                            </summary>
+                            <p className="mt-2 text-muted-foreground whitespace-pre-wrap">
+                              {exercise.instructions}
+                            </p>
+                          </details>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                {exercises.length === 0 && (
+                  <div className="text-center py-12">
+                    <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhum exercício cadastrado na biblioteca</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Cadastre exercícios com vídeos para usar nos planos dos clientes
+                    </p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
