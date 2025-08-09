@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Dumbbell, Clock, Target, PlayCircle, Calendar, Trophy, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +10,7 @@ import WorkoutTimer from "@/components/workout/WorkoutTimer";
 import WorkoutFeedbackDialog from "@/components/workout/WorkoutFeedbackDialog";
 import ClientGoalsDialog from "@/components/profile/ClientGoalsDialog";
 import ExerciseWeightDialog from "@/components/workout/ExerciseWeightDialog";
+import WorkoutCalendar from "@/components/workout/WorkoutCalendar";
 
 const PersonalSection = () => {
   const { user } = useAuth();
@@ -21,6 +23,8 @@ const PersonalSection = () => {
   const [showGoalsDialog, setShowGoalsDialog] = useState(false);
   const [showExerciseDialog, setShowExerciseDialog] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState("");
+  const [showWorkoutCalendar, setShowWorkoutCalendar] = useState(false);
+  const [selectedWorkoutType, setSelectedWorkoutType] = useState<"musculacao" | "cardio">("musculacao");
   const workoutTypes = [
     { 
       title: "Musculação", 
@@ -254,10 +258,17 @@ const PersonalSection = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="text-muted-foreground">{type.description}</p>
-                  <Button variant="outline" className="w-full">
-                    Ver Treinos
-                  </Button>
+                   <p className="text-muted-foreground">{type.description}</p>
+                   <Button 
+                     variant="outline" 
+                     className="w-full"
+                     onClick={() => {
+                       setSelectedWorkoutType(type.title === "Musculação" ? "musculacao" : "cardio");
+                       setShowWorkoutCalendar(true);
+                     }}
+                   >
+                     Ver Calendário
+                   </Button>
                 </div>
               </Card>
             );
@@ -317,6 +328,18 @@ const PersonalSection = () => {
         exerciseName={selectedExercise}
         onSubmit={handleSaveExerciseLog}
       />
+
+      {/* Workout Calendar Dialog */}
+      <Dialog open={showWorkoutCalendar} onOpenChange={setShowWorkoutCalendar}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Calendário de Treinos - {selectedWorkoutType === "musculacao" ? "Musculação" : "Corrida/Cardio"}
+            </DialogTitle>
+          </DialogHeader>
+          <WorkoutCalendar workoutType={selectedWorkoutType} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -41,6 +41,16 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
   const { toast } = useToast();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [profile, setProfile] = useState({
+    training_days_per_week: "",
+    training_duration_minutes: "",
+    goal_type: "",
+    current_weight: "",
+    target_weight: "",
+    target_date: "",
+    description: "",
+    limitations: ""
+  });
   const [newGoal, setNewGoal] = useState({
     goal_type: "",
     target_value: "",
@@ -52,6 +62,7 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
   useEffect(() => {
     if (isOpen && user) {
       fetchGoals();
+      fetchProfile();
     }
   }, [isOpen, user]);
 
@@ -75,6 +86,30 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
     }
 
     setGoals(data || []);
+  };
+
+  const fetchProfile = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('client_goals')
+      .select('*')
+      .eq('client_id', user.id)
+      .eq('goal_type', 'profile_config')
+      .single();
+
+    if (data && !error) {
+      setProfile({
+        training_days_per_week: data.target_value?.toString() || "",
+        training_duration_minutes: data.current_value?.toString() || "",
+        goal_type: data.description?.split('|')[0] || "",
+        current_weight: data.description?.split('|')[1] || "",
+        target_weight: data.description?.split('|')[2] || "",
+        target_date: data.target_date || "",
+        description: data.description?.split('|')[3] || "",
+        limitations: data.description?.split('|')[4] || ""
+      });
+    }
   };
 
   const handleAddGoal = async () => {
@@ -116,6 +151,47 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
     fetchGoals();
   };
 
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    // Concatenate profile data into description field
+    const profileData = [
+      profile.goal_type,
+      profile.current_weight,
+      profile.target_weight,
+      profile.description,
+      profile.limitations
+    ].join('|');
+
+    const { error } = await supabase
+      .from('client_goals')
+      .upsert({
+        client_id: user.id,
+        goal_type: 'profile_config',
+        target_value: profile.training_days_per_week ? parseFloat(profile.training_days_per_week) : null,
+        current_value: profile.training_duration_minutes ? parseFloat(profile.training_duration_minutes) : null,
+        target_date: profile.target_date || null,
+        description: profileData,
+        is_active: true
+      }, {
+        onConflict: 'client_id,goal_type'
+      });
+
+    if (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as configurações",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Sucesso",
+      description: "Configurações salvas com sucesso!"
+    });
+  };
+
   const handleRemoveGoal = async (goalId: string) => {
     const { error } = await supabase
       .from('client_goals')
@@ -155,10 +231,119 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Configuração do Perfil */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Configurar Perfil</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Quantas vezes na semana consegue treinar:</Label>
+                <Select 
+                  value={profile.training_days_per_week} 
+                  onValueChange={(value) => setProfile(prev => ({ ...prev, training_days_per_week: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Dias por semana" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7].map((days) => (
+                      <SelectItem key={days} value={days.toString()}>
+                        {days} {days === 1 ? 'dia' : 'dias'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label>Tempo de treino (minutos):</Label>
+                <Input
+                  type="number"
+                  placeholder="ex: 60"
+                  value={profile.training_duration_minutes}
+                  onChange={(e) => setProfile(prev => ({ ...prev, training_duration_minutes: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Tipo do Objetivo:</Label>
+              <Select 
+                value={profile.goal_type} 
+                onValueChange={(value) => setProfile(prev => ({ ...prev, goal_type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o objetivo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {goalTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Peso Atual (kg):</Label>
+                <Input
+                  type="number"
+                  placeholder="ex: 70"
+                  value={profile.current_weight}
+                  onChange={(e) => setProfile(prev => ({ ...prev, current_weight: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <Label>Meta (kg):</Label>
+                <Input
+                  type="number"
+                  placeholder="ex: 65"
+                  value={profile.target_weight}
+                  onChange={(e) => setProfile(prev => ({ ...prev, target_weight: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Data Objetivo:</Label>
+              <Input
+                type="date"
+                value={profile.target_date}
+                onChange={(e) => setProfile(prev => ({ ...prev, target_date: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label>Descrição:</Label>
+              <Textarea
+                placeholder="Descreva seu objetivo..."
+                value={profile.description}
+                onChange={(e) => setProfile(prev => ({ ...prev, description: e.target.value }))}
+                rows={2}
+              />
+            </div>
+
+            <div>
+              <Label>Limitações:</Label>
+              <Textarea
+                placeholder="Descreva aqui quaisquer limitações físicas. Exemplo: Lesão recente, condromalácia, etc."
+                value={profile.limitations}
+                onChange={(e) => setProfile(prev => ({ ...prev, limitations: e.target.value }))}
+                rows={3}
+              />
+            </div>
+
+            <Button onClick={handleSaveProfile} className="w-full">
+              Salvar Configurações
+            </Button>
+          </div>
+
           {/* Lista de objetivos existentes */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Objetivos Atuais</h3>
+              <h3 className="text-lg font-semibold">Objetivos Adicionais</h3>
               <Button 
                 onClick={() => setShowAddForm(!showAddForm)}
                 size="sm"
