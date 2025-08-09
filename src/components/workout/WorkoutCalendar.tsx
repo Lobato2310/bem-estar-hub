@@ -26,9 +26,10 @@ interface WorkoutPlan {
 
 interface WorkoutCalendarProps {
   workoutType: "musculacao" | "cardio";
+  viewMode?: "client" | "professional";
 }
 
-const WorkoutCalendar = ({ workoutType }: WorkoutCalendarProps) => {
+const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -172,10 +173,12 @@ const WorkoutCalendar = ({ workoutType }: WorkoutCalendarProps) => {
           <CalendarIcon className="h-5 w-5" />
           <span>Calendário de Treinos - {workoutType === "musculacao" ? "Musculação" : "Cardio"}</span>
         </h3>
-        <Button onClick={() => setShowAddDialog(true)} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Treino
-        </Button>
+        {viewMode === "professional" && (
+          <Button onClick={() => setShowAddDialog(true)} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Treino
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -245,14 +248,16 @@ const WorkoutCalendar = ({ workoutType }: WorkoutCalendarProps) => {
                           </a>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteWorkout(workout.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {viewMode === "professional" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteWorkout(workout.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </Card>
                 ))}

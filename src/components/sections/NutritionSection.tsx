@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Apple, Scale, FileText, Calendar, TrendingUp, CheckCircle } from "lucide-react";
+import { Apple, Scale, FileText, Calendar, TrendingUp, CheckCircle, Eye } from "lucide-react";
+import MealDetailsDialog from "@/components/nutrition/MealDetailsDialog";
 
 const NutritionSection = () => {
+  const [showMealDialog, setShowMealDialog] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState("");
   const nutritionServices = [
     {
       title: "Medidas",
@@ -25,12 +29,17 @@ const NutritionSection = () => {
   ];
 
   const todayMeals = [
-    { meal: "Café da Manhã", time: "07:00", calories: 350, completed: true },
-    { meal: "Lanche da Manhã", time: "10:00", calories: 150, completed: false },
-    { meal: "Almoço", time: "12:30", calories: 450, completed: false },
-    { meal: "Lanche da Tarde", time: "15:30", calories: 200, completed: false },
-    { meal: "Jantar", time: "19:00", calories: 400, completed: false },
+    { meal: "Café da Manhã", type: "cafe_da_manha", time: "07:00", calories: 350, completed: true },
+    { meal: "Lanche da Manhã", type: "lanche_da_manha", time: "10:00", calories: 150, completed: false },
+    { meal: "Almoço", type: "almoco", time: "12:30", calories: 450, completed: false },
+    { meal: "Lanche da Tarde", type: "lanche_da_tarde", time: "15:30", calories: 200, completed: false },
+    { meal: "Jantar", type: "jantar", time: "19:00", calories: 400, completed: false },
   ];
+
+  const handleMealClick = (mealType: string) => {
+    setSelectedMealType(mealType);
+    setShowMealDialog(true);
+  };
 
   const totalCalories = todayMeals.reduce((sum, meal) => sum + meal.calories, 0);
   const completedCalories = todayMeals.filter(meal => meal.completed)
@@ -98,15 +107,24 @@ const NutritionSection = () => {
                     <p className="text-sm text-muted-foreground">{meal.time}</p>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right space-y-1">
                   <p className="font-semibold text-foreground">{meal.calories} kcal</p>
-                  <Button 
-                    variant={meal.completed ? "secondary" : "outline"} 
-                    size="sm"
-                    className="mt-1"
-                  >
-                    {meal.completed ? "Concluído" : "Marcar"}
-                  </Button>
+                  <div className="flex space-x-1">
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleMealClick(meal.type)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Ver
+                    </Button>
+                    <Button 
+                      variant={meal.completed ? "secondary" : "outline"} 
+                      size="sm"
+                    >
+                      {meal.completed ? "✓" : "Marcar"}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -166,6 +184,13 @@ const NutritionSection = () => {
           </div>
         </div>
       </Card>
+
+      {/* Meal Details Dialog */}
+      <MealDetailsDialog
+        isOpen={showMealDialog}
+        onClose={() => setShowMealDialog(false)}
+        mealType={selectedMealType}
+      />
     </div>
   );
 };
