@@ -373,6 +373,27 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_settings: {
+        Row: {
+          created_at: string
+          psych_password_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          psych_password_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          psych_password_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
