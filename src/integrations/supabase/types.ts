@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_checkins: {
+        Row: {
+          back_photo_url: string | null
+          belly_circumference: number | null
+          checkin_date: string
+          checkin_type: string
+          client_id: string
+          created_at: string
+          feedback_date: string | null
+          front_photo_url: string | null
+          hip_circumference: number | null
+          id: string
+          left_thigh: number | null
+          next_goal: string | null
+          nutritionist_feedback: string | null
+          observations: string | null
+          right_thigh: number | null
+          side_photo_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          back_photo_url?: string | null
+          belly_circumference?: number | null
+          checkin_date: string
+          checkin_type: string
+          client_id: string
+          created_at?: string
+          feedback_date?: string | null
+          front_photo_url?: string | null
+          hip_circumference?: number | null
+          id?: string
+          left_thigh?: number | null
+          next_goal?: string | null
+          nutritionist_feedback?: string | null
+          observations?: string | null
+          right_thigh?: number | null
+          side_photo_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          back_photo_url?: string | null
+          belly_circumference?: number | null
+          checkin_date?: string
+          checkin_type?: string
+          client_id?: string
+          created_at?: string
+          feedback_date?: string | null
+          front_photo_url?: string | null
+          hip_circumference?: number | null
+          id?: string
+          left_thigh?: number | null
+          next_goal?: string | null
+          nutritionist_feedback?: string | null
+          observations?: string | null
+          right_thigh?: number | null
+          side_photo_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_goals: {
         Row: {
           client_id: string

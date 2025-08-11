@@ -1,32 +1,43 @@
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Scale, TrendingUp, Plus, Calendar } from "lucide-react";
+import { Scale, TrendingUp, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import CheckinCalendar from "@/components/measurements/CheckinCalendar";
 
 const MeasurementsSection = () => {
   const [measurements, setMeasurements] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
       fetchMeasurements();
+      fetchUserProfile();
     }
   }, [user]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+      
+      if (error) throw error;
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Erro ao buscar perfil:', error);
+    }
+  };
 
   const fetchMeasurements = async () => {
     try {
       const { data, error } = await supabase
         .from('client_measurements')
         .select('*')
-        .eq('client_id', user.id)
+        .eq('client_id', user?.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -149,6 +160,9 @@ const MeasurementsSection = () => {
           </div>
         </Card>
       </div>
+
+      {/* Calendário de Check-ins */}
+      <CheckinCalendar userProfile={userProfile} />
 
       {/* Histórico de medidas */}
       <Card className="p-6">

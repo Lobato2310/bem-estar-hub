@@ -43,6 +43,13 @@ const CaloriesSection = () => {
         </p>
       </div>
 
+      {/* Observação importante */}
+      <Card className="p-4 bg-accent/50 border-warning">
+        <p className="text-sm text-foreground">
+          <strong>Importante:</strong> Aqui você deve adicionar todas as suas refeições, mesmo que não esteja no seu cronograma de dieta, para analisarmos os deslizes em refeições livres, e buscar ajustes.
+        </p>
+      </Card>
+
       {/* Meta diária */}
       <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary-light/20 border-primary/20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

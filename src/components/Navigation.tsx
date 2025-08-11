@@ -3,7 +3,6 @@ import {
   Dumbbell, 
   Apple, 
   Calculator, 
-  ShoppingCart, 
   Brain,
   Heart,
   LogOut,
@@ -26,7 +25,6 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     { id: "nutrition", label: "Nutrição", icon: Apple },
     { id: "measurements", label: "Medidas", icon: Scale },
     { id: "calories", label: "Calorias", icon: Calculator },
-    { id: "market", label: "Mercado", icon: ShoppingCart },
     { id: "psychology", label: "Psicologia", icon: Brain },
   ];
 
