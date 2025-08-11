@@ -11,6 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { hashSync, compareSync } from "bcryptjs";
 
 const ProfessionalDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,22 +21,34 @@ const ProfessionalDashboard = () => {
   const [clients, setClients] = useState([]);
   const [workoutPlans, setWorkoutPlans] = useState([]);
   const [nutritionPlans, setNutritionPlans] = useState([]);
-  // removed: marketProducts state
   const [exercises, setExercises] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedExerciseName, setSelectedExerciseName] = useState("");
+  const [isPsychUnlocked, setIsPsychUnlocked] = useState(false);
+  const [psychPassword, setPsychPassword] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
   const exerciseNameRef = useRef<HTMLInputElement>(null);
 
   const ADMIN_PASSWORD = "MyFitLifeSistemaAdm";
 
-  const handlePasswordSubmit = () => {
+  const handlePasswordSubmit = async () => {
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
       toast({
         title: "Acesso liberado",
         description: "Bem-vindo ao painel administrativo profissional"
       });
+      try {
+        if (user?.id) {
+          const hashed = hashSync("psicologia123", 10);
+          await supabase
+            .from('professional_settings')
+            .upsert({ user_id: user.id, psych_password_hash: hashed }, { onConflict: 'user_id' });
+        }
+      } catch (err) {
+        console.error('Erro ao configurar senha de psicologia:', err);
+      }
     } else {
       toast({
         title: "Senha incorreta",
@@ -181,7 +194,7 @@ const ProfessionalDashboard = () => {
     }
   };
 
-  const saveNutritionPlan = async (mealType, mealTime, description, observations = '') => {
+  const saveNutritionPlan = async (mealType, mealTime, mealTimeEnd, description, observations = '') => {
     if (!selectedClient || !user) return;
     
     setIsLoading(true);
@@ -193,6 +206,7 @@ const ProfessionalDashboard = () => {
           professional_id: user.id,
           meal_type: mealType,
           meal_time: mealTime,
+          meal_time_end: mealTimeEnd,
           meal_description: description,
           observations: observations
         }, {
@@ -547,7 +561,17 @@ const ProfessionalDashboard = () => {
                         }} className="space-y-4">
                           <div>
                             <Label>Nome do Exercício</Label>
-                            <Input name="exerciseName" placeholder="Ex: Agachamento livre" required />
+                            <Select value={selectedExerciseName} onValueChange={(v) => setSelectedExerciseName(v)}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione um exercício da biblioteca" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {exercises.map((ex) => (
+                                  <SelectItem key={ex.id} value={ex.name}>{ex.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <input type="hidden" name="exerciseName" value={selectedExerciseName} />
                           </div>
                           <div>
                             <Label>Séries x Repetições</Label>
@@ -839,17 +863,28 @@ const ProfessionalDashboard = () => {
                             const form = e.target as HTMLFormElement;
                             const formData = new FormData(form);
                             const mealTime = formData.get('mealTime') as string;
+                            const mealTimeEnd = formData.get('mealTimeEnd') as string;
                             const description = formData.get('description') as string;
                             const observations = formData.get('observations') as string;
-                            saveNutritionPlan(mealType, mealTime, description, observations);
+                            saveNutritionPlan(mealType, mealTime, mealTimeEnd, description, observations);
                           }} className="space-y-3">
-                            <div>
-                              <Label>Horário</Label>
-                              <Input 
-                                name="mealTime" 
-                                type="time" 
-                                defaultValue={existingPlan?.meal_time || ''}
-                              />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <Label>Horário Início</Label>
+                                <Input 
+                                  name="mealTime" 
+                                  type="time" 
+                                  defaultValue={existingPlan?.meal_time || ''}
+                                />
+                              </div>
+                              <div>
+                                <Label>Horário Final</Label>
+                                <Input 
+                                  name="mealTimeEnd" 
+                                  type="time" 
+                                  defaultValue={existingPlan?.meal_time_end || ''}
+                                />
+                              </div>
                             </div>
                             <div>
                               <Label>Descrição da Refeição</Label>
@@ -880,8 +915,6 @@ const ProfessionalDashboard = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
-  
 
         {/* Psychology Tab */}
         <TabsContent value="psychology" className="space-y-6">
