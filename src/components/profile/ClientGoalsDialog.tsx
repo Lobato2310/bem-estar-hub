@@ -96,7 +96,7 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
       .select('*')
       .eq('client_id', user.id)
       .eq('goal_type', 'profile_config')
-      .single();
+      .maybeSingle();
 
     if (data && !error) {
       setProfile({
@@ -154,7 +154,6 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
   const handleSaveProfile = async () => {
     if (!user) return;
 
-    // Concatenate profile data into description field
     const profileData = [
       profile.goal_type,
       profile.current_weight,
@@ -163,33 +162,39 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
       profile.limitations
     ].join('|');
 
-    const { error } = await supabase
+    // Verifica se já existe uma configuração de perfil
+    const { data: existing, error: fetchError } = await supabase
       .from('client_goals')
-      .upsert({
-        client_id: user.id,
-        goal_type: 'profile_config',
-        target_value: profile.training_days_per_week ? parseFloat(profile.training_days_per_week) : null,
-        current_value: profile.training_duration_minutes ? parseFloat(profile.training_duration_minutes) : null,
-        target_date: profile.target_date || null,
-        description: profileData,
-        is_active: true
-      }, {
-        onConflict: 'client_id,goal_type'
-      });
+      .select('id')
+      .eq('client_id', user.id)
+      .eq('goal_type', 'profile_config')
+      .maybeSingle();
 
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar as configurações",
-        variant: "destructive"
-      });
+    if (fetchError) {
+      toast({ title: 'Erro', description: 'Falha ao verificar configurações existentes', variant: 'destructive' });
       return;
     }
 
-    toast({
-      title: "Sucesso",
-      description: "Configurações salvas com sucesso!"
-    });
+    const payload = {
+      client_id: user.id,
+      goal_type: 'profile_config',
+      target_value: profile.training_days_per_week ? parseFloat(profile.training_days_per_week) : null,
+      current_value: profile.training_duration_minutes ? parseFloat(profile.training_duration_minutes) : null,
+      target_date: profile.target_date || null,
+      description: profileData,
+      is_active: true,
+    };
+
+    const result = existing
+      ? await supabase.from('client_goals').update(payload).eq('id', existing.id)
+      : await supabase.from('client_goals').insert(payload);
+
+    if (result.error) {
+      toast({ title: 'Erro', description: 'Não foi possível salvar as configurações', variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Sucesso', description: 'Configurações salvas com sucesso!' });
   };
 
   const handleRemoveGoal = async (goalId: string) => {
