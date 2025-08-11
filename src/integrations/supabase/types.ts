@@ -280,36 +280,6 @@ export type Database = {
         }
         Relationships: []
       }
-      market_products: {
-        Row: {
-          category: string
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          price: number
-          updated_at: string
-        }
-        Insert: {
-          category: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          price: number
-          updated_at?: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          price?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       motivational_phrases: {
         Row: {
           client_id: string
@@ -344,6 +314,7 @@ export type Database = {
           id: string
           meal_description: string | null
           meal_time: string | null
+          meal_time_end: string | null
           meal_type: string
           observations: string | null
           professional_id: string
@@ -355,6 +326,7 @@ export type Database = {
           id?: string
           meal_description?: string | null
           meal_time?: string | null
+          meal_time_end?: string | null
           meal_type: string
           observations?: string | null
           professional_id: string
@@ -366,6 +338,7 @@ export type Database = {
           id?: string
           meal_description?: string | null
           meal_time?: string | null
+          meal_time_end?: string | null
           meal_type?: string
           observations?: string | null
           professional_id?: string

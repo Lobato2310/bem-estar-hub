@@ -6,8 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Calendar, Dumbbell, Apple, ShoppingCart, Brain, Lock, Video, Plus, Edit, Trash2, Upload } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Users, Calendar, Dumbbell, Apple, Brain, Lock, Video, Plus, Edit, Trash2, Upload } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,11 +20,12 @@ const ProfessionalDashboard = () => {
   const [clients, setClients] = useState([]);
   const [workoutPlans, setWorkoutPlans] = useState([]);
   const [nutritionPlans, setNutritionPlans] = useState([]);
-  const [marketProducts, setMarketProducts] = useState([]);
+  // removed: marketProducts state
   const [exercises, setExercises] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const exerciseNameRef = useRef<HTMLInputElement>(null);
 
   const ADMIN_PASSWORD = "MyFitLifeSistemaAdm";
 
@@ -47,7 +48,7 @@ const ProfessionalDashboard = () => {
   useEffect(() => {
     if (isAuthenticated) {
       fetchClients();
-      fetchMarketProducts();
+// removed: fetchMarketProducts();
       fetchExercises();
     }
   }, [isAuthenticated]);
@@ -110,24 +111,7 @@ const ProfessionalDashboard = () => {
     }
   };
 
-  const fetchMarketProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('market_products')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setMarketProducts(data || []);
-    } catch (error) {
-      console.error('Error fetching market products:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar produtos do mercado",
-        variant: "destructive"
-      });
-    }
-  };
+// removed: fetchMarketProducts function
 
   const fetchExercises = async () => {
     try {
@@ -234,63 +218,9 @@ const ProfessionalDashboard = () => {
     }
   };
 
-  const saveMarketProduct = async (name, price, category, description = '') => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('market_products')
-        .insert({
-          name,
-          price: parseFloat(price),
-          category,
-          description
-        });
-      
-      if (error) throw error;
-      
-      await fetchMarketProducts();
-      toast({
-        title: "Sucesso",
-        description: "Produto adicionado com sucesso!"
-      });
-    } catch (error) {
-      console.error('Error saving product:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao adicionar produto",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+// removed: saveMarketProduct
 
-  const deleteMarketProduct = async (productId) => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('market_products')
-        .delete()
-        .eq('id', productId);
-      
-      if (error) throw error;
-      
-      await fetchMarketProducts();
-      toast({
-        title: "Sucesso",
-        description: "Produto removido com sucesso!"
-      });
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao remover produto",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+// removed: deleteMarketProduct
 
   const savePsychologySession = async (sessionDate, sessionType, notes) => {
     if (!selectedClient || !user) return;
@@ -559,10 +489,6 @@ const ProfessionalDashboard = () => {
           <TabsTrigger value="nutrition" className="flex items-center space-x-2">
             <Apple className="h-4 w-4" />
             <span>Nutrição</span>
-          </TabsTrigger>
-          <TabsTrigger value="market" className="flex items-center space-x-2">
-            <ShoppingCart className="h-4 w-4" />
-            <span>Mercado</span>
           </TabsTrigger>
           <TabsTrigger value="psychology" className="flex items-center space-x-2">
             <Brain className="h-4 w-4" />
@@ -955,117 +881,7 @@ const ProfessionalDashboard = () => {
           </Card>
         </TabsContent>
 
-        {/* Market Tab */}
-        <TabsContent value="market" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerenciar Mercado e Suplementos</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Card className="bg-accent/5">
-                <CardContent className="p-4">
-                  <h3 className="font-semibold mb-2">Informações de Entrega</h3>
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Horário:</strong> Segunda à Sexta, das 09:00 às 19:00<br />
-                    <strong>Frete Grátis:</strong> Pedidos acima de R$ 150,00
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Produtos Disponíveis</h3>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Produto
-                    </Button>
-                  </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Novo Produto</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={(e) => {
-                          e.preventDefault();
-                          const form = e.target as HTMLFormElement;
-                          const formData = new FormData(form);
-                          const name = formData.get('name') as string;
-                          const price = formData.get('price') as string;
-                          const category = formData.get('category') as string;
-                          saveMarketProduct(name, price, category);
-                          form.reset();
-                        }} className="space-y-4">
-                          <div>
-                            <Label>Nome do Produto</Label>
-                            <Input name="name" placeholder="Ex: Whey Protein" required />
-                          </div>
-                          <div>
-                            <Label>Preço (R$)</Label>
-                            <Input name="price" placeholder="89.90" type="number" step="0.01" required />
-                          </div>
-                          <div>
-                            <Label>Categoria</Label>
-                            <Select name="category" required>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione a categoria" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Proteína">Proteína</SelectItem>
-                                <SelectItem value="Carboidrato">Carboidrato</SelectItem>
-                                <SelectItem value="Suplemento">Suplemento</SelectItem>
-                                <SelectItem value="Fruta">Fruta</SelectItem>
-                                <SelectItem value="Vegetal">Vegetal</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button type="submit" disabled={isLoading}>
-                            {isLoading ? "Adicionando..." : "Adicionar Produto"}
-                          </Button>
-                        </form>
-                      </DialogContent>
-                </Dialog>
-              </div>
-              
-              <div className="grid gap-4">
-                {marketProducts.map((product) => (
-                  <Card key={product.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">{product.name}</h4>
-                          <p className="text-sm text-muted-foreground">{product.category}</p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <p className="font-semibold text-primary">R$ {product.price.toFixed(2)}</p>
-                          </div>
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => deleteMarketProduct(product.id)}
-                              disabled={isLoading}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {marketProducts.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">
-                    Nenhum produto cadastrado
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+  
 
         {/* Psychology Tab */}
         <TabsContent value="psychology" className="space-y-6">
