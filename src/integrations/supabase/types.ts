@@ -77,6 +77,42 @@ export type Database = {
         }
         Relationships: []
       }
+      client_food_logs: {
+        Row: {
+          client_id: string
+          created_at: string
+          eaten_at: string
+          expires_at: string | null
+          foods: Json
+          id: string
+          meal_name: string
+          total_calories: number | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          eaten_at?: string
+          expires_at?: string | null
+          foods?: Json
+          id?: string
+          meal_name: string
+          total_calories?: number | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          eaten_at?: string
+          expires_at?: string | null
+          foods?: Json
+          id?: string
+          meal_name?: string
+          total_calories?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_goals: {
         Row: {
           client_id: string
@@ -546,6 +582,10 @@ export type Database = {
       is_professional: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      purge_expired_food_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

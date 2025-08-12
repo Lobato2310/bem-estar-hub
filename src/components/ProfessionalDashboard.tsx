@@ -22,6 +22,8 @@ const ProfessionalDashboard = () => {
   const [workoutPlans, setWorkoutPlans] = useState([]);
   const [nutritionPlans, setNutritionPlans] = useState([]);
   const [exercises, setExercises] = useState([]);
+  const [measurements, setMeasurements] = useState([]);
+  const [pendingCheckins, setPendingCheckins] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedExerciseName, setSelectedExerciseName] = useState("");
   const [isPsychUnlocked, setIsPsychUnlocked] = useState(false);
@@ -60,6 +62,8 @@ const ProfessionalDashboard = () => {
     if (selectedClient) {
       fetchWorkoutPlans();
       fetchNutritionPlans();
+      fetchMeasurements();
+      fetchPendingCheckins();
     }
   }, [selectedClient]);
 
@@ -115,6 +119,37 @@ const ProfessionalDashboard = () => {
   };
 
 // removed: fetchMarketProducts function
+
+  const fetchMeasurements = async () => {
+    if (!selectedClient) return;
+    try {
+      const { data, error } = await supabase
+        .from('client_measurements')
+        .select('*')
+        .eq('client_id', selectedClient)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setMeasurements(data || []);
+    } catch (error) {
+      console.error('Error fetching measurements:', error);
+    }
+  };
+
+  const fetchPendingCheckins = async () => {
+    if (!selectedClient) return;
+    try {
+      const { data, error } = await supabase
+        .from('client_checkins')
+        .select('*')
+        .eq('client_id', selectedClient)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setPendingCheckins(data || []);
+    } catch (error) {
+      console.error('Error fetching check-ins:', error);
+    }
+  };
 
   const fetchExercises = async () => {
     try {
@@ -353,6 +388,30 @@ const ProfessionalDashboard = () => {
     }
   };
 
+  const submitCheckinFeedback = async (checkinId: string, feedback: string) => {
+    if (!user || !selectedClient) return;
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('client_checkins')
+        .update({
+          nutritionist_feedback: feedback,
+          feedback_date: new Date().toISOString(),
+          status: 'reviewed'
+        })
+        .eq('id', checkinId)
+        .eq('client_id', selectedClient);
+      if (error) throw error;
+      toast({ title: 'Feedback enviado', description: 'O check-in foi analisado.' });
+      await fetchPendingCheckins();
+    } catch (err) {
+      console.error('Erro ao enviar feedback:', err);
+      toast({ title: 'Erro', description: 'Não foi possível enviar o feedback', variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const saveExercise = async (name, description, instructions, muscleGroup, equipment, difficultyLevel, videoFile = null) => {
     if (!user) return;
     
@@ -481,7 +540,7 @@ const ProfessionalDashboard = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="personal" className="flex items-center space-x-2">
             <Dumbbell className="h-4 w-4" />
             <span>Personal</span>
@@ -493,6 +552,10 @@ const ProfessionalDashboard = () => {
           <TabsTrigger value="nutrition" className="flex items-center space-x-2">
             <Apple className="h-4 w-4" />
             <span>Nutrição</span>
+          </TabsTrigger>
+          <TabsTrigger value="measurements" className="flex items-center space-x-2">
+            <Calendar className="h-4 w-4" />
+            <span>Medidas</span>
           </TabsTrigger>
           <TabsTrigger value="psychology" className="flex items-center space-x-2">
             <Brain className="h-4 w-4" />
@@ -831,77 +894,169 @@ const ProfessionalDashboard = () => {
               </div>
               
               {selectedClient && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {['breakfast', 'lunch', 'snack', 'dinner'].map((mealType) => {
-                    const mealNames = {
-                      breakfast: 'Café da Manhã',
-                      lunch: 'Almoço', 
-                      snack: 'Lanche',
-                      dinner: 'Jantar'
-                    };
-                    
-                    const existingPlan = nutritionPlans.find(plan => plan.meal_type === mealType);
-                    
-                    return (
-                      <Card key={mealType}>
-                        <CardHeader>
-                          <CardTitle className="text-lg">{mealNames[mealType]}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const form = e.target as HTMLFormElement;
-                            const formData = new FormData(form);
-                            const mealTime = formData.get('mealTime') as string;
-                            const mealTimeEnd = formData.get('mealTimeEnd') as string;
-                            const description = formData.get('description') as string;
-                            const observations = formData.get('observations') as string;
-                            saveNutritionPlan(mealType, mealTime, mealTimeEnd, description, observations);
-                          }} className="space-y-3">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label>Horário Início</Label>
-                                <Input 
-                                  name="mealTime" 
-                                  type="time" 
-                                  defaultValue={existingPlan?.meal_time || ''}
-                                />
-                              </div>
-                              <div>
-                                <Label>Horário Final</Label>
-                                <Input 
-                                  name="mealTimeEnd" 
-                                  type="time" 
-                                  defaultValue={existingPlan?.meal_time_end || ''}
-                                />
-                              </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Refeições</h3>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Adicionar Refeição
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Nova Refeição</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={(e) => {
+                          e.preventDefault();
+                          const form = e.target as HTMLFormElement;
+                          const formData = new FormData(form);
+                          const mealTypeName = (formData.get('mealTypeName') as string)?.trim();
+                          const mealTime = formData.get('mealTime') as string;
+                          const mealTimeEnd = formData.get('mealTimeEnd') as string;
+                          const description = formData.get('description') as string;
+                          const observations = formData.get('observations') as string;
+                          if (mealTypeName) {
+                            saveNutritionPlan(mealTypeName, mealTime, mealTimeEnd, description, observations);
+                            form.reset();
+                          }
+                        }} className="space-y-3">
+                          <div>
+                            <Label>Nome da Refeição</Label>
+                            <Input name="mealTypeName" placeholder="Ex: Lanche da manhã" required />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label>Horário Início</Label>
+                              <Input name="mealTime" type="time" />
                             </div>
                             <div>
-                              <Label>Descrição da Refeição</Label>
-                              <Textarea 
-                                name="description"
-                                placeholder={`Descreva o ${mealNames[mealType].toLowerCase()}...`}
-                                defaultValue={existingPlan?.meal_description || ''}
-                              />
+                              <Label>Horário Final</Label>
+                              <Input name="mealTimeEnd" type="time" />
                             </div>
-                            <div>
-                              <Label>Observações Nutricionais</Label>
-                              <Textarea 
-                                name="observations"
-                                placeholder="Dicas nutricionais para o dia a dia..."
-                                defaultValue={existingPlan?.observations || ''}
-                              />
-                            </div>
-                            <Button type="submit" size="sm" disabled={isLoading}>
-                              {isLoading ? "Salvando..." : "Salvar"}
-                            </Button>
-                          </form>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                          </div>
+                          <div>
+                            <Label>Descrição</Label>
+                            <Textarea name="description" placeholder="Detalhe os alimentos e porções..." />
+                          </div>
+                          <div>
+                            <Label>Observações</Label>
+                            <Textarea name="observations" placeholder="Observações e dicas..." />
+                          </div>
+                          <Button type="submit" disabled={isLoading}>
+                            {isLoading ? 'Salvando...' : 'Adicionar'}
+                          </Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {['breakfast', 'lunch', 'snack', 'dinner'].map((mealType) => {
+                      const mealNames = {
+                        breakfast: 'Café da Manhã',
+                        lunch: 'Almoço', 
+                        snack: 'Lanche',
+                        dinner: 'Jantar'
+                      } as Record<string,string>;
+                      const existingPlan = nutritionPlans.find(plan => plan.meal_type === mealType);
+                      return (
+                        <Card key={mealType}>
+                          <CardHeader>
+                            <CardTitle className="text-lg">{mealNames[mealType]}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <form onSubmit={(e) => {
+                              e.preventDefault();
+                              const form = e.target as HTMLFormElement;
+                              const formData = new FormData(form);
+                              const mealTime = formData.get('mealTime') as string;
+                              const mealTimeEnd = formData.get('mealTimeEnd') as string;
+                              const description = formData.get('description') as string;
+                              const observations = formData.get('observations') as string;
+                              saveNutritionPlan(mealType, mealTime, mealTimeEnd, description, observations);
+                            }} className="space-y-3">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Horário Início</Label>
+                                  <Input name="mealTime" type="time" defaultValue={existingPlan?.meal_time || ''} />
+                                </div>
+                                <div>
+                                  <Label>Horário Final</Label>
+                                  <Input name="mealTimeEnd" type="time" defaultValue={existingPlan?.meal_time_end || ''} />
+                                </div>
+                              </div>
+                              <div>
+                                <Label>Descrição da Refeição</Label>
+                                <Textarea name="description" placeholder={`Descreva o ${(mealNames[mealType] || mealType).toLowerCase()}...`} defaultValue={existingPlan?.meal_description || ''} />
+                              </div>
+                              <div>
+                                <Label>Observações Nutricionais</Label>
+                                <Textarea name="observations" placeholder="Dicas nutricionais para o dia a dia..." defaultValue={existingPlan?.observations || ''} />
+                              </div>
+                              <Button type="submit" size="sm" disabled={isLoading}>
+                                {isLoading ? 'Salvando...' : 'Salvar'}
+                              </Button>
+                            </form>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+
+                  {/* Outras Refeições (customizadas) */}
+                  {nutritionPlans.filter((p) => !['breakfast','lunch','snack','dinner'].includes(p.meal_type)).length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-md font-semibold">Outras Refeições</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {nutritionPlans.filter((p) => !['breakfast','lunch','snack','dinner'].includes(p.meal_type)).map((plan) => (
+                          <Card key={plan.id}>
+                            <CardHeader>
+                              <CardTitle className="text-lg">{plan.meal_type}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <form onSubmit={(e) => {
+                                e.preventDefault();
+                                const form = e.target as HTMLFormElement;
+                                const formData = new FormData(form);
+                                const mealTime = formData.get('mealTime') as string;
+                                const mealTimeEnd = formData.get('mealTimeEnd') as string;
+                                const description = formData.get('description') as string;
+                                const observations = formData.get('observations') as string;
+                                saveNutritionPlan(plan.meal_type, mealTime, mealTimeEnd, description, observations);
+                              }} className="space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <Label>Horário Início</Label>
+                                    <Input name="mealTime" type="time" defaultValue={plan.meal_time || ''} />
+                                  </div>
+                                  <div>
+                                    <Label>Horário Final</Label>
+                                    <Input name="mealTimeEnd" type="time" defaultValue={plan.meal_time_end || ''} />
+                                  </div>
+                                </div>
+                                <div>
+                                  <Label>Descrição da Refeição</Label>
+                                  <Textarea name="description" placeholder={`Descreva ${plan.meal_type.toLowerCase()}...`} defaultValue={plan.meal_description || ''} />
+                                </div>
+                                <div>
+                                  <Label>Observações Nutricionais</Label>
+                                  <Textarea name="observations" placeholder="Dicas nutricionais para o dia a dia..." defaultValue={plan.observations || ''} />
+                                </div>
+                                <Button type="submit" size="sm" disabled={isLoading}>
+                                  {isLoading ? 'Salvando...' : 'Salvar'}
+                                </Button>
+                              </form>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
+
             </CardContent>
           </Card>
         </TabsContent>
