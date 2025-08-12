@@ -41,6 +41,7 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
     video_url: ""
   });
   const [workoutDates, setWorkoutDates] = useState<Date[]>([]);
+  const [exercises, setExercises] = useState<{id: string; name: string; video_url?: string}[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -48,6 +49,12 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
       fetchWorkoutDates();
     }
   }, [user, selectedDate]);
+
+  useEffect(() => {
+    if (user) {
+      fetchExercises();
+    }
+  }, [user]);
 
   const fetchWorkoutPlans = async () => {
     if (!user || !selectedDate) return;
@@ -85,6 +92,19 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
 
     const dates = data?.map(item => new Date(item.created_at)) || [];
     setWorkoutDates(dates);
+  };
+
+  const fetchExercises = async () => {
+    const { data, error } = await supabase
+      .from('exercises')
+      .select('id,name,video_url')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching exercises:', error);
+      return;
+    }
+    setExercises(data || []);
   };
 
   const handleAddWorkout = async () => {
@@ -274,6 +294,27 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
             <DialogTitle>Adicionar Treino</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label>Selecionar da Biblioteca</Label>
+              <Select onValueChange={(val) => {
+                const ex = exercises.find(e => e.id === val);
+                setNewWorkout(prev => ({
+                  ...prev,
+                  exercise_name: ex?.name || "",
+                  video_url: ex?.video_url || prev.video_url
+                }));
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Escolha um exercício" />
+                </SelectTrigger>
+                <SelectContent>
+                  {exercises.map((ex) => (
+                    <SelectItem key={ex.id} value={ex.id}>{ex.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label>Nome do Exercício</Label>
               <Input

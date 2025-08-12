@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Dumbbell, Apple, Calculator, ShoppingCart, Brain, TrendingUp, Target, Users } from "lucide-react";
+import { Heart, Dumbbell, Apple, Calculator, Brain, TrendingUp, Target, Users } from "lucide-react";
 
 interface HomeSectionProps {
   onNavigate: (section: string) => void;
@@ -11,7 +11,6 @@ const HomeSection = ({ onNavigate }: HomeSectionProps) => {
     { id: "personal", label: "Treinar Hoje", icon: Dumbbell, color: "bg-primary" },
     { id: "nutrition", label: "Minha Dieta", icon: Apple, color: "bg-accent" },
     { id: "calories", label: "Contar Calorias", icon: Calculator, color: "bg-primary-light" },
-    { id: "market", label: "Fazer Pedido", icon: ShoppingCart, color: "bg-secondary" },
   ];
 
   const stats = [
