@@ -11,7 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { hashSync, compareSync } from "bcryptjs";
+
 
 const ProfessionalDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -39,16 +39,6 @@ const ProfessionalDashboard = () => {
         title: "Acesso liberado",
         description: "Bem-vindo ao painel administrativo profissional"
       });
-      try {
-        if (user?.id) {
-          const hashed = hashSync("psicologia123", 10);
-          await supabase
-            .from('professional_settings')
-            .upsert({ user_id: user.id, psych_password_hash: hashed }, { onConflict: 'user_id' });
-        }
-      } catch (err) {
-        console.error('Erro ao configurar senha de psicologia:', err);
-      }
     } else {
       toast({
         title: "Senha incorreta",
