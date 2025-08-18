@@ -44,21 +44,36 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
     try {
       console.log('Buscando alimentos para termo:', term);
       
-      // Buscar na tabela TACO
-      const { data: tacoFoods, error: tacoError } = await supabase
-        .from('taco_foods')
-        .select('*')
-        .ilike('alimento', `%${term}%`)
-        .limit(10);
+      // Preparar termos de busca - buscar por palavras individuais também
+      const searchTerms = term.toLowerCase().split(' ').filter(t => t.length > 1);
+      
+      // Buscar na tabela TACO com múltiplas estratégias
+      let tacoQuery = supabase.from('taco_foods').select('*');
+      
+      // Busca principal pelo termo completo
+      if (searchTerms.length === 1) {
+        tacoQuery = tacoQuery.ilike('alimento', `%${term}%`);
+      } else {
+        // Para múltiplas palavras, buscar por cada uma
+        let orConditions = searchTerms.map(t => `alimento.ilike.%${t}%`).join(',');
+        tacoQuery = tacoQuery.or(orConditions);
+      }
+      
+      const { data: tacoFoods, error: tacoError } = await tacoQuery.limit(15);
 
       console.log('TACO Foods encontrados:', tacoFoods, 'Erro:', tacoError);
 
-      // Buscar na tabela Open Foods
-      const { data: openFoods, error: openError } = await supabase
-        .from('open_foods')
-        .select('*')
-        .ilike('product_name', `%${term}%`)
-        .limit(10);
+      // Buscar na tabela Open Foods com múltiplas estratégias
+      let openQuery = supabase.from('open_foods').select('*');
+      
+      if (searchTerms.length === 1) {
+        openQuery = openQuery.ilike('product_name', `%${term}%`);
+      } else {
+        let orConditions = searchTerms.map(t => `product_name.ilike.%${t}%`).join(',');
+        openQuery = openQuery.or(orConditions);
+      }
+      
+      const { data: openFoods, error: openError } = await openQuery.limit(15);
 
       console.log('Open Foods encontrados:', openFoods, 'Erro:', openError);
 
