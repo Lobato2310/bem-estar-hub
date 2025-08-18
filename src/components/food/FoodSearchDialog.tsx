@@ -42,12 +42,16 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
 
     setLoading(true);
     try {
+      console.log('Buscando alimentos para termo:', term);
+      
       // Buscar na tabela TACO
       const { data: tacoFoods, error: tacoError } = await supabase
         .from('taco_foods')
         .select('*')
         .ilike('alimento', `%${term}%`)
         .limit(10);
+
+      console.log('TACO Foods encontrados:', tacoFoods, 'Erro:', tacoError);
 
       // Buscar na tabela Open Foods
       const { data: openFoods, error: openError } = await supabase
@@ -56,8 +60,16 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
         .ilike('product_name', `%${term}%`)
         .limit(10);
 
-      if (tacoError) throw tacoError;
-      if (openError) throw openError;
+      console.log('Open Foods encontrados:', openFoods, 'Erro:', openError);
+
+      if (tacoError) {
+        console.error('Erro TACO:', tacoError);
+        throw tacoError;
+      }
+      if (openError) {
+        console.error('Erro Open Foods:', openError);
+        throw openError;
+      }
 
       // Converter para formato unificado
       const tacoFormatted: Food[] = (tacoFoods || []).map(food => ({
