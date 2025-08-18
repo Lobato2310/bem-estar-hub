@@ -42,7 +42,18 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
 
     setLoading(true);
     try {
-      console.log('Buscando alimentos para termo:', term);
+      console.log('🔍 Buscando alimentos para termo:', term);
+      
+      // First check total counts for debugging
+      const { count: tacoCount } = await supabase
+        .from('taco_foods')
+        .select('*', { count: 'exact', head: true });
+      
+      const { count: openCount } = await supabase
+        .from('open_foods')  
+        .select('*', { count: 'exact', head: true });
+      
+      console.log(`📊 Total disponível - TACO: ${tacoCount}, Open Foods: ${openCount}`);
       
       // Melhorar busca com múltiplas estratégias
       const searchTerm = term.toLowerCase().trim();
@@ -90,7 +101,7 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
         index === self.findIndex(f => f.id === food.id)
       );
 
-      console.log('TACO Foods encontrados:', uniqueTacoFoods.length);
+      console.log('✅ TACO Foods encontrados:', uniqueTacoFoods.length);
 
       // Mesma estratégia para Open Foods
       let openQueries = [];
@@ -134,7 +145,7 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
         index === self.findIndex(f => f.id === food.id)
       );
 
-      console.log('Open Foods encontrados:', uniqueOpenFoods.length);
+      console.log('✅ Open Foods encontrados:', uniqueOpenFoods.length);
 
       // Converter para formato unificado
       const tacoFormatted: Food[] = uniqueTacoFoods.map(food => ({
@@ -181,9 +192,10 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
         return aName.length - bName.length;
       }).slice(0, 20); // Limitar a 20 resultados para performance
       
+      console.log(`🎯 Total final de resultados: ${sortedFoods.length}`);
       setFoods(sortedFoods);
     } catch (error) {
-      console.error('Erro ao buscar alimentos:', error);
+      console.error('❌ Erro ao buscar alimentos:', error);
       toast.error('Erro ao buscar alimentos');
     } finally {
       setLoading(false);
