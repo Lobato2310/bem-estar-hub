@@ -382,6 +382,66 @@ export type Database = {
         }
         Relationships: []
       }
+      open_foods: {
+        Row: {
+          barcode: string | null
+          brands: string | null
+          carbohydrates_100g: number | null
+          categories: string | null
+          created_at: string
+          energy_kcal_100g: number | null
+          fat_100g: number | null
+          fiber_100g: number | null
+          id: string
+          porcao_g: number | null
+          product_name: string
+          proteins_100g: number | null
+          salt_100g: number | null
+          saturated_fat_100g: number | null
+          sodium_100g: number | null
+          sugars_100g: number | null
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          brands?: string | null
+          carbohydrates_100g?: number | null
+          categories?: string | null
+          created_at?: string
+          energy_kcal_100g?: number | null
+          fat_100g?: number | null
+          fiber_100g?: number | null
+          id?: string
+          porcao_g?: number | null
+          product_name: string
+          proteins_100g?: number | null
+          salt_100g?: number | null
+          saturated_fat_100g?: number | null
+          sodium_100g?: number | null
+          sugars_100g?: number | null
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          brands?: string | null
+          carbohydrates_100g?: number | null
+          categories?: string | null
+          created_at?: string
+          energy_kcal_100g?: number | null
+          fat_100g?: number | null
+          fiber_100g?: number | null
+          id?: string
+          porcao_g?: number | null
+          product_name?: string
+          proteins_100g?: number | null
+          salt_100g?: number | null
+          saturated_fat_100g?: number | null
+          sodium_100g?: number | null
+          sugars_100g?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       professional_settings: {
         Row: {
           created_at: string
@@ -493,6 +553,90 @@ export type Database = {
           session_date?: string
           session_type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      taco_foods: {
+        Row: {
+          alimento: string
+          calcio_mg: number | null
+          carboidrato_g: number | null
+          cobre_mg: number | null
+          codigo: number | null
+          created_at: string
+          energia_kcal: number | null
+          ferro_mg: number | null
+          fibra_g: number | null
+          fosforo_mg: number | null
+          id: string
+          lipideos_g: number | null
+          magnesio_mg: number | null
+          manganes_mg: number | null
+          niacina_mg: number | null
+          porcao_g: number | null
+          potassio_mg: number | null
+          proteina_g: number | null
+          retinol_mcg: number | null
+          riboflavina_mg: number | null
+          sodio_mg: number | null
+          tiamina_mg: number | null
+          updated_at: string
+          vitamina_c_mg: number | null
+          zinco_mg: number | null
+        }
+        Insert: {
+          alimento: string
+          calcio_mg?: number | null
+          carboidrato_g?: number | null
+          cobre_mg?: number | null
+          codigo?: number | null
+          created_at?: string
+          energia_kcal?: number | null
+          ferro_mg?: number | null
+          fibra_g?: number | null
+          fosforo_mg?: number | null
+          id?: string
+          lipideos_g?: number | null
+          magnesio_mg?: number | null
+          manganes_mg?: number | null
+          niacina_mg?: number | null
+          porcao_g?: number | null
+          potassio_mg?: number | null
+          proteina_g?: number | null
+          retinol_mcg?: number | null
+          riboflavina_mg?: number | null
+          sodio_mg?: number | null
+          tiamina_mg?: number | null
+          updated_at?: string
+          vitamina_c_mg?: number | null
+          zinco_mg?: number | null
+        }
+        Update: {
+          alimento?: string
+          calcio_mg?: number | null
+          carboidrato_g?: number | null
+          cobre_mg?: number | null
+          codigo?: number | null
+          created_at?: string
+          energia_kcal?: number | null
+          ferro_mg?: number | null
+          fibra_g?: number | null
+          fosforo_mg?: number | null
+          id?: string
+          lipideos_g?: number | null
+          magnesio_mg?: number | null
+          manganes_mg?: number | null
+          niacina_mg?: number | null
+          porcao_g?: number | null
+          potassio_mg?: number | null
+          proteina_g?: number | null
+          retinol_mcg?: number | null
+          riboflavina_mg?: number | null
+          sodio_mg?: number | null
+          tiamina_mg?: number | null
+          updated_at?: string
+          vitamina_c_mg?: number | null
+          zinco_mg?: number | null
         }
         Relationships: []
       }

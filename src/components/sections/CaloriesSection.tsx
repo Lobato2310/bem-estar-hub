@@ -1,34 +1,168 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calculator, Plus, Search, Utensils, Clock, Target } from "lucide-react";
-import { useState } from "react";
+import { Calculator, Plus, Search, Utensils, Clock, Target, Edit } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FoodSearchDialog } from "@/components/food/FoodSearchDialog";
+import { AddMealDialog } from "@/components/food/AddMealDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Food {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number;
+  defaultPortion: number;
+  source: 'taco' | 'open';
+}
+
+interface MealFood {
+  food: Food;
+  quantity: number;
+  calculatedNutrition: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+  };
+}
+
+interface SavedMeal {
+  id: string;
+  mealType: string;
+  foods: MealFood[];
+  totalNutrition: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+  };
+  date: string;
+}
 
 const CaloriesSection = () => {
+  const { user } = useAuth();
   const [searchFood, setSearchFood] = useState("");
+  const [showFoodSearch, setShowFoodSearch] = useState(false);
+  const [showAddMeal, setShowAddMeal] = useState(false);
+  const [todayMeals, setTodayMeals] = useState<SavedMeal[]>([]);
+  const [dailyGoal, setDailyGoal] = useState(2000);
+  const [loading, setLoading] = useState(true);
 
-  const recentFoods = [
-    { name: "Peito de Frango Grelhado", calories: 231, portion: "100g" },
-    { name: "Arroz Integral", calories: 123, portion: "100g" },
-    { name: "Brócolis Cozido", calories: 34, portion: "100g" },
-    { name: "Batata Doce", calories: 86, portion: "100g" },
-    { name: "Ovo Cozido", calories: 155, portion: "unidade" },
-  ];
+  // Carregar refeições do dia atual
+  const loadTodayMeals = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data: foodLogs, error } = await supabase
+        .from('client_food_logs')
+        .select('*')
+        .eq('client_id', user.id)
+        .gte('eaten_at', `${today}T00:00:00`)
+        .lt('eaten_at', `${today}T23:59:59`)
+        .order('eaten_at', { ascending: true });
 
-  const todayMeals = [
-    {
-      meal: "Café da Manhã",
-      foods: [
-        { name: "Aveia", calories: 150, quantity: "50g" },
-        { name: "Banana", calories: 89, quantity: "1 unidade" }
-      ],
-      total: 239
+      if (error) throw error;
+
+      const meals: SavedMeal[] = (foodLogs || []).map(log => {
+        const foods = Array.isArray(log.foods) ? log.foods as any[] : [];
+        const parsedFoods: MealFood[] = foods.map(f => ({
+          food: f.food || f,
+          quantity: f.quantity || 0,
+          calculatedNutrition: f.calculatedNutrition || {
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            fiber: 0
+          }
+        }));
+
+        return {
+          id: log.id,
+          mealType: log.meal_name,
+          foods: parsedFoods,
+          totalNutrition: {
+            calories: Number(log.total_calories) || 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            fiber: 0
+          },
+          date: log.eaten_at
+        };
+      });
+
+      setTodayMeals(meals);
+    } catch (error) {
+      console.error('Erro ao carregar refeições:', error);
+      toast.error('Erro ao carregar refeições do dia');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const dailyGoal = 2000;
-  const consumedToday = todayMeals.reduce((sum, meal) => sum + meal.total, 0);
+  useEffect(() => {
+    loadTodayMeals();
+  }, [user]);
+
+  const handleAddMeal = async (meal: {
+    mealType: string;
+    foods: MealFood[];
+    totalNutrition: any;
+  }) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('client_food_logs')
+        .insert({
+          client_id: user.id,
+          meal_name: meal.mealType,
+          foods: meal.foods as any,
+          total_calories: meal.totalNutrition.calories,
+          eaten_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      // Recarregar refeições
+      loadTodayMeals();
+      toast.success('Refeição salva com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar refeição:', error);
+      toast.error('Erro ao salvar refeição');
+    }
+  };
+
+  const consumedToday = todayMeals.reduce((sum, meal) => sum + meal.totalNutrition.calories, 0);
   const remaining = dailyGoal - consumedToday;
+
+  // Calcular totais nutricionais do dia
+  const dailyNutrition = todayMeals.reduce((total, meal) => {
+    const mealNutrition = meal.foods.reduce((mealTotal, mealFood) => ({
+      protein: mealTotal.protein + mealFood.calculatedNutrition.protein,
+      carbs: mealTotal.carbs + mealFood.calculatedNutrition.carbs,
+      fat: mealTotal.fat + mealFood.calculatedNutrition.fat,
+      fiber: mealTotal.fiber + mealFood.calculatedNutrition.fiber
+    }), { protein: 0, carbs: 0, fat: 0, fiber: 0 });
+
+    return {
+      protein: total.protein + mealNutrition.protein,
+      carbs: total.carbs + mealNutrition.carbs,
+      fat: total.fat + mealNutrition.fat,
+      fiber: total.fiber + mealNutrition.fiber
+    };
+  }, { protein: 0, carbs: 0, fat: 0, fiber: 0 });
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
@@ -107,23 +241,10 @@ const CaloriesSection = () => {
           </Button>
         </div>
 
-        <div className="space-y-3">
-          <h3 className="font-medium text-foreground">Alimentos Recentes</h3>
-          {recentFoods.map((food, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-accent rounded-lg hover:bg-accent/80 transition-colors cursor-pointer">
-              <div>
-                <p className="font-medium text-foreground">{food.name}</p>
-                <p className="text-sm text-muted-foreground">{food.portion}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-foreground">{food.calories} kcal</p>
-                <Button variant="outline" size="sm">
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Button onClick={() => setShowFoodSearch(true)} className="w-full" variant="outline">
+          <Search className="h-4 w-4 mr-2" />
+          Buscar no Banco de Alimentos
+        </Button>
       </Card>
 
       {/* Refeições de hoje */}
@@ -133,18 +254,18 @@ const CaloriesSection = () => {
         {todayMeals.map((meal, index) => (
           <Card key={index} className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">{meal.meal}</h3>
-              <p className="text-lg font-bold text-primary">{meal.total} kcal</p>
+              <h3 className="text-lg font-semibold text-foreground">{meal.mealType}</h3>
+              <p className="text-lg font-bold text-primary">{meal.totalNutrition.calories} kcal</p>
             </div>
             
             <div className="space-y-2">
               {meal.foods.map((food, foodIndex) => (
                 <div key={foodIndex} className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
                   <div>
-                    <p className="text-foreground">{food.name}</p>
-                    <p className="text-sm text-muted-foreground">{food.quantity}</p>
+                    <p className="text-foreground">{food.food.name}</p>
+                    <p className="text-sm text-muted-foreground">{food.quantity}g</p>
                   </div>
-                  <p className="font-medium text-foreground">{food.calories} kcal</p>
+                  <p className="font-medium text-foreground">{food.calculatedNutrition.calories} kcal</p>
                 </div>
               ))}
             </div>
@@ -152,7 +273,10 @@ const CaloriesSection = () => {
         ))}
 
         {/* Adicionar refeição */}
-        <Card className="p-6 border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer">
+        <Card 
+          className="p-6 border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer"
+          onClick={() => setShowAddMeal(true)}
+        >
           <div className="text-center space-y-4">
             <Plus className="h-12 w-12 text-muted-foreground mx-auto" />
             <div>
