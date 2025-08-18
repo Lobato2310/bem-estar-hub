@@ -62,6 +62,7 @@ const CaloriesSection = () => {
     
     setLoading(true);
     try {
+      console.log('Carregando refeições para user:', user.id);
       const today = new Date().toISOString().split('T')[0];
       const { data: foodLogs, error } = await supabase
         .from('client_food_logs')
@@ -71,7 +72,12 @@ const CaloriesSection = () => {
         .lt('eaten_at', `${today}T23:59:59`)
         .order('eaten_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na query client_food_logs:', error);
+        throw error;
+      }
+      
+      console.log('Food logs encontrados:', foodLogs);
 
       const meals: SavedMeal[] = (foodLogs || []).map(log => {
         const foods = Array.isArray(log.foods) ? log.foods as any[] : [];
@@ -314,6 +320,22 @@ const CaloriesSection = () => {
           </div>
         </div>
       </Card>
+
+      {/* Diálogos */}
+      <FoodSearchDialog
+        open={showFoodSearch}
+        onOpenChange={setShowFoodSearch}
+        onFoodAdd={(food, quantity) => {
+          console.log('Alimento selecionado:', food, 'Quantidade:', quantity);
+          setShowFoodSearch(false);
+        }}
+      />
+
+      <AddMealDialog
+        open={showAddMeal}
+        onOpenChange={setShowAddMeal}
+        onMealAdd={handleAddMeal}
+      />
     </div>
   );
 };
