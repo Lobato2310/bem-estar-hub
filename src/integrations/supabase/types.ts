@@ -727,6 +727,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_user_professional: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       purge_expired_food_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
