@@ -1,13 +1,16 @@
 import { Card } from "@/components/ui/card";
-import { Scale, TrendingUp, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Scale, TrendingUp, Calendar, History } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import CheckinCalendar from "@/components/measurements/CheckinCalendar";
+import CheckinHistoryDialog from "@/components/measurements/CheckinHistoryDialog";
 
 const MeasurementsSection = () => {
   const [measurements, setMeasurements] = useState([]);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -164,40 +167,78 @@ const MeasurementsSection = () => {
       {/* Calendário de Check-ins */}
       <CheckinCalendar userProfile={userProfile} />
 
-      {/* Histórico de medidas */}
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Histórico de Medidas</h2>
-        {measurements.length > 0 ? (
-          <div className="space-y-3">
-            {measurements.slice(0, 5).map((measurement, index) => (
-              <div key={measurement.id} className="p-4 bg-accent/50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">
-                      {new Date(measurement.created_at).toLocaleDateString('pt-BR')}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Peso: {measurement.weight}kg | % Gordura: {measurement.body_fat_percentage || '--'}%
-                    </p>
+      {/* Histórico de medidas e check-ins */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-foreground">Histórico de Medidas</h2>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsHistoryDialogOpen(true)}
+            >
+              <History className="h-4 w-4 mr-2" />
+              Ver Histórico Completo
+            </Button>
+          </div>
+          {measurements.length > 0 ? (
+            <div className="space-y-3">
+              {measurements.slice(0, 3).map((measurement, index) => (
+                <div key={measurement.id} className="p-4 bg-accent/50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">
+                        {new Date(measurement.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Peso: {measurement.weight}kg | % Gordura: {measurement.body_fat_percentage || '--'}%
+                      </p>
+                    </div>
+                    {index === 0 && (
+                      <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
+                        Atual
+                      </span>
+                    )}
                   </div>
-                  {index === 0 && (
-                    <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
-                      Atual
-                    </span>
-                  )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Scale className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                Nenhuma medida registrada ainda. Seu nutricionista adicionará suas medidas durante as consultas.
+              </p>
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Check-ins com Fotos</h3>
+          <div className="space-y-4">
+            <div className="text-center space-y-2">
+              <Calendar className="h-8 w-8 text-primary mx-auto" />
+              <p className="font-medium">Acompanhamento Visual</p>
+              <p className="text-sm text-muted-foreground">
+                Registre seu progresso com fotos e medidas nos check-ins quinzenais
+              </p>
+            </div>
+            <Button 
+              className="w-full" 
+              onClick={() => setIsHistoryDialogOpen(true)}
+            >
+              <History className="h-4 w-4 mr-2" />
+              Ver Histórico de Check-ins
+            </Button>
           </div>
-        ) : (
-          <div className="text-center py-8">
-            <Scale className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              Nenhuma medida registrada ainda. Seu nutricionista adicionará suas medidas durante as consultas.
-            </p>
-          </div>
-        )}
-      </Card>
+        </Card>
+      </div>
+
+      {/* Dialogs */}
+      <CheckinHistoryDialog
+        open={isHistoryDialogOpen}
+        onOpenChange={setIsHistoryDialogOpen}
+      />
     </div>
   );
 };

@@ -1,46 +1,9 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award, BookOpen } from "lucide-react";
 
 const PsychologySection = () => {
-  const [unlocked, setUnlocked] = useState(false);
-  const [pwd, setPwd] = useState("");
-  const [error, setError] = useState("");
-
-  const handleUnlock = () => {
-    if (pwd === "psicologia123") {
-      setUnlocked(true);
-      setError("");
-    } else {
-      setError("Senha incorreta. Tente novamente.");
-    }
-  };
-
-  if (!unlocked) {
-    return (
-      <div className="max-w-md mx-auto mt-20 p-6">
-        <Card className="p-6 space-y-4">
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-foreground">Acesso à Psicologia</h1>
-            <p className="text-sm text-muted-foreground">Digite a senha para continuar</p>
-          </div>
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder="Senha da Psicologia"
-              value={pwd}
-              onChange={(e) => setPwd(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-            />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-          </div>
-          <Button className="w-full" onClick={handleUnlock}>Entrar</Button>
-        </Card>
-      </div>
-    );
-  }
 
   const sessions = [
     {

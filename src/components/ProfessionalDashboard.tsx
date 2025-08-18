@@ -11,6 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import ProfessionalPsychologySection from "./sections/ProfessionalPsychologySection";
 
 
 const ProfessionalDashboard = () => {
@@ -540,7 +541,7 @@ const ProfessionalDashboard = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="personal" className="flex items-center space-x-2">
             <Dumbbell className="h-4 w-4" />
             <span>Personal</span>
