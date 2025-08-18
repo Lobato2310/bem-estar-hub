@@ -1,8 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calculator, Plus, Search, Utensils, Clock, Target, Edit } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Calculator, Plus, Search, Utensils, Clock, Target, Edit, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 
 import { AddMealDialog } from "@/components/food/AddMealDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,11 +50,88 @@ interface SavedMeal {
 const CaloriesSection = () => {
   const { user } = useAuth();
   const [searchFood, setSearchFood] = useState("");
+  const [searchResults, setSearchResults] = useState<Food[]>([]);
   const [showFoodSearch, setShowFoodSearch] = useState(false);
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [todayMeals, setTodayMeals] = useState<SavedMeal[]>([]);
   const [dailyGoal, setDailyGoal] = useState(2000);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedFood, setSelectedFood] = useState<Food | null>(null);
+  const [foodQuantity, setFoodQuantity] = useState("");
+
+  // Função para buscar alimentos no banco de dados
+  const searchFoods = useCallback(async (query: string) => {
+    if (!query || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      // Busca em múltiplas tabelas de alimentos
+      const searchQueries = [];
+      
+      // Busca na tabela TACO (se existir)
+      searchQueries.push(
+        supabase
+          .from('tabela_taco') // Ajuste o nome da tabela conforme sua estrutura
+          .select('*')
+          .ilike('name', `%${query}%`)
+          .limit(10)
+      );
+
+      // Busca na tabela Open Food Facts (se existir)
+      searchQueries.push(
+        supabase
+          .from('tabela_open') // Ajuste o nome da tabela conforme sua estrutura
+          .select('*')
+          .ilike('name', `%${query}%`)
+          .limit(10)
+      );
+
+      const results = await Promise.allSettled(searchQueries);
+      const allFoods: Food[] = [];
+
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value.data) {
+          const foods = result.value.data.map((food: any) => ({
+            id: food.id,
+            alimento: food.alimento,
+            calorias: food.calorias,
+            proteina: food.proteina,
+            carboidratos: food.carboidratos,
+            gorduras: food.gorduras,
+            fibras: food.fibras,
+            defaultPortion: food.porcao,
+            source: index === 0 ? 'taco' : 'open'
+          }));
+          allFoods.push(...foods);
+        }
+      });
+
+      // Remove duplicatas baseado no nome
+      const uniqueFoods = allFoods.filter((food, index, self) => 
+        index === self.findIndex(f => f.name.toLowerCase() === food.name.toLowerCase())
+      );
+
+      setSearchResults(uniqueFoods);
+    } catch (error) {
+      console.error('Erro ao buscar alimentos:', error);
+      toast.error('Erro ao buscar alimentos');
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  // Debounce para a busca
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchFoods(searchFood);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchFood, searchFoods]);
 
   // Carregar refeições do dia atual
   const loadTodayMeals = async () => {
@@ -150,6 +227,57 @@ const CaloriesSection = () => {
     }
   };
 
+  // Adicionar alimento individual à refeição rápida
+  const handleQuickAddFood = async () => {
+    if (!selectedFood || !foodQuantity || !user) return;
+
+    const quantity = parseFloat(foodQuantity);
+    if (isNaN(quantity) || quantity <= 0) {
+      toast.error('Quantidade inválida');
+      return;
+    }
+
+    // Calcular nutrição baseada na quantidade
+    const calculatedNutrition = {
+      calories: Math.round((selectedFood.calories * quantity) / 100),
+      protein: Math.round((selectedFood.protein * quantity) / 100 * 10) / 10,
+      carbs: Math.round((selectedFood.carbs * quantity) / 100 * 10) / 10,
+      fat: Math.round((selectedFood.fat * quantity) / 100 * 10) / 10,
+      fiber: Math.round(((selectedFood.fiber || 0) * quantity) / 100 * 10) / 10
+    };
+
+    const mealFood: MealFood = {
+      food: selectedFood,
+      quantity,
+      calculatedNutrition
+    };
+
+    try {
+      const { error } = await supabase
+        .from('client_food_logs')
+        .insert({
+          client_id: user.id,
+          meal_name: 'Lanche Rápido',
+          foods: [mealFood] as any,
+          total_calories: calculatedNutrition.calories,
+          eaten_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      // Limpar seleção e recarregar
+      setSelectedFood(null);
+      setFoodQuantity("");
+      setSearchFood("");
+      setSearchResults([]);
+      loadTodayMeals();
+      toast.success('Alimento adicionado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao adicionar alimento:', error);
+      toast.error('Erro ao adicionar alimento');
+    }
+  };
+
   const consumedToday = todayMeals.reduce((sum, meal) => sum + meal.totalNutrition.calories, 0);
   const remaining = dailyGoal - consumedToday;
 
@@ -228,29 +356,127 @@ const CaloriesSection = () => {
         </div>
       </Card>
 
-      {/* Buscar alimentos */}
+      {/* Buscar e adicionar alimentos */}
       <Card className="p-6">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Adicionar Alimento</h2>
-        <div className="flex space-x-2 mb-4">
-          <div className="relative flex-1">
+        <h2 className="text-xl font-semibold text-foreground mb-4">Buscar e Adicionar Alimento</h2>
+        
+        <div className="space-y-4">
+          {/* Campo de busca */}
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Buscar alimento..."
+              placeholder="Digite o nome do alimento (ex: arroz, frango, maçã)..."
               value={searchFood}
               onChange={(e) => setSearchFood(e.target.value)}
               className="pl-10"
             />
+            {searchFood && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                onClick={() => {
+                  setSearchFood("");
+                  setSearchResults([]);
+                  setSelectedFood(null);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar
-          </Button>
+
+          {/* Loading de busca */}
+          {searchLoading && (
+            <div className="text-center py-4">
+              <p className="text-muted-foreground">Buscando alimentos...</p>
+            </div>
+          )}
+
+          {/* Resultados da busca */}
+          {searchResults.length > 0 && (
+            <div className="max-h-64 overflow-y-auto border rounded-lg">
+              {searchResults.map((food) => (
+                <div
+                  key={food.id}
+                  className={`p-3 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors ${
+                    selectedFood?.id === food.id ? 'bg-primary/10 border-primary/20' : ''
+                  }`}
+                  onClick={() => setSelectedFood(food)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-foreground">{food.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {food.calories} kcal por 100g | Proteína: {food.protein}g | Carbs: {food.carbs}g | Gordura: {food.fat}g
+                      </p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      food.source === 'taco' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {food.source === 'taco' ? 'TACO' : 'Open Food'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Alimento selecionado e quantidade */}
+          {selectedFood && (
+            <Card className="p-4 bg-primary/5 border-primary/20">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-foreground">{selectedFood.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedFood.calories} kcal | P: {selectedFood.protein}g | C: {selectedFood.carbs}g | G: {selectedFood.fat}g (por 100g)
+                  </p>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      placeholder="Quantidade em gramas"
+                      value={foodQuantity}
+                      onChange={(e) => setFoodQuantity(e.target.value)}
+                      min="1"
+                      step="1"
+                    />
+                  </div>
+                  <Button onClick={handleQuickAddFood} disabled={!foodQuantity}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar
+                  </Button>
+                </div>
+
+                {/* Preview dos valores calculados */}
+                {foodQuantity && !isNaN(parseFloat(foodQuantity)) && parseFloat(foodQuantity) > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    <p>Para {foodQuantity}g: ~{Math.round((selectedFood.calories * parseFloat(foodQuantity)) / 100)} kcal</p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {/* Estado vazio */}
+          {searchFood.length >= 2 && searchResults.length === 0 && !searchLoading && (
+            <div className="text-center py-4">
+              <p className="text-muted-foreground">Nenhum alimento encontrado para "{searchFood}"</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Tente usar termos mais simples como "arroz", "frango" ou "maçã"
+              </p>
+            </div>
+          )}
         </div>
 
-        <Button onClick={() => setShowFoodSearch(true)} className="w-full" variant="outline">
-          <Search className="h-4 w-4 mr-2" />
-          Buscar no Banco de Alimentos
-        </Button>
+        <div className="mt-6 pt-4 border-t border-border">
+          <Button onClick={() => setShowAddMeal(true)} className="w-full" variant="outline">
+            <Utensils className="h-4 w-4 mr-2" />
+            Criar Refeição Completa
+          </Button>
+        </div>
       </Card>
 
       {/* Refeições de hoje */}
@@ -278,6 +504,18 @@ const CaloriesSection = () => {
           </Card>
         ))}
 
+        {todayMeals.length === 0 && !loading && (
+          <Card className="p-6 text-center">
+            <div className="space-y-4">
+              <Utensils className="h-12 w-12 text-muted-foreground mx-auto" />
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Nenhuma refeição registrada</h3>
+                <p className="text-muted-foreground">Comece adicionando um alimento acima ou criando uma refeição completa</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Adicionar refeição */}
         <Card 
           className="p-6 border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer"
@@ -296,33 +534,39 @@ const CaloriesSection = () => {
       {/* Resumo nutricional */}
       <Card className="p-6">
         <h2 className="text-xl font-semibold text-foreground mb-4">Resumo Nutricional</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">12g</p>
+            <p className="text-2xl font-bold text-primary">{Math.round(dailyNutrition.protein)}g</p>
             <p className="text-sm text-muted-foreground">Proteínas</p>
             <div className="w-full bg-secondary rounded-full h-2">
-              <div className="bg-primary h-2 rounded-full" style={{ width: '20%' }}></div>
+              <div className="bg-primary h-2 rounded-full" style={{ width: `${Math.min((dailyNutrition.protein / 150) * 100, 100)}%` }}></div>
             </div>
           </div>
           <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">35g</p>
+            <p className="text-2xl font-bold text-primary">{Math.round(dailyNutrition.carbs)}g</p>
             <p className="text-sm text-muted-foreground">Carboidratos</p>
             <div className="w-full bg-secondary rounded-full h-2">
-              <div className="bg-primary h-2 rounded-full" style={{ width: '60%' }}></div>
+              <div className="bg-primary h-2 rounded-full" style={{ width: `${Math.min((dailyNutrition.carbs / 250) * 100, 100)}%` }}></div>
             </div>
           </div>
           <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">8g</p>
+            <p className="text-2xl font-bold text-primary">{Math.round(dailyNutrition.fat)}g</p>
             <p className="text-sm text-muted-foreground">Gorduras</p>
             <div className="w-full bg-secondary rounded-full h-2">
-              <div className="bg-primary h-2 rounded-full" style={{ width: '30%' }}></div>
+              <div className="bg-primary h-2 rounded-full" style={{ width: `${Math.min((dailyNutrition.fat / 80) * 100, 100)}%` }}></div>
+            </div>
+          </div>
+          <div className="text-center space-y-2">
+            <p className="text-2xl font-bold text-primary">{Math.round(dailyNutrition.fiber)}g</p>
+            <p className="text-sm text-muted-foreground">Fibras</p>
+            <div className="w-full bg-secondary rounded-full h-2">
+              <div className="bg-primary h-2 rounded-full" style={{ width: `${Math.min((dailyNutrition.fiber / 25) * 100, 100)}%` }}></div>
             </div>
           </div>
         </div>
       </Card>
 
       {/* Diálogos */}
-
       <AddMealDialog
         open={showAddMeal}
         onOpenChange={setShowAddMeal}
