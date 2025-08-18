@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calculator, Plus, Search, Utensils, Clock, Target, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
-import { FoodSearchDialog } from "@/components/food/FoodSearchDialog";
+
 import { AddMealDialog } from "@/components/food/AddMealDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -322,14 +322,6 @@ const CaloriesSection = () => {
       </Card>
 
       {/* Diálogos */}
-      <FoodSearchDialog
-        open={showFoodSearch}
-        onOpenChange={setShowFoodSearch}
-        onFoodAdd={(food, quantity) => {
-          console.log('Alimento selecionado:', food, 'Quantidade:', quantity);
-          setShowFoodSearch(false);
-        }}
-      />
 
       <AddMealDialog
         open={showAddMeal}

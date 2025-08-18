@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award, BookOpen } from "lucide-react";
+import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award } from "lucide-react";
+import { DailyCheckinDialog } from "@/components/psychology/DailyCheckinDialog";
+import { AchievementsDialog } from "@/components/psychology/AchievementsDialog";
 
 const PsychologySection = () => {
+  const [showCheckinDialog, setShowCheckinDialog] = useState(false);
+  const [showAchievementsDialog, setShowAchievementsDialog] = useState(false);
 
   const sessions = [
     {
@@ -164,27 +168,21 @@ const PsychologySection = () => {
             </div>
           ))}
         </div>
-        <Button variant="outline" className="w-full mt-4">
-          Registrar Hoje
-        </Button>
+          <Button 
+            variant="outline" 
+            className="w-full mt-4"
+            onClick={() => setShowCheckinDialog(true)}
+          >
+            Registrar Hoje
+          </Button>
       </Card>
 
       {/* Recursos de bem-estar */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
-          <div className="text-center space-y-4">
-            <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
-              <BookOpen className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground">Exercícios de Mindfulness</h3>
-            <p className="text-muted-foreground">Técnicas de respiração e meditação</p>
-            <Button variant="outline" className="w-full">
-              Acessar
-            </Button>
-          </div>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+      <div className="grid grid-cols-1 gap-6">
+        <Card 
+          className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+          onClick={() => setShowAchievementsDialog(true)}
+        >
           <div className="text-center space-y-4">
             <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
               <Award className="h-6 w-6 text-primary-foreground" />
@@ -220,6 +218,17 @@ const PsychologySection = () => {
           </div>
         </div>
       </Card>
+
+      {/* Dialogs */}
+      <DailyCheckinDialog
+        open={showCheckinDialog}
+        onOpenChange={setShowCheckinDialog}
+      />
+      
+      <AchievementsDialog
+        open={showAchievementsDialog}
+        onOpenChange={setShowAchievementsDialog}
+      />
     </div>
   );
 };

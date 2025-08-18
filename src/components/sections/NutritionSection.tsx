@@ -3,10 +3,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Apple, Scale, FileText, Calendar, TrendingUp, CheckCircle, Eye } from "lucide-react";
 import MealDetailsDialog from "@/components/nutrition/MealDetailsDialog";
+import { NutritionPlanDialog } from "@/components/nutrition/NutritionPlanDialog";
+import { MealHistoryDialog } from "@/components/nutrition/MealHistoryDialog";
 
 const NutritionSection = () => {
   const [showMealDialog, setShowMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState("");
+  const [showNutritionPlan, setShowNutritionPlan] = useState(false);
+  const [showMealHistory, setShowMealHistory] = useState(false);
   const nutritionServices = [
     {
       title: "Medidas",
@@ -39,6 +43,22 @@ const NutritionSection = () => {
   const handleMealClick = (mealType: string) => {
     setSelectedMealType(mealType);
     setShowMealDialog(true);
+  };
+
+  const handleServiceClick = (serviceTitle: string) => {
+    switch (serviceTitle) {
+      case "Medidas":
+        // Navegar para aba de medidas
+        const event = new CustomEvent('navigate-to-tab', { detail: 'measurements' });
+        window.dispatchEvent(event);
+        break;
+      case "Plano Alimentar":
+        setShowNutritionPlan(true);
+        break;
+      case "Acompanhamento":
+        setShowMealHistory(true);
+        break;
+    }
   };
 
   const totalCalories = todayMeals.reduce((sum, meal) => sum + meal.calories, 0);
@@ -139,7 +159,11 @@ const NutritionSection = () => {
           {nutritionServices.map((service, index) => {
             const Icon = service.icon;
             return (
-              <Card key={index} className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+              <Card 
+                key={index} 
+                className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                onClick={() => handleServiceClick(service.title)}
+              >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300">
@@ -154,7 +178,9 @@ const NutritionSection = () => {
                     <p className="text-muted-foreground">{service.description}</p>
                   </div>
                   <Button variant="outline" className="w-full">
-                    Saiba Mais
+                    {service.title === "Medidas" ? "Ir para Medidas" :
+                     service.title === "Plano Alimentar" ? "Ver Plano" : 
+                     "Ver Histórico"}
                   </Button>
                 </div>
               </Card>
@@ -185,11 +211,21 @@ const NutritionSection = () => {
         </div>
       </Card>
 
-      {/* Meal Details Dialog */}
+      {/* Dialogs */}
       <MealDetailsDialog
         isOpen={showMealDialog}
         onClose={() => setShowMealDialog(false)}
         mealType={selectedMealType}
+      />
+      
+      <NutritionPlanDialog
+        open={showNutritionPlan}
+        onOpenChange={setShowNutritionPlan}
+      />
+      
+      <MealHistoryDialog
+        open={showMealHistory}
+        onOpenChange={setShowMealHistory}
       />
     </div>
   );
