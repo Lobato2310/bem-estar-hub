@@ -496,6 +496,45 @@ export type Database = {
         }
         Relationships: []
       }
+      taco: {
+        Row: {
+          alimento: string
+          calorias: number
+          carboidrato: number
+          created_at: string
+          fibras: number
+          gorduras: number
+          id: string
+          proteina: number
+          sodio: number
+          updated_at: string
+        }
+        Insert: {
+          alimento: string
+          calorias?: number
+          carboidrato?: number
+          created_at?: string
+          fibras?: number
+          gorduras?: number
+          id?: string
+          proteina?: number
+          sodio?: number
+          updated_at?: string
+        }
+        Update: {
+          alimento?: string
+          calorias?: number
+          carboidrato?: number
+          created_at?: string
+          fibras?: number
+          gorduras?: number
+          id?: string
+          proteina?: number
+          sodio?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       workout_plans: {
         Row: {
           client_id: string

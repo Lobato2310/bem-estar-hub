@@ -33,7 +33,6 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
   const [quantity, setQuantity] = useState(100);
   const [loading, setLoading] = useState(false);
 
-  // Temporariamente desabilitado - aguardando criação da tabela taco
   const searchFoods = async (term: string) => {
     if (!term || term.length < 2) {
       setFoods([]);
@@ -42,11 +41,90 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
 
     setLoading(true);
     try {
-      console.log('⚠️ Busca temporariamente desabilitada - tabela taco não encontrada no banco');
-      toast.error('Funcionalidade temporariamente indisponível');
-      setFoods([]);
+      console.log('🔍 Buscando alimentos para termo:', term);
+      
+      // Buscar na tabela TACO com múltiplas estratégias
+      const searchTerm = term.toLowerCase().trim();
+      const words = searchTerm.split(' ').filter(w => w.length > 1);
+      
+      let queries = [];
+      
+      // 1. Busca exata (termo completo)
+      queries.push(
+        supabase.from('taco')
+          .select('*')
+          .ilike('alimento', `%${searchTerm}%`)
+          .limit(10)
+      );
+      
+      // 2. Busca por palavras individuais se houver múltiplas palavras
+      if (words.length > 1) {
+        for (const word of words) {
+          if (word.length >= 3) {
+            queries.push(
+              supabase.from('taco')
+                .select('*')
+                .ilike('alimento', `%${word}%`)
+                .limit(8)
+            );
+          }
+        }
+      }
+      
+      // 3. Busca com prefixo
+      queries.push(
+        supabase.from('taco')
+          .select('*')
+          .ilike('alimento', `${searchTerm}%`)
+          .limit(5)
+      );
+      
+      // Executar todas as queries
+      const results = await Promise.all(queries);
+      const allFoods = results.flatMap(result => result.data || []);
+      
+      // Remover duplicatas por ID
+      const uniqueFoods = allFoods.filter((food, index, self) => 
+        index === self.findIndex(f => f.id === food.id)
+      );
+
+      console.log('✅ Alimentos encontrados:', uniqueFoods.length);
+
+      // Converter para formato unificado
+      const formattedFoods: Food[] = uniqueFoods.map(food => ({
+        id: food.id,
+        name: food.alimento,
+        calories: Number(food.calorias) || 0,
+        protein: Number(food.proteina) || 0,
+        carbs: Number(food.carboidrato) || 0,
+        fat: Number(food.gorduras) || 0,
+        fiber: Number(food.fibras) || 0,
+        defaultPortion: 100, // padrão de 100g
+        source: 'taco'
+      }));
+      
+      // Ordenar por relevância
+      const sortedFoods = formattedFoods.sort((a, b) => {
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
+        
+        // Priorizar resultados que começam com o termo de busca
+        const aStarts = aName.startsWith(searchLower);
+        const bStarts = bName.startsWith(searchLower);
+        
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        
+        // Depois priorizar por comprimento (nomes menores primeiro)
+        return aName.length - bName.length;
+      }).slice(0, 20); // Limitar a 20 resultados
+      
+      console.log(`🎯 Total final de resultados: ${sortedFoods.length}`);
+      setFoods(sortedFoods);
     } catch (error) {
-      console.error('❌ Erro:', error);
+      console.error('❌ Erro ao buscar alimentos:', error);
+      toast.error('Erro ao buscar alimentos');
     } finally {
       setLoading(false);
     }
