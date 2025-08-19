@@ -122,6 +122,36 @@ export type Database = {
         }
         Relationships: []
       }
+      client_reports: {
+        Row: {
+          client_id: string
+          created_at: string
+          generated_at: string
+          id: string
+          professional_id: string
+          report_data: Json | null
+          report_type: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          professional_id: string
+          report_data?: Json | null
+          report_type: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          professional_id?: string
+          report_data?: Json | null
+          report_type?: string
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           category: string | null
@@ -149,6 +179,30 @@ export type Database = {
           instructions?: string | null
           muscle_groups?: string[] | null
           name?: string
+        }
+        Relationships: []
+      }
+      motivational_phrases: {
+        Row: {
+          author: string | null
+          category: string | null
+          created_at: string
+          id: string
+          phrase: string
+        }
+        Insert: {
+          author?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          phrase: string
+        }
+        Update: {
+          author?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          phrase?: string
         }
         Relationships: []
       }
@@ -263,6 +317,81 @@ export type Database = {
           updated_at?: string
           user_id?: string
           user_type?: string | null
+        }
+        Relationships: []
+      }
+      psychology_goals: {
+        Row: {
+          client_id: string
+          created_at: string
+          goal_description: string | null
+          goal_title: string
+          id: string
+          professional_id: string
+          progress: number | null
+          status: string | null
+          target_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          goal_description?: string | null
+          goal_title: string
+          id?: string
+          professional_id: string
+          progress?: number | null
+          status?: string | null
+          target_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          goal_description?: string | null
+          goal_title?: string
+          id?: string
+          professional_id?: string
+          progress?: number | null
+          status?: string | null
+          target_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      psychology_sessions: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          mood_after: number | null
+          mood_before: number | null
+          professional_id: string
+          session_date: string
+          session_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          professional_id: string
+          session_date: string
+          session_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          professional_id?: string
+          session_date?: string
+          session_notes?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
