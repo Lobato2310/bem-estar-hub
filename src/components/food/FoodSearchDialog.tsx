@@ -43,12 +43,12 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
     try {
       console.log('🔍 Buscando alimentos para termo:', term);
       
-      // Buscar na tabela TACO com múltiplas estratégias
       const searchTerm = term.toLowerCase().trim();
       const words = searchTerm.split(' ').filter(w => w.length > 1);
       
       let queries = [];
       
+      // BUSCAR NA TABELA TACO
       // 1. Busca exata (termo completo)
       queries.push(
         supabase.from('taco')
@@ -78,30 +78,95 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
           .ilike('alimento', `${searchTerm}%`)
           .limit(5)
       );
+
+      // BUSCAR NA TABELA OPEN
+      // 1. Busca exata (termo completo)
+      queries.push(
+        supabase.from('open')
+          .select('*')
+          .ilike('alimento', `%${searchTerm}%`)
+          .limit(10)
+      );
+      
+      // 2. Busca por palavras individuais se houver múltiplas palavras
+      if (words.length > 1) {
+        for (const word of words) {
+          if (word.length >= 3) {
+            queries.push(
+              supabase.from('open')
+                .select('*')
+                .ilike('alimento', `%${word}%`)
+                .limit(8)
+            );
+          }
+        }
+      }
+      
+      // 3. Busca com prefixo
+      queries.push(
+        supabase.from('open')
+          .select('*')
+          .ilike('alimento', `${searchTerm}%`)
+          .limit(5)
+      );
       
       // Executar todas as queries
       const results = await Promise.all(queries);
       const allFoods = results.flatMap(result => result.data || []);
       
-      // Remover duplicatas por ID
+      // Remover duplicatas por ID e fonte
       const uniqueFoods = allFoods.filter((food, index, self) => 
-        index === self.findIndex(f => f.id === food.id)
+        index === self.findIndex(f => f.id === food.id && 
+          (f.hasOwnProperty('carboidrato') === food.hasOwnProperty('carboidrato')))
       );
 
       console.log('✅ Alimentos encontrados:', uniqueFoods.length);
 
       // Converter para formato unificado
-      const formattedFoods: Food[] = uniqueFoods.map(food => ({
-        id: food.id,
-        name: food.alimento,
-        calories: Number(food.calorias) || 0,
-        protein: Number(food.proteina) || 0,
-        carbs: Number(food.carboidrato) || 0,
-        fat: Number(food.gorduras) || 0,
-        fiber: Number(food.fibras) || 0,
-        defaultPortion: 100, // padrão de 100g
-        source: 'taco'
-      }));
+      const formattedFoods: Food[] = uniqueFoods.map(food => {
+        // Determinar se é da tabela TACO ou OPEN baseado nas colunas
+        const isTaco = food.hasOwnProperty('carboidrato');
+        const isOpen = food.hasOwnProperty('carboidratos');
+        
+        if (isTaco) {
+          return {
+            id: `taco_${food.id}`,
+            name: food.alimento,
+            calories: Number(food.calorias) || 0,
+            protein: Number(food.proteina) || 0,
+            carbs: Number(food.carboidrato) || 0,
+            fat: Number(food.gorduras) || 0,
+            fiber: Number(food.fibras) || 0,
+            defaultPortion: 100,
+            source: 'taco' as const
+          };
+        } else if (isOpen) {
+          return {
+            id: `open_${food.id}`,
+            name: food.alimento,
+            calories: Number(food.calorias) || 0,
+            protein: Number(food.proteina) || 0,
+            carbs: Number(food.carboidratos) || 0,
+            fat: Number(food.gorduras) || 0,
+            fiber: Number(food.fibras) || 0,
+            defaultPortion: Number(food.porcao?.replace(/\D/g, '')) || 100,
+            source: 'open' as const
+          };
+        } else {
+          // Fallback para estrutura desconhecida
+          return {
+            id: `unknown_${food.id}`,
+            name: food.alimento || 'Alimento desconhecido',
+            calories: Number(food.calorias) || 0,
+            protein: Number(food.proteina) || 0,
+            carbs: Number(food.carboidratos || food.carboidrato) || 0,
+            fat: Number(food.gorduras) || 0,
+            fiber: Number(food.fibras) || 0,
+            defaultPortion: 100,
+            source: 'open' as const
+          };
+        }
+      });
       
       // Ordenar por relevância
       const sortedFoods = formattedFoods.sort((a, b) => {

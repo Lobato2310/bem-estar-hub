@@ -228,18 +228,6 @@ const CaloriesSection = () => {
         </div>
       </Card>
 
-      {/* Adicionar Refeição */}
-      <Card className="p-6">
-        <div className="text-center space-y-4">
-          <Button onClick={() => setShowAddMeal(true)} className="w-full" size="lg">
-            <Utensils className="h-4 w-4 mr-2" />
-            Adicionar Refeição
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            Clique para adicionar uma nova refeição com múltiplos alimentos
-          </p>
-        </div>
-      </Card>
 
       {/* Refeições de hoje */}
       <div className="space-y-6">
