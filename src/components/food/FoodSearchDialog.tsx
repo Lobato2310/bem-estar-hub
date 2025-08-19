@@ -46,77 +46,48 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
       const searchTerm = term.toLowerCase().trim();
       console.log('🎯 Termo processado:', searchTerm);
       
-      // TESTE SIMPLES - APENAS UMA QUERY POR VEZ
-      console.log('🧪 Testando query simples na tabela TACO...');
-      
-      const { data: tacoData, error: tacoError } = await supabase
-        .from('taco')
-        .select('*')
-        .ilike('alimento', `%${searchTerm}%`)
-        .limit(5);
+      // Busca simples e direta
+      const [tacoResult, openResult] = await Promise.all([
+        supabase
+          .from('taco')
+          .select('*')
+          .ilike('alimento', `%${searchTerm}%`)
+          .limit(10),
+        supabase
+          .from('open')
+          .select('*')
+          .ilike('alimento', `%${searchTerm}%`)
+          .limit(10)
+      ]);
       
       console.log('📊 Resultado TACO:', {
-        data: tacoData?.length || 0,
-        error: tacoError?.message || 'nenhum erro',
-        primeiros3: tacoData?.slice(0, 3)?.map(item => ({
-          id: item.id,
-          alimento: item.alimento,
-          calorias: item.calorias
-        })) || []
+        data: tacoResult.data?.length || 0,
+        error: tacoResult.error?.message || 'nenhum erro'
       });
 
-      console.log('🧪 Testando query simples na tabela OPEN...');
-      
-      const { data: openData, error: openError } = await supabase
-        .from('open')
-        .select('*')
-        .ilike('alimento', `%${searchTerm}%`)
-        .limit(5);
-      
       console.log('📊 Resultado OPEN:', {
-        data: openData?.length || 0,
-        error: openError?.message || 'nenhum erro',
-        primeiros3: openData?.slice(0, 3)?.map(item => ({
-          id: item.id,
-          alimento: item.alimento,
-          calorias: item.calorias
-        })) || []
+        data: openResult.data?.length || 0,
+        error: openResult.error?.message || 'nenhum erro'
       });
+
+      if (tacoResult.error) {
+        console.error('❌ Erro TACO:', tacoResult.error);
+      }
+      
+      if (openResult.error) {
+        console.error('❌ Erro OPEN:', openResult.error);
+      }
 
       // Combinar resultados
-      const allFoods = [...(tacoData || []), ...(openData || [])];
-      console.log('🥘 Total de alimentos combinados:', allFoods.length);
+      const allFoods = [
+        ...(tacoResult.data || []),
+        ...(openResult.data || [])
+      ];
       
-      if (allFoods.length === 0) {
-        console.log('❌ NENHUM resultado encontrado - debugando...');
-        
-        // Teste direto
-        console.log('🔬 Testando query mais específica...');
-        const { data: testData, error: testError } = await supabase
-          .from('taco')
-          .select('id, alimento, calorias')
-          .limit(3);
-        
-        console.log('🔬 Teste básico TACO:', {
-          success: !testError,
-          count: testData?.length || 0,
-          error: testError?.message,
-          sample: testData
-        });
-        
-        setFoods([]);
-        return;
-      }
+      console.log('🥘 Total de alimentos combinados:', allFoods.length);
 
       // Converter para formato unificado
       const formattedFoods: Food[] = allFoods.map((food: any) => {
-        console.log('🔄 Processando alimento:', {
-          id: food.id,
-          alimento: food.alimento,
-          temCarboidrato: food.hasOwnProperty('carboidrato'),
-          temCarboidratos: food.hasOwnProperty('carboidratos')
-        });
-        
         // Verificar estrutura da tabela TACO (coluna carboidrato)
         if (food.hasOwnProperty('carboidrato')) {
           return {
@@ -147,7 +118,7 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
           };
         }
         
-        // Fallback - assumir TACO se não conseguir identificar
+        // Fallback
         return {
           id: `fallback_${food.id}`,
           name: food.alimento || 'Alimento desconhecido',
@@ -161,10 +132,26 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
         };
       });
       
-      console.log(`✅ Alimentos formatados: ${formattedFoods.length}`);
-      console.log('📋 Primeiros 3 alimentos formatados:', formattedFoods.slice(0, 3));
+      // Ordenar por relevância
+      const sortedFoods = formattedFoods.sort((a, b) => {
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
+        
+        // Priorizar resultados que começam com o termo de busca
+        const aStarts = aName.startsWith(searchLower);
+        const bStarts = bName.startsWith(searchLower);
+        
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        
+        // Depois priorizar por comprimento (nomes menores primeiro)
+        return aName.length - bName.length;
+      }).slice(0, 20); // Limitar a 20 resultados
       
-      setFoods(formattedFoods);
+      console.log(`✅ Alimentos formatados e ordenados: ${sortedFoods.length}`);
+      setFoods(sortedFoods);
+      
     } catch (error) {
       console.error('❌ ERRO FATAL ao buscar alimentos:', error);
       toast.error('Erro ao buscar alimentos');
