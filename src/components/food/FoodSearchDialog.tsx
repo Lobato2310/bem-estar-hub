@@ -111,8 +111,22 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
       );
       
       // Executar todas as queries
+      console.log('📊 Executando', queries.length, 'queries');
       const results = await Promise.all(queries);
-      const allFoods = results.flatMap(result => result.data || []);
+      console.log('📈 Resultados das queries:', results.map(r => ({ 
+        data: r.data?.length || 0, 
+        error: r.error?.message || 'ok' 
+      })));
+      
+      const allFoods = results.flatMap(result => {
+        if (result.error) {
+          console.error('❌ Erro na query:', result.error);
+          return [];
+        }
+        return result.data || [];
+      });
+      
+      console.log('🥘 Total de alimentos antes de filtrar duplicatas:', allFoods.length);
       
       // Remover duplicatas por ID e fonte
       const uniqueFoods = allFoods.filter((food, index, self) => 
@@ -120,15 +134,21 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
           (f.hasOwnProperty('carboidrato') === food.hasOwnProperty('carboidrato')))
       );
 
-      console.log('✅ Alimentos encontrados:', uniqueFoods.length);
+      console.log('✅ Alimentos únicos encontrados:', uniqueFoods.length);
 
       // Converter para formato unificado
-      const formattedFoods: Food[] = uniqueFoods.map(food => {
-        // Determinar se é da tabela TACO ou OPEN baseado nas colunas
-        const isTaco = food.hasOwnProperty('carboidrato');
-        const isOpen = food.hasOwnProperty('carboidratos');
+      const formattedFoods: Food[] = uniqueFoods.map((food, index) => {
+        console.log(`🔍 Processando alimento ${index + 1}:`, {
+          id: food.id,
+          alimento: food.alimento,
+          hasCarb: food.hasOwnProperty('carboidrato'),
+          hasCarbs: food.hasOwnProperty('carboidratos'),
+          allKeys: Object.keys(food)
+        });
         
-        if (isTaco) {
+        // Verificar estrutura da tabela TACO (coluna carboidrato)
+        if (food.hasOwnProperty('carboidrato')) {
+          console.log('✅ Identificado como TACO:', food.alimento);
           return {
             id: `taco_${food.id}`,
             name: food.alimento,
@@ -140,7 +160,11 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
             defaultPortion: 100,
             source: 'taco' as const
           };
-        } else if (isOpen) {
+        }
+        
+        // Verificar estrutura da tabela OPEN (coluna carboidratos)
+        if (food.hasOwnProperty('carboidratos')) {
+          console.log('✅ Identificado como OPEN:', food.alimento);
           return {
             id: `open_${food.id}`,
             name: food.alimento,
@@ -149,23 +173,24 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
             carbs: Number(food.carboidratos) || 0,
             fat: Number(food.gorduras) || 0,
             fiber: Number(food.fibras) || 0,
-            defaultPortion: Number(food.porcao?.replace(/\D/g, '')) || 100,
-            source: 'open' as const
-          };
-        } else {
-          // Fallback para estrutura desconhecida
-          return {
-            id: `unknown_${food.id}`,
-            name: food.alimento || 'Alimento desconhecido',
-            calories: Number(food.calorias) || 0,
-            protein: Number(food.proteina) || 0,
-            carbs: Number(food.carboidratos || food.carboidrato) || 0,
-            fat: Number(food.gorduras) || 0,
-            fiber: Number(food.fibras) || 0,
-            defaultPortion: 100,
+            defaultPortion: Number(food.porcao?.toString().replace(/\D/g, '')) || 100,
             source: 'open' as const
           };
         }
+        
+        // Fallback - assumir TACO se não conseguir identificar
+        console.log('⚠️ Estrutura não identificada, assumindo TACO:', food.alimento);
+        return {
+          id: `fallback_${food.id}`,
+          name: food.alimento || 'Alimento desconhecido',
+          calories: Number(food.calorias) || 0,
+          protein: Number(food.proteina) || 0,
+          carbs: Number(food.carboidrato || food.carboidratos) || 0,
+          fat: Number(food.gorduras) || 0,
+          fiber: Number(food.fibras) || 0,
+          defaultPortion: 100,
+          source: 'taco' as const
+        };
       });
       
       // Ordenar por relevância
