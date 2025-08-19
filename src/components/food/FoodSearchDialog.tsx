@@ -41,114 +41,84 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
 
     setLoading(true);
     try {
-      console.log('🔍 Buscando alimentos para termo:', term);
+      console.log('🔍 INICIANDO busca para termo:', term);
       
       const searchTerm = term.toLowerCase().trim();
-      const words = searchTerm.split(' ').filter(w => w.length > 1);
+      console.log('🎯 Termo processado:', searchTerm);
       
-      let queries = [];
+      // TESTE SIMPLES - APENAS UMA QUERY POR VEZ
+      console.log('🧪 Testando query simples na tabela TACO...');
       
-      // BUSCAR NA TABELA TACO
-      // 1. Busca exata (termo completo)
-      queries.push(
-        supabase.from('taco')
-          .select('*')
-          .ilike('alimento', `%${searchTerm}%`)
-          .limit(10)
-      );
+      const { data: tacoData, error: tacoError } = await supabase
+        .from('taco')
+        .select('*')
+        .ilike('alimento', `%${searchTerm}%`)
+        .limit(5);
       
-      // 2. Busca por palavras individuais se houver múltiplas palavras
-      if (words.length > 1) {
-        for (const word of words) {
-          if (word.length >= 3) {
-            queries.push(
-              supabase.from('taco')
-                .select('*')
-                .ilike('alimento', `%${word}%`)
-                .limit(8)
-            );
-          }
-        }
-      }
-      
-      // 3. Busca com prefixo
-      queries.push(
-        supabase.from('taco')
-          .select('*')
-          .ilike('alimento', `${searchTerm}%`)
-          .limit(5)
-      );
-
-      // BUSCAR NA TABELA OPEN
-      // 1. Busca exata (termo completo)
-      queries.push(
-        supabase.from('open')
-          .select('*')
-          .ilike('alimento', `%${searchTerm}%`)
-          .limit(10)
-      );
-      
-      // 2. Busca por palavras individuais se houver múltiplas palavras
-      if (words.length > 1) {
-        for (const word of words) {
-          if (word.length >= 3) {
-            queries.push(
-              supabase.from('open')
-                .select('*')
-                .ilike('alimento', `%${word}%`)
-                .limit(8)
-            );
-          }
-        }
-      }
-      
-      // 3. Busca com prefixo
-      queries.push(
-        supabase.from('open')
-          .select('*')
-          .ilike('alimento', `${searchTerm}%`)
-          .limit(5)
-      );
-      
-      // Executar todas as queries
-      console.log('📊 Executando', queries.length, 'queries');
-      const results = await Promise.all(queries);
-      console.log('📈 Resultados das queries:', results.map(r => ({ 
-        data: r.data?.length || 0, 
-        error: r.error?.message || 'ok' 
-      })));
-      
-      const allFoods = results.flatMap(result => {
-        if (result.error) {
-          console.error('❌ Erro na query:', result.error);
-          return [];
-        }
-        return result.data || [];
+      console.log('📊 Resultado TACO:', {
+        data: tacoData?.length || 0,
+        error: tacoError?.message || 'nenhum erro',
+        primeiros3: tacoData?.slice(0, 3)?.map(item => ({
+          id: item.id,
+          alimento: item.alimento,
+          calorias: item.calorias
+        })) || []
       });
-      
-      console.log('🥘 Total de alimentos antes de filtrar duplicatas:', allFoods.length);
-      
-      // Remover duplicatas por ID e fonte
-      const uniqueFoods = allFoods.filter((food, index, self) => 
-        index === self.findIndex(f => f.id === food.id && 
-          (f.hasOwnProperty('carboidrato') === food.hasOwnProperty('carboidrato')))
-      );
 
-      console.log('✅ Alimentos únicos encontrados:', uniqueFoods.length);
+      console.log('🧪 Testando query simples na tabela OPEN...');
+      
+      const { data: openData, error: openError } = await supabase
+        .from('open')
+        .select('*')
+        .ilike('alimento', `%${searchTerm}%`)
+        .limit(5);
+      
+      console.log('📊 Resultado OPEN:', {
+        data: openData?.length || 0,
+        error: openError?.message || 'nenhum erro',
+        primeiros3: openData?.slice(0, 3)?.map(item => ({
+          id: item.id,
+          alimento: item.alimento,
+          calorias: item.calorias
+        })) || []
+      });
+
+      // Combinar resultados
+      const allFoods = [...(tacoData || []), ...(openData || [])];
+      console.log('🥘 Total de alimentos combinados:', allFoods.length);
+      
+      if (allFoods.length === 0) {
+        console.log('❌ NENHUM resultado encontrado - debugando...');
+        
+        // Teste direto
+        console.log('🔬 Testando query mais específica...');
+        const { data: testData, error: testError } = await supabase
+          .from('taco')
+          .select('id, alimento, calorias')
+          .limit(3);
+        
+        console.log('🔬 Teste básico TACO:', {
+          success: !testError,
+          count: testData?.length || 0,
+          error: testError?.message,
+          sample: testData
+        });
+        
+        setFoods([]);
+        return;
+      }
 
       // Converter para formato unificado
-      const formattedFoods: Food[] = uniqueFoods.map((food, index) => {
-        console.log(`🔍 Processando alimento ${index + 1}:`, {
+      const formattedFoods: Food[] = allFoods.map((food: any) => {
+        console.log('🔄 Processando alimento:', {
           id: food.id,
           alimento: food.alimento,
-          hasCarb: food.hasOwnProperty('carboidrato'),
-          hasCarbs: food.hasOwnProperty('carboidratos'),
-          allKeys: Object.keys(food)
+          temCarboidrato: food.hasOwnProperty('carboidrato'),
+          temCarboidratos: food.hasOwnProperty('carboidratos')
         });
         
         // Verificar estrutura da tabela TACO (coluna carboidrato)
         if (food.hasOwnProperty('carboidrato')) {
-          console.log('✅ Identificado como TACO:', food.alimento);
           return {
             id: `taco_${food.id}`,
             name: food.alimento,
@@ -164,7 +134,6 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
         
         // Verificar estrutura da tabela OPEN (coluna carboidratos)
         if (food.hasOwnProperty('carboidratos')) {
-          console.log('✅ Identificado como OPEN:', food.alimento);
           return {
             id: `open_${food.id}`,
             name: food.alimento,
@@ -179,7 +148,6 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
         }
         
         // Fallback - assumir TACO se não conseguir identificar
-        console.log('⚠️ Estrutura não identificada, assumindo TACO:', food.alimento);
         return {
           id: `fallback_${food.id}`,
           name: food.alimento || 'Alimento desconhecido',
@@ -193,27 +161,12 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
         };
       });
       
-      // Ordenar por relevância
-      const sortedFoods = formattedFoods.sort((a, b) => {
-        const aName = a.name.toLowerCase();
-        const bName = b.name.toLowerCase();
-        const searchLower = searchTerm.toLowerCase();
-        
-        // Priorizar resultados que começam com o termo de busca
-        const aStarts = aName.startsWith(searchLower);
-        const bStarts = bName.startsWith(searchLower);
-        
-        if (aStarts && !bStarts) return -1;
-        if (!aStarts && bStarts) return 1;
-        
-        // Depois priorizar por comprimento (nomes menores primeiro)
-        return aName.length - bName.length;
-      }).slice(0, 20); // Limitar a 20 resultados
+      console.log(`✅ Alimentos formatados: ${formattedFoods.length}`);
+      console.log('📋 Primeiros 3 alimentos formatados:', formattedFoods.slice(0, 3));
       
-      console.log(`🎯 Total final de resultados: ${sortedFoods.length}`);
-      setFoods(sortedFoods);
+      setFoods(formattedFoods);
     } catch (error) {
-      console.error('❌ Erro ao buscar alimentos:', error);
+      console.error('❌ ERRO FATAL ao buscar alimentos:', error);
       toast.error('Erro ao buscar alimentos');
     } finally {
       setLoading(false);
