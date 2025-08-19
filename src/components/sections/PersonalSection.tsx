@@ -51,18 +51,9 @@ const PersonalSection = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('workout_sessions')
-        .insert({
-          client_id: user.id,
-          start_time: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setCurrentWorkoutSession(data.id);
+      // For now, use local state since workout_sessions table doesn't exist
+      const sessionId = Date.now().toString();
+      setCurrentWorkoutSession(sessionId);
       setIsWorkoutActive(true);
       toast({
         title: "Treino iniciado!",
@@ -93,18 +84,12 @@ const PersonalSection = () => {
     if (!currentWorkoutSession) return;
 
     try {
-      const { error } = await supabase
-        .from('workout_sessions')
-        .update({
-          end_time: new Date().toISOString(),
-          duration_minutes: Math.round(workoutDuration / 60),
-          intensity_level: feedback.intensityLevel,
-          difficulty_level: feedback.difficultyLevel,
-          notes: feedback.notes
-        })
-        .eq('id', currentWorkoutSession);
-
-      if (error) throw error;
+      // For now, just store locally since workout_sessions table doesn't exist
+      localStorage.setItem(`workout_${currentWorkoutSession}`, JSON.stringify({
+        endTime: new Date().toISOString(),
+        duration: Math.round(workoutDuration / 60),
+        ...feedback
+      }));
 
       setIsWorkoutActive(false);
       setCurrentWorkoutSession(null);
@@ -146,18 +131,9 @@ const PersonalSection = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('exercise_logs')
-        .insert({
-          workout_session_id: currentWorkoutSession,
-          exercise_name: data.exerciseName,
-          sets_completed: data.sets,
-          weight_used: data.weight,
-          reps_completed: data.reps,
-          notes: data.notes
-        });
-
-      if (error) throw error;
+      // For now, store in local storage since exercise_logs table doesn't exist
+      const exerciseKey = `exercise_${currentWorkoutSession}_${Date.now()}`;
+      localStorage.setItem(exerciseKey, JSON.stringify(data));
 
       toast({
         title: "Exercício registrado!",

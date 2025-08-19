@@ -15,13 +15,17 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface WorkoutPlan {
+// Use the actual database schema from workout_plans table
+type WorkoutPlan = {
   id: string;
-  exercise_name: string;
-  sets: string;
-  video_url?: string;
-  video_file_path?: string;
+  client_id: string;
+  professional_id: string;
+  name: string;
+  description: string | null;
+  exercises: any; // JsonB type
+  status: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface WorkoutCalendarProps {
@@ -36,12 +40,12 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newWorkout, setNewWorkout] = useState({
-    exercise_name: "",
-    sets: "",
-    video_url: ""
+    name: "",
+    description: "",
+    exercises: ""
   });
   const [workoutDates, setWorkoutDates] = useState<Date[]>([]);
-  const [exercises, setExercises] = useState<{id: string; name: string; video_url?: string}[]>([]);
+  const [exercises, setExercises] = useState<{id: string; name: string}[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -97,7 +101,7 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
   const fetchExercises = async () => {
     const { data, error } = await supabase
       .from('exercises')
-      .select('id,name,video_url')
+      .select('id,name')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -108,7 +112,7 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
   };
 
   const handleAddWorkout = async () => {
-    if (!user || !selectedDate || !newWorkout.exercise_name || !newWorkout.sets) {
+    if (!user || !selectedDate || !newWorkout.name) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -122,9 +126,9 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
       .insert({
         client_id: user.id,
         professional_id: user.id, // For now, clients can add their own workouts
-        exercise_name: newWorkout.exercise_name,
-        sets: newWorkout.sets,
-        video_url: newWorkout.video_url || null,
+        name: newWorkout.name,
+        description: newWorkout.description,
+        exercises: { exercises: newWorkout.exercises },
         created_at: selectedDate.toISOString()
       });
 
@@ -142,7 +146,7 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
       description: "Treino adicionado com sucesso!"
     });
 
-    setNewWorkout({ exercise_name: "", sets: "", video_url: "" });
+    setNewWorkout({ name: "", description: "", exercises: "" });
     setShowAddDialog(false);
     fetchWorkoutPlans();
     fetchWorkoutDates();
@@ -252,20 +256,17 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
                   <Card key={workout.id} className="p-3">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 flex-1">
-                        <h5 className="font-medium">{workout.exercise_name}</h5>
-                        <p className="text-sm text-muted-foreground">
-                          <Clock className="h-3 w-3 inline mr-1" />
-                          {workout.sets}
-                        </p>
-                        {workout.video_url && (
-                          <a 
-                            href={workout.video_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline"
-                          >
-                            Ver vídeo demonstrativo
-                          </a>
+                        <h5 className="font-medium">{workout.name}</h5>
+                        {workout.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {workout.description}
+                          </p>
+                        )}
+                        {workout.exercises && (
+                          <p className="text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3 inline mr-1" />
+                            {typeof workout.exercises === 'string' ? workout.exercises : JSON.stringify(workout.exercises)}
+                          </p>
                         )}
                       </div>
                       {viewMode === "professional" && (
@@ -300,8 +301,7 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
                 const ex = exercises.find(e => e.id === val);
                 setNewWorkout(prev => ({
                   ...prev,
-                  exercise_name: ex?.name || "",
-                  video_url: ex?.video_url || prev.video_url
+                  name: ex?.name || ""
                 }));
               }}>
                 <SelectTrigger>
@@ -316,29 +316,29 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client" }: WorkoutCalendarPr
             </div>
 
             <div>
-              <Label>Nome do Exercício</Label>
+              <Label>Nome do Treino</Label>
               <Input
-                placeholder="ex: Supino reto"
-                value={newWorkout.exercise_name}
-                onChange={(e) => setNewWorkout(prev => ({ ...prev, exercise_name: e.target.value }))}
+                placeholder="ex: Treino de Peito"
+                value={newWorkout.name}
+                onChange={(e) => setNewWorkout(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
 
             <div>
-              <Label>Séries e Repetições</Label>
+              <Label>Descrição</Label>
               <Input
-                placeholder="ex: 3x12, 4x8-10"
-                value={newWorkout.sets}
-                onChange={(e) => setNewWorkout(prev => ({ ...prev, sets: e.target.value }))}
+                placeholder="ex: Foco em peito e tríceps"
+                value={newWorkout.description}
+                onChange={(e) => setNewWorkout(prev => ({ ...prev, description: e.target.value }))}
               />
             </div>
 
             <div>
-              <Label>URL do Vídeo (opcional)</Label>
+              <Label>Exercícios</Label>
               <Input
-                placeholder="https://..."
-                value={newWorkout.video_url}
-                onChange={(e) => setNewWorkout(prev => ({ ...prev, video_url: e.target.value }))}
+                placeholder="ex: Supino 3x12, Voador 3x15"
+                value={newWorkout.exercises}
+                onChange={(e) => setNewWorkout(prev => ({ ...prev, exercises: e.target.value }))}
               />
             </div>
 
