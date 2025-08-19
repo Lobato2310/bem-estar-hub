@@ -20,6 +20,7 @@ interface Goal {
   target_date: string | null;
   description: string | null;
   is_active: boolean;
+  created_at: string;
 }
 
 interface ClientGoalsDialogProps {
@@ -68,72 +69,41 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
 
   const fetchGoals = async () => {
     if (!user) return;
-
-    const { data, error } = await supabase
-      .from('client_goals')
-      .select('*')
-      .eq('client_id', user.id)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar seus objetivos",
-        variant: "destructive"
-      });
-      return;
+    
+    // For now, use local storage since client_goals table doesn't exist
+    const storedGoals = localStorage.getItem(`goals_${user.id}`);
+    if (storedGoals) {
+      setGoals(JSON.parse(storedGoals));
     }
-
-    setGoals(data || []);
   };
 
   const fetchProfile = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('client_goals')
-      .select('*')
-      .eq('client_id', user.id)
-      .eq('goal_type', 'profile_config')
-      .maybeSingle();
-
-    if (data && !error) {
-      setProfile({
-        training_days_per_week: data.target_value?.toString() || "",
-        training_duration_minutes: data.current_value?.toString() || "",
-        goal_type: data.description?.split('|')[0] || "",
-        current_weight: data.description?.split('|')[1] || "",
-        target_weight: data.description?.split('|')[2] || "",
-        target_date: data.target_date || "",
-        description: data.description?.split('|')[3] || "",
-        limitations: data.description?.split('|')[4] || ""
-      });
+    // For now, use local storage since client_goals table doesn't exist
+    const storedProfile = localStorage.getItem(`profile_${user.id}`);
+    if (storedProfile) {
+      setProfile(JSON.parse(storedProfile));
     }
   };
 
   const handleAddGoal = async () => {
     if (!user || !newGoal.goal_type) return;
 
-    const { error } = await supabase
-      .from('client_goals')
-      .insert({
-        client_id: user.id,
-        goal_type: newGoal.goal_type,
-        target_value: newGoal.target_value ? parseFloat(newGoal.target_value) : null,
-        current_value: newGoal.current_value ? parseFloat(newGoal.current_value) : null,
-        target_date: newGoal.target_date || null,
-        description: newGoal.description || null
-      });
+    const newGoalObj: Goal = {
+      id: Date.now().toString(),
+      goal_type: newGoal.goal_type,
+      target_value: newGoal.target_value ? parseFloat(newGoal.target_value) : null,
+      current_value: newGoal.current_value ? parseFloat(newGoal.current_value) : null,
+      target_date: newGoal.target_date || null,
+      description: newGoal.description || null,
+      is_active: true,
+      created_at: new Date().toISOString()
+    };
 
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o objetivo",
-        variant: "destructive"
-      });
-      return;
-    }
+    const updatedGoals = [newGoalObj, ...goals];
+    setGoals(updatedGoals);
+    localStorage.setItem(`goals_${user.id}`, JSON.stringify(updatedGoals));
 
     toast({
       title: "Sucesso",
@@ -148,76 +118,26 @@ const ClientGoalsDialog = ({ isOpen, onClose }: ClientGoalsDialogProps) => {
       description: ""
     });
     setShowAddForm(false);
-    fetchGoals();
   };
 
   const handleSaveProfile = async () => {
     if (!user) return;
 
-    const profileData = [
-      profile.goal_type,
-      profile.current_weight,
-      profile.target_weight,
-      profile.description,
-      profile.limitations
-    ].join('|');
-
-    // Verifica se já existe uma configuração de perfil
-    const { data: existing, error: fetchError } = await supabase
-      .from('client_goals')
-      .select('id')
-      .eq('client_id', user.id)
-      .eq('goal_type', 'profile_config')
-      .maybeSingle();
-
-    if (fetchError) {
-      toast({ title: 'Erro', description: 'Falha ao verificar configurações existentes', variant: 'destructive' });
-      return;
-    }
-
-    const payload = {
-      client_id: user.id,
-      goal_type: 'profile_config',
-      target_value: profile.training_days_per_week ? parseFloat(profile.training_days_per_week) : null,
-      current_value: profile.training_duration_minutes ? parseFloat(profile.training_duration_minutes) : null,
-      target_date: profile.target_date || null,
-      description: profileData,
-      is_active: true,
-    };
-
-    const result = existing
-      ? await supabase.from('client_goals').update(payload).eq('id', existing.id)
-      : await supabase.from('client_goals').insert(payload);
-
-    if (result.error) {
-      toast({ title: 'Erro', description: 'Não foi possível salvar as configurações', variant: 'destructive' });
-      return;
-    }
+    // Save to local storage for now
+    localStorage.setItem(`profile_${user.id}`, JSON.stringify(profile));
 
     toast({ title: 'Sucesso', description: 'Configurações salvas com sucesso!' });
   };
 
   const handleRemoveGoal = async (goalId: string) => {
-    const { error } = await supabase
-      .from('client_goals')
-      .update({ is_active: false })
-      .eq('id', goalId);
-
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o objetivo",
-        variant: "destructive"
-      });
-      return;
-    }
+    const updatedGoals = goals.filter(goal => goal.id !== goalId);
+    setGoals(updatedGoals);
+    localStorage.setItem(`goals_${user.id}`, JSON.stringify(updatedGoals));
 
     toast({
       title: "Sucesso",
       description: "Objetivo removido com sucesso!"
     });
-
-    fetchGoals();
   };
 
   const getGoalTypeLabel = (type: string) => {

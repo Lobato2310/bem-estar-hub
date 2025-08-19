@@ -7,13 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Apple, Info } from "lucide-react";
 
-interface NutritionPlan {
+// Use the actual database schema from nutrition_plans table
+type NutritionPlan = {
   id: string;
-  meal_type: string;
-  meal_description: string;
-  meal_time: string;
-  observations: string;
+  client_id: string;
+  professional_id: string;
+  name: string;
+  description: string | null;
+  daily_calories: number | null;
+  meals: any; // JsonB type
+  status: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface MealDetailsDialogProps {
@@ -41,8 +46,7 @@ const MealDetailsDialog = ({ isOpen, onClose, mealType }: MealDetailsDialogProps
       .from('nutrition_plans')
       .select('*')
       .eq('client_id', user.id)
-      .eq('meal_type', mealType)
-      .order('meal_time');
+      .eq('status', 'active');
 
     if (!error && data) {
       setNutritionPlans(data);
@@ -62,12 +66,11 @@ const MealDetailsDialog = ({ isOpen, onClose, mealType }: MealDetailsDialogProps
     return titles[type] || type;
   };
 
-  const groupedPlans = nutritionPlans.reduce((acc, plan) => {
-    const key = plan.meal_time || 'sem_horario';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(plan);
-    return acc;
-  }, {} as { [key: string]: NutritionPlan[] });
+  // Filter plans for this specific meal type from the meals JSON
+  const filteredPlans = nutritionPlans.filter(plan => {
+    if (!plan.meals || typeof plan.meals !== 'object') return false;
+    return Object.keys(plan.meals).some(mealKey => mealKey === mealType);
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -90,37 +93,36 @@ const MealDetailsDialog = ({ isOpen, onClose, mealType }: MealDetailsDialogProps
               <div className="text-center py-8 text-muted-foreground">
                 Carregando...
               </div>
-            ) : Object.keys(groupedPlans).length === 0 ? (
+            ) : filteredPlans.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Apple className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>Nenhum plano alimentar encontrado para esta refeição</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {Object.entries(groupedPlans).map(([time, plans]) => (
-                  <div key={time} className="space-y-2">
-                    {time !== 'sem_horario' && (
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline">{time}</Badge>
-                      </div>
-                    )}
-                    <div className="space-y-3">
-                      {plans.map((plan) => (
-                        <Card key={plan.id} className="p-4">
-                          <div className="space-y-2">
-                            <div className="whitespace-pre-wrap text-foreground">
-                              {plan.meal_description}
-                            </div>
-                            {plan.meal_time && time === 'sem_horario' && (
-                              <Badge variant="secondary" className="text-xs">
-                                {plan.meal_time}
-                              </Badge>
-                            )}
-                          </div>
-                        </Card>
-                      ))}
+                {filteredPlans.map((plan) => (
+                  <Card key={plan.id} className="p-4">
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">{plan.name}</h3>
+                      {plan.description && (
+                        <div className="whitespace-pre-wrap text-foreground">
+                          {plan.description}
+                        </div>
+                      )}
+                      {plan.meals && plan.meals[mealType] && (
+                        <div className="whitespace-pre-wrap text-muted-foreground">
+                          {typeof plan.meals[mealType] === 'string' 
+                            ? plan.meals[mealType] 
+                            : JSON.stringify(plan.meals[mealType], null, 2)}
+                        </div>
+                      )}
+                      {plan.daily_calories && (
+                        <Badge variant="secondary" className="text-xs">
+                          {plan.daily_calories} kcal/dia
+                        </Badge>
+                      )}
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             )}
@@ -133,34 +135,29 @@ const MealDetailsDialog = ({ isOpen, onClose, mealType }: MealDetailsDialogProps
               </div>
             ) : (
               <div className="space-y-4">
-                {nutritionPlans.length === 0 ? (
+                {filteredPlans.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <Info className="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p>Nenhuma observação disponível para esta refeição</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {nutritionPlans
-                      .filter(plan => plan.observations)
+                    {filteredPlans
+                      .filter(plan => plan.description)
                       .map((plan) => (
                         <Card key={plan.id} className="p-4">
                           <div className="space-y-2">
                             <div className="flex items-center space-x-2">
                               <Info className="h-4 w-4 text-primary" />
-                              <span className="font-medium text-foreground">Dicas do Nutricionista</span>
-                              {plan.meal_time && (
-                                <Badge variant="outline" className="text-xs">
-                                  {plan.meal_time}
-                                </Badge>
-                              )}
+                              <span className="font-medium text-foreground">Observações - {plan.name}</span>
                             </div>
                             <div className="whitespace-pre-wrap text-muted-foreground pl-6">
-                              {plan.observations}
+                              {plan.description}
                             </div>
                           </div>
                         </Card>
                       ))}
-                    {nutritionPlans.filter(plan => plan.observations).length === 0 && (
+                    {filteredPlans.filter(plan => plan.description).length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
                         <Info className="h-12 w-12 mx-auto mb-2 opacity-50" />
                         <p>Nenhuma observação específica para esta refeição</p>

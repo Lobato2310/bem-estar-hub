@@ -14,22 +14,16 @@ interface CheckinHistoryDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface Checkin {
+// Use the actual database schema from client_checkins table
+type Checkin = {
   id: string;
   checkin_date: string;
-  checkin_type: string;
-  belly_circumference: number;
-  hip_circumference: number;
-  left_thigh: number;
-  right_thigh: number;
-  next_goal: string;
-  observations: string;
-  front_photo_url: string;
-  side_photo_url: string;
-  back_photo_url: string;
-  status: string;
-  nutritionist_feedback: string;
-  feedback_date: string;
+  client_id: string;
+  mood: number | null;
+  stress_level: number | null;
+  sleep_quality: number | null;
+  energy: number | null;
+  notes: string | null;
   created_at: string;
 }
 
@@ -70,43 +64,22 @@ const CheckinHistoryDialog = ({ open, onOpenChange }: CheckinHistoryDialogProps)
     return data.publicUrl;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'reviewed':
-        return 'bg-blue-100 text-blue-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getMoodText = (mood: number | null) => {
+    if (!mood) return 'Não informado';
+    if (mood >= 8) return 'Excelente';
+    if (mood >= 6) return 'Bom';
+    if (mood >= 4) return 'Regular';
+    if (mood >= 2) return 'Ruim';
+    return 'Muito ruim';
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'Realizado';
-      case 'reviewed':
-        return 'Avaliado';
-      case 'pending':
-        return 'Pendente';
-      default:
-        return 'Indefinido';
-    }
-  };
-
-  const getGoalText = (goal: string) => {
-    switch (goal) {
-      case 'mass_gain':
-        return 'Ganho de massa';
-      case 'fat_loss':
-        return 'Diminuição da gordura';
-      case 'maintenance':
-        return 'Manutenção do corpo';
-      default:
-        return goal;
-    }
+  const getEnergyText = (energy: number | null) => {
+    if (!energy) return 'Não informado';
+    if (energy >= 8) return 'Muita energia';
+    if (energy >= 6) return 'Boa energia';
+    if (energy >= 4) return 'Energia moderada';
+    if (energy >= 2) return 'Pouca energia';
+    return 'Muito cansado';
   };
 
   if (selectedCheckin) {
@@ -124,11 +97,8 @@ const CheckinHistoryDialog = ({ open, onOpenChange }: CheckinHistoryDialogProps)
             {/* Header com status */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Badge className={getStatusColor(selectedCheckin.status)}>
-                  {getStatusText(selectedCheckin.status)}
-                </Badge>
                 <span className="text-sm text-muted-foreground">
-                  {selectedCheckin.checkin_type === 'biweekly' ? 'Check-in Quinzenal' : 'Check-in Mensal'}
+                  Check-in Psicológico
                 </span>
               </div>
               <Button variant="outline" onClick={() => setSelectedCheckin(null)}>
@@ -136,127 +106,59 @@ const CheckinHistoryDialog = ({ open, onOpenChange }: CheckinHistoryDialogProps)
               </Button>
             </div>
 
-            {/* Fotos */}
+            {/* Estado Psicológico */}
             <Card className="p-4">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <Camera className="h-5 w-5" />
-                Fotos de Avaliação
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { label: 'Frente', url: getPhotoUrl(selectedCheckin.front_photo_url) },
-                  { label: 'Lado', url: getPhotoUrl(selectedCheckin.side_photo_url) },
-                  { label: 'Costas', url: getPhotoUrl(selectedCheckin.back_photo_url) }
-                ].map((photo, index) => (
-                  <div key={index} className="space-y-2">
-                    <h4 className="text-sm font-medium">{photo.label}</h4>
-                    {photo.url ? (
-                      <img
-                        src={photo.url}
-                        alt={`Foto ${photo.label}`}
-                        className="w-full h-48 object-cover rounded-lg border"
-                      />
-                    ) : (
-                      <div className="w-full h-48 bg-muted rounded-lg border flex items-center justify-center">
-                        <span className="text-muted-foreground">Sem foto</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Medidas */}
-            <Card className="p-4">
-              <h3 className="font-semibold mb-4">Medidas Corporais</h3>
+              <h3 className="font-semibold mb-4">Estado Psicológico</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center space-y-2">
                   <p className="text-2xl font-bold text-primary">
-                    {selectedCheckin.belly_circumference ? `${selectedCheckin.belly_circumference}cm` : '--'}
+                    {selectedCheckin.mood ? `${selectedCheckin.mood}/10` : '--'}
                   </p>
-                  <p className="text-sm text-muted-foreground">Barriga</p>
+                  <p className="text-sm text-muted-foreground">Humor</p>
+                  <p className="text-xs text-muted-foreground">{getMoodText(selectedCheckin.mood)}</p>
                 </div>
                 <div className="text-center space-y-2">
                   <p className="text-2xl font-bold text-primary">
-                    {selectedCheckin.hip_circumference ? `${selectedCheckin.hip_circumference}cm` : '--'}
+                    {selectedCheckin.stress_level ? `${selectedCheckin.stress_level}/10` : '--'}
                   </p>
-                  <p className="text-sm text-muted-foreground">Quadril</p>
+                  <p className="text-sm text-muted-foreground">Estresse</p>
                 </div>
                 <div className="text-center space-y-2">
                   <p className="text-2xl font-bold text-primary">
-                    {selectedCheckin.left_thigh ? `${selectedCheckin.left_thigh}cm` : '--'}
+                    {selectedCheckin.sleep_quality ? `${selectedCheckin.sleep_quality}/10` : '--'}
                   </p>
-                  <p className="text-sm text-muted-foreground">Coxa Esq.</p>
+                  <p className="text-sm text-muted-foreground">Sono</p>
                 </div>
                 <div className="text-center space-y-2">
                   <p className="text-2xl font-bold text-primary">
-                    {selectedCheckin.right_thigh ? `${selectedCheckin.right_thigh}cm` : '--'}
+                    {selectedCheckin.energy ? `${selectedCheckin.energy}/10` : '--'}
                   </p>
-                  <p className="text-sm text-muted-foreground">Coxa Dir.</p>
+                  <p className="text-sm text-muted-foreground">Energia</p>
+                  <p className="text-xs text-muted-foreground">{getEnergyText(selectedCheckin.energy)}</p>
                 </div>
               </div>
             </Card>
 
-            {/* Objetivo e Observações */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="p-4">
-                <h3 className="font-semibold mb-2">Objetivo</h3>
-                <p className="text-muted-foreground">
-                  {selectedCheckin.next_goal ? getGoalText(selectedCheckin.next_goal) : 'Não informado'}
-                </p>
-              </Card>
-              
-              <Card className="p-4">
-                <h3 className="font-semibold mb-2">Data do Check-in</h3>
-                <p className="text-muted-foreground">
-                  {new Date(selectedCheckin.created_at).toLocaleDateString('pt-BR')} às {new Date(selectedCheckin.created_at).toLocaleTimeString('pt-BR')}
-                </p>
-              </Card>
-            </div>
+            {/* Data do Check-in */}
+            <Card className="p-4">
+              <h3 className="font-semibold mb-2">Data do Check-in</h3>
+              <p className="text-muted-foreground">
+                {new Date(selectedCheckin.created_at).toLocaleDateString('pt-BR')} às {new Date(selectedCheckin.created_at).toLocaleTimeString('pt-BR')}
+              </p>
+            </Card>
 
             {/* Observações do cliente */}
-            {selectedCheckin.observations && (
+            {selectedCheckin.notes && (
               <Card className="p-4">
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Suas Observações
                 </h3>
                 <p className="text-muted-foreground whitespace-pre-wrap">
-                  {selectedCheckin.observations}
+                  {selectedCheckin.notes}
                 </p>
               </Card>
             )}
-
-            {/* Feedback do nutricionista */}
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Feedback do Nutricionista
-              </h3>
-              {selectedCheckin.nutritionist_feedback ? (
-                <div className="space-y-2">
-                  <p className="text-muted-foreground whitespace-pre-wrap">
-                    {selectedCheckin.nutritionist_feedback}
-                  </p>
-                  {selectedCheckin.feedback_date && (
-                    <p className="text-xs text-muted-foreground">
-                      Avaliado em: {new Date(selectedCheckin.feedback_date).toLocaleDateString('pt-BR')} às {new Date(selectedCheckin.feedback_date).toLocaleTimeString('pt-BR')}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center py-8 bg-muted/50 rounded-lg">
-                  <div className="text-center space-y-2">
-                    <Star className="h-8 w-8 text-muted-foreground mx-auto" />
-                    <p className="text-muted-foreground">
-                      {selectedCheckin.status === 'pending' 
-                        ? 'Aguardando feedback do nutricionista...' 
-                        : 'Nenhum feedback disponível'}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </Card>
           </div>
         </DialogContent>
       </Dialog>
@@ -291,22 +193,18 @@ const CheckinHistoryDialog = ({ open, onOpenChange }: CheckinHistoryDialogProps)
                       <h3 className="font-medium">
                         {new Date(checkin.checkin_date).toLocaleDateString('pt-BR')}
                       </h3>
-                      <Badge className={getStatusColor(checkin.status)}>
-                        {getStatusText(checkin.status)}
-                      </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {checkin.checkin_type === 'biweekly' ? 'Check-in Quinzenal' : 'Check-in Mensal'}
+                      Check-in Psicológico
                     </p>
-                    {checkin.next_goal && (
-                      <p className="text-sm text-muted-foreground">
-                        Objetivo: {getGoalText(checkin.next_goal)}
-                      </p>
-                    )}
+                    <div className="flex gap-4 text-xs text-muted-foreground">
+                      {checkin.mood && <span>Humor: {checkin.mood}/10</span>}
+                      {checkin.energy && <span>Energia: {checkin.energy}/10</span>}
+                    </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    {checkin.nutritionist_feedback && (
+                    {checkin.notes && (
                       <MessageSquare className="h-4 w-4 text-green-600" />
                     )}
                     <Button variant="outline" size="sm">
