@@ -46,11 +46,11 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
       
       // First check total counts for debugging
       const { count: tacoCount } = await supabase
-        .from('taco_foods')
+        .from('taco')
         .select('*', { count: 'exact', head: true });
       
       const { count: openCount } = await supabase
-        .from('open_foods')  
+        .from('open')  
         .select('*', { count: 'exact', head: true });
       
       console.log(`📊 Total disponível - TACO: ${tacoCount}, Open Foods: ${openCount}`);
@@ -64,7 +64,7 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
       
       // 1. Busca exata (termo completo)
       tacoQueries.push(
-        supabase.from('taco_foods')
+        supabase.from('taco')
           .select('*')
           .ilike('alimento', `%${searchTerm}%`)
           .limit(10)
@@ -86,7 +86,7 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
       
       // 3. Busca com tolerância (removendo acentos implicitamente via ILIKE)
       tacoQueries.push(
-        supabase.from('taco_foods')
+        supabase.from('taco')
           .select('*')
           .ilike('alimento', `${searchTerm}%`)
           .limit(5)
@@ -108,7 +108,7 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
       
       // 1. Busca exata
       openQueries.push(
-        supabase.from('open_foods')
+        supabase.from('open')
           .select('*')
           .ilike('product_name', `%${searchTerm}%`)
           .limit(10)
@@ -119,7 +119,7 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
         for (const word of words) {
           if (word.length >= 3) {
             openQueries.push(
-              supabase.from('open_foods')
+              supabase.from('open')
                 .select('*')
                 .ilike('product_name', `%${word}%`)
                 .limit(8)
@@ -130,7 +130,7 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
       
       // 3. Busca com prefixo
       openQueries.push(
-        supabase.from('open_foods')
+        supabase.from('open')
           .select('*')
           .ilike('product_name', `${searchTerm}%`)
           .limit(5)
