@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Dumbbell, Clock, Target, PlayCircle, Calendar, Trophy, Plus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dumbbell, Clock, Target, PlayCircle, Calendar, Trophy, Plus, Users, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +12,8 @@ import WorkoutFeedbackDialog from "@/components/workout/WorkoutFeedbackDialog";
 import ClientGoalsDialog from "@/components/profile/ClientGoalsDialog";
 import ExerciseWeightDialog from "@/components/workout/ExerciseWeightDialog";
 import WorkoutCalendar from "@/components/workout/WorkoutCalendar";
+import ExerciseManagement from "@/components/professional/ExerciseManagement";
+import ClientSelector from "@/components/professional/ClientSelector";
 
 const PersonalSection = () => {
   const { user } = useAuth();
@@ -25,6 +28,23 @@ const PersonalSection = () => {
   const [selectedExercise, setSelectedExercise] = useState("");
   const [showWorkoutCalendar, setShowWorkoutCalendar] = useState(false);
   const [selectedWorkoutType, setSelectedWorkoutType] = useState<"musculacao" | "cardio">("musculacao");
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        setUserProfile(data);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
   const workoutTypes = [
     { 
       title: "Musculação", 
@@ -147,6 +167,80 @@ const PersonalSection = () => {
       });
     }
   };
+
+  // Se for profissional, mostrar interface diferente
+  if (userProfile?.user_type === "professional") {
+    return (
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center space-x-3">
+            <Dumbbell className="h-10 w-10 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">Painel Profissional</h1>
+          </div>
+          <p className="text-lg text-muted-foreground">
+            Gerencie exercícios e clientes
+          </p>
+        </div>
+
+        <Tabs defaultValue="exercises" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="exercises" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span>Exercícios</span>
+            </TabsTrigger>
+            <TabsTrigger value="clients" className="flex items-center space-x-2">
+              <Users className="h-4 w-4" />
+              <span>Clientes</span>
+            </TabsTrigger>
+            <TabsTrigger value="workouts" className="flex items-center space-x-2">
+              <Calendar className="h-4 w-4" />
+              <span>Treinos</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="exercises" className="mt-6">
+            <ExerciseManagement />
+          </TabsContent>
+
+          <TabsContent value="clients" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ClientSelector 
+                onClientSelect={setSelectedClient}
+                selectedClientId={selectedClient?.user_id}
+              />
+              {selectedClient && (
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Perfil do Cliente</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <strong>Nome:</strong> {selectedClient.display_name || "Nome não informado"}
+                    </div>
+                    <div>
+                      <strong>Email:</strong> {selectedClient.email}
+                    </div>
+                    <div>
+                      <strong>Cliente desde:</strong> {new Date(selectedClient.created_at).toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="workouts" className="mt-6">
+            {selectedClient ? (
+              <WorkoutCalendar workoutType="musculacao" viewMode="professional" />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Selecione um cliente na aba "Clientes" para gerenciar seus treinos
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">

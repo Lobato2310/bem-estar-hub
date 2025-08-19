@@ -16,6 +16,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [userType, setUserType] = useState<"professional" | "client">("client");
+  const [systemPassword, setSystemPassword] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -24,6 +25,16 @@ const Auth = () => {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar senha de sistema para profissionais
+    if (userType === "professional" && systemPassword !== "MyFitLifeAdmProf") {
+      toast({
+        title: "Erro",
+        description: "Senha de sistema inválida para cadastro de profissional.",
         variant: "destructive",
       });
       return;
@@ -223,6 +234,18 @@ const Auth = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                {userType === "professional" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="system-password">Senha de Sistema (Profissionais)</Label>
+                    <Input
+                      id="system-password"
+                      type="password"
+                      placeholder="Senha especial para profissionais"
+                      value={systemPassword}
+                      onChange={(e) => setSystemPassword(e.target.value)}
+                    />
+                  </div>
+                )}
                 <Button 
                   onClick={handleSignUp} 
                   className="w-full" 
