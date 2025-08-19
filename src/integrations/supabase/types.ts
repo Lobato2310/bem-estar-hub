@@ -14,6 +14,258 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_checkins: {
+        Row: {
+          checkin_date: string
+          client_id: string
+          created_at: string
+          energy: number | null
+          id: string
+          mood: number | null
+          notes: string | null
+          sleep_quality: number | null
+          stress_level: number | null
+        }
+        Insert: {
+          checkin_date?: string
+          client_id: string
+          created_at?: string
+          energy?: number | null
+          id?: string
+          mood?: number | null
+          notes?: string | null
+          sleep_quality?: number | null
+          stress_level?: number | null
+        }
+        Update: {
+          checkin_date?: string
+          client_id?: string
+          created_at?: string
+          energy?: number | null
+          id?: string
+          mood?: number | null
+          notes?: string | null
+          sleep_quality?: number | null
+          stress_level?: number | null
+        }
+        Relationships: []
+      }
+      client_food_logs: {
+        Row: {
+          client_id: string
+          created_at: string
+          eaten_at: string
+          foods: Json
+          id: string
+          meal_name: string
+          total_calories: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          eaten_at?: string
+          foods: Json
+          id?: string
+          meal_name: string
+          total_calories?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          eaten_at?: string
+          foods?: Json
+          id?: string
+          meal_name?: string
+          total_calories?: number | null
+        }
+        Relationships: []
+      }
+      client_measurements: {
+        Row: {
+          arms: number | null
+          body_fat: number | null
+          chest: number | null
+          client_id: string
+          created_at: string
+          height: number | null
+          id: string
+          measured_at: string
+          muscle_mass: number | null
+          waist: number | null
+          weight: number | null
+        }
+        Insert: {
+          arms?: number | null
+          body_fat?: number | null
+          chest?: number | null
+          client_id: string
+          created_at?: string
+          height?: number | null
+          id?: string
+          measured_at?: string
+          muscle_mass?: number | null
+          waist?: number | null
+          weight?: number | null
+        }
+        Update: {
+          arms?: number | null
+          body_fat?: number | null
+          chest?: number | null
+          client_id?: string
+          created_at?: string
+          height?: number | null
+          id?: string
+          measured_at?: string
+          muscle_mass?: number | null
+          waist?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      exercises: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          instructions: string | null
+          muscle_groups: string[] | null
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          muscle_groups?: string[] | null
+          name: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          muscle_groups?: string[] | null
+          name?: string
+        }
+        Relationships: []
+      }
+      nutrition_plans: {
+        Row: {
+          client_id: string
+          created_at: string
+          daily_calories: number | null
+          description: string | null
+          id: string
+          meals: Json | null
+          name: string
+          professional_id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          daily_calories?: number | null
+          description?: string | null
+          id?: string
+          meals?: Json | null
+          name: string
+          professional_id: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          daily_calories?: number | null
+          description?: string | null
+          id?: string
+          meals?: Json | null
+          name?: string
+          professional_id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      open: {
+        Row: {
+          acucares: number | null
+          alimento: string | null
+          calorias: number | null
+          carboidratos: number | null
+          created_at: string
+          fibras: number | null
+          gorduras: number | null
+          id: number
+          marca: string | null
+          porcao: string | null
+          proteina: number | null
+          sodio: number | null
+        }
+        Insert: {
+          acucares?: number | null
+          alimento?: string | null
+          calorias?: number | null
+          carboidratos?: number | null
+          created_at?: string
+          fibras?: number | null
+          gorduras?: number | null
+          id?: number
+          marca?: string | null
+          porcao?: string | null
+          proteina?: number | null
+          sodio?: number | null
+        }
+        Update: {
+          acucares?: number | null
+          alimento?: string | null
+          calorias?: number | null
+          carboidratos?: number | null
+          created_at?: string
+          fibras?: number | null
+          gorduras?: number | null
+          id?: number
+          marca?: string | null
+          porcao?: string | null
+          proteina?: number | null
+          sodio?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          user_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          user_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          user_type?: string | null
+        }
+        Relationships: []
+      }
       taco: {
         Row: {
           alimento: string | null
@@ -47,6 +299,42 @@ export type Database = {
           id?: number
           proteina?: number | null
           sodio?: number | null
+        }
+        Relationships: []
+      }
+      workout_plans: {
+        Row: {
+          client_id: string
+          created_at: string
+          description: string | null
+          exercises: Json | null
+          id: string
+          name: string
+          professional_id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          description?: string | null
+          exercises?: Json | null
+          id?: string
+          name: string
+          professional_id: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          exercises?: Json | null
+          id?: string
+          name?: string
+          professional_id?: string
+          status?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
