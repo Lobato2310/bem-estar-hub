@@ -33,7 +33,7 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
   const [quantity, setQuantity] = useState(100);
   const [loading, setLoading] = useState(false);
 
-  // Buscar alimentos nas tabelas TACO e Open Foods
+  // Temporariamente desabilitado - aguardando criação da tabela taco
   const searchFoods = async (term: string) => {
     if (!term || term.length < 2) {
       setFoods([]);
@@ -42,161 +42,11 @@ export const FoodSearchDialog = ({ open, onOpenChange, onFoodAdd }: FoodSearchDi
 
     setLoading(true);
     try {
-      console.log('🔍 Buscando alimentos para termo:', term);
-      
-      // First check total counts for debugging
-      const { count: tacoCount } = await supabase
-        .from('taco')
-        .select('*', { count: 'exact', head: true });
-      
-      const { count: openCount } = await supabase
-        .from('open')  
-        .select('*', { count: 'exact', head: true });
-      
-      console.log(`📊 Total disponível - TACO: ${tacoCount}, Open Foods: ${openCount}`);
-      
-      // Melhorar busca com múltiplas estratégias
-      const searchTerm = term.toLowerCase().trim();
-      const words = searchTerm.split(' ').filter(w => w.length > 1);
-      
-      // Buscar na tabela TACO com diferentes estratégias
-      let tacoQueries = [];
-      
-      // 1. Busca exata (termo completo)
-      tacoQueries.push(
-        supabase.from('taco')
-          .select('*')
-          .ilike('alimento', `%${searchTerm}%`)
-          .limit(10)
-      );
-      
-      // 2. Busca por palavras individuais se houver múltiplas palavras
-      if (words.length > 1) {
-        for (const word of words) {
-          if (word.length >= 3) {
-            tacoQueries.push(
-              supabase.from('taco_foods')
-                .select('*')
-                .ilike('alimento', `%${word}%`)
-                .limit(8)
-            );
-          }
-        }
-      }
-      
-      // 3. Busca com tolerância (removendo acentos implicitamente via ILIKE)
-      tacoQueries.push(
-        supabase.from('taco')
-          .select('*')
-          .ilike('alimento', `${searchTerm}%`)
-          .limit(5)
-      );
-      
-      // Executar todas as queries da TACO
-      const tacoResults = await Promise.all(tacoQueries);
-      const allTacoFoods = tacoResults.flatMap(result => result.data || []);
-      
-      // Remover duplicatas por ID
-      const uniqueTacoFoods = allTacoFoods.filter((food, index, self) => 
-        index === self.findIndex(f => f.id === food.id)
-      );
-
-      console.log('✅ TACO Foods encontrados:', uniqueTacoFoods.length);
-
-      // Mesma estratégia para Open Foods
-      let openQueries = [];
-      
-      // 1. Busca exata
-      openQueries.push(
-        supabase.from('open')
-          .select('*')
-          .ilike('product_name', `%${searchTerm}%`)
-          .limit(10)
-      );
-      
-      // 2. Busca por palavras individuais
-      if (words.length > 1) {
-        for (const word of words) {
-          if (word.length >= 3) {
-            openQueries.push(
-              supabase.from('open')
-                .select('*')
-                .ilike('product_name', `%${word}%`)
-                .limit(8)
-            );
-          }
-        }
-      }
-      
-      // 3. Busca com prefixo
-      openQueries.push(
-        supabase.from('open')
-          .select('*')
-          .ilike('product_name', `${searchTerm}%`)
-          .limit(5)
-      );
-      
-      // Executar todas as queries do Open Foods
-      const openResults = await Promise.all(openQueries);
-      const allOpenFoods = openResults.flatMap(result => result.data || []);
-      
-      // Remover duplicatas por ID
-      const uniqueOpenFoods = allOpenFoods.filter((food, index, self) => 
-        index === self.findIndex(f => f.id === food.id)
-      );
-
-      console.log('✅ Open Foods encontrados:', uniqueOpenFoods.length);
-
-      // Converter para formato unificado
-      const tacoFormatted: Food[] = uniqueTacoFoods.map(food => ({
-        id: food.id,
-        name: food.alimento,
-        calories: Number(food.energia_kcal) || 0,
-        protein: Number(food.proteina_g) || 0,
-        carbs: Number(food.carboidrato_g) || 0,
-        fat: Number(food.lipideos_g) || 0,
-        fiber: Number(food.fibra_g) || 0,
-        defaultPortion: Number(food.porcao_g) || 100,
-        source: 'taco'
-      }));
-
-      const openFormatted: Food[] = uniqueOpenFoods.map(food => ({
-        id: food.id,
-        name: food.product_name,
-        calories: Number(food.energy_kcal_100g) || 0,
-        protein: Number(food.proteins_100g) || 0,
-        carbs: Number(food.carbohydrates_100g) || 0,
-        fat: Number(food.fat_100g) || 0,
-        fiber: Number(food.fiber_100g) || 0,
-        defaultPortion: Number(food.porcao_g) || 100,
-        source: 'open'
-      }));
-
-      // Combinar resultados e ordenar por relevância
-      const allFoods = [...tacoFormatted, ...openFormatted];
-      
-      // Ordenar por relevância: primeiro resultados que começam com o termo, depois que contêm
-      const sortedFoods = allFoods.sort((a, b) => {
-        const aName = a.name.toLowerCase();
-        const bName = b.name.toLowerCase();
-        const searchLower = searchTerm.toLowerCase();
-        
-        // Priorizar resultados que começam com o termo de busca
-        const aStarts = aName.startsWith(searchLower);
-        const bStarts = bName.startsWith(searchLower);
-        
-        if (aStarts && !bStarts) return -1;
-        if (!aStarts && bStarts) return 1;
-        
-        // Depois priorizar por comprimento (nomes menores primeiro)
-        return aName.length - bName.length;
-      }).slice(0, 20); // Limitar a 20 resultados para performance
-      
-      console.log(`🎯 Total final de resultados: ${sortedFoods.length}`);
-      setFoods(sortedFoods);
+      console.log('⚠️ Busca temporariamente desabilitada - tabela taco não encontrada no banco');
+      toast.error('Funcionalidade temporariamente indisponível');
+      setFoods([]);
     } catch (error) {
-      console.error('❌ Erro ao buscar alimentos:', error);
-      toast.error('Erro ao buscar alimentos');
+      console.error('❌ Erro:', error);
     } finally {
       setLoading(false);
     }
