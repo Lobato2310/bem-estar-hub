@@ -5,6 +5,7 @@ import { Apple, Scale, FileText, Calendar, TrendingUp, CheckCircle, Eye } from "
 import MealDetailsDialog from "@/components/nutrition/MealDetailsDialog";
 import { NutritionPlanDialog } from "@/components/nutrition/NutritionPlanDialog";
 import { MealHistoryDialog } from "@/components/nutrition/MealHistoryDialog";
+import { ClientNutritionPlan } from "@/components/ClientNutritionPlan";
 
 const NutritionSection = () => {
   const [showMealDialog, setShowMealDialog] = useState(false);
@@ -77,6 +78,9 @@ const NutritionSection = () => {
           Alimentação equilibrada para uma vida mais saudável
         </p>
       </div>
+
+      {/* Plano Nutricional do Profissional */}
+      <ClientNutritionPlan />
 
       {/* Resumo nutricional do dia */}
       <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary-light/20 border-primary/20">

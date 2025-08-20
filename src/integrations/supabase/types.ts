@@ -152,6 +152,39 @@ export type Database = {
         }
         Relationships: []
       }
+      client_updates: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          id: string
+          is_viewed: boolean | null
+          professional_id: string
+          update_message: string | null
+          update_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          id?: string
+          is_viewed?: boolean | null
+          professional_id: string
+          update_message?: string | null
+          update_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          is_viewed?: boolean | null
+          professional_id?: string
+          update_message?: string | null
+          update_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           category: string | null

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dumbbell, 
   Apple, 
@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { ClientUpdatesDialog } from "@/components/ClientUpdatesDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavigationProps {
   activeTab: string;
@@ -17,7 +19,30 @@ interface NavigationProps {
 }
 
 const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Carregar perfil do usuário para verificar se é cliente
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+        setUserProfile(data);
+      } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, [user]);
   
   const tabs = [
     { id: "home", label: "Início", icon: Heart },
@@ -60,6 +85,14 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
                 </button>
               );
             })}
+            
+            {/* Mostrar atualizações apenas para clientes */}
+            {userProfile?.user_type === 'client' && (
+              <div className="ml-4">
+                <ClientUpdatesDialog />
+              </div>
+            )}
+            
             <Button
               variant="ghost"
               size="sm"
@@ -73,26 +106,35 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
         </div>
         
         {/* Mobile navigation */}
-        <div className="md:hidden flex overflow-x-auto pb-2 space-x-1">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={`
-                  flex flex-col items-center space-y-1 p-2 rounded-lg min-w-0 flex-shrink-0 transition-all duration-300
-                  ${activeTab === tab.id 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                  }
-                `}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-xs font-medium truncate">{tab.label}</span>
-              </button>
-            );
-          })}
+        <div className="md:hidden">
+          <div className="flex overflow-x-auto pb-2 space-x-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => onTabChange(tab.id)}
+                  className={`
+                    flex flex-col items-center space-y-1 p-2 rounded-lg min-w-0 flex-shrink-0 transition-all duration-300
+                    ${activeTab === tab.id 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                    }
+                  `}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="text-xs font-medium truncate">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          
+          {/* Mobile updates for clients */}
+          {userProfile?.user_type === 'client' && (
+            <div className="mt-2 px-2">
+              <ClientUpdatesDialog />
+            </div>
+          )}
         </div>
       </div>
     </nav>
