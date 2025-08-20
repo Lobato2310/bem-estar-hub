@@ -625,6 +625,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_current_user_professional: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_professional: {
         Args: Record<PropertyKey, never>
         Returns: boolean
