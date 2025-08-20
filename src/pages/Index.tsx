@@ -14,6 +14,7 @@ import ProfessionalDashboard from "@/components/ProfessionalDashboard";
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [anamnesisComplete, setAnamnesisComplete] = useState<boolean | null>(null);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -26,19 +27,42 @@ const Index = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
-        const { data } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('user_id', user.id)
           .single();
-        setUserProfile(data);
+        
+        if (profile) {
+          setUserProfile(profile);
+          
+          // Se é cliente, verificar se completou anamnese
+          if (profile.user_type === "client") {
+            const { data: anamnesis } = await supabase
+              .from("client_anamnesis")
+              .select("is_completed")
+              .eq("client_id", user.id)
+              .eq("is_completed", true)
+              .single();
+            
+            setAnamnesisComplete(!!anamnesis);
+            
+            // Se não completou anamnese, redirecionar
+            if (!anamnesis) {
+              navigate("/anamnesis");
+              return;
+            }
+          } else {
+            setAnamnesisComplete(true); // Profissionais não precisam de anamnese
+          }
+        }
       }
     };
 
     if (user) {
       fetchUserProfile();
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const renderSection = () => {
     // Se o usuário for profissional, mostrar dashboard profissional na home
@@ -64,7 +88,7 @@ const Index = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !userProfile || anamnesisComplete === null) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

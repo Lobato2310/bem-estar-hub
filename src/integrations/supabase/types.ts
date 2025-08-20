@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_anamnesis: {
+        Row: {
+          birth_date: string | null
+          client_id: string
+          created_at: string
+          daily_meals_description: string | null
+          fitness_objective: string | null
+          food_restrictions: string | null
+          full_name: string | null
+          gender: string | null
+          has_cardiac_problems: boolean | null
+          has_high_blood_pressure: boolean | null
+          has_high_cholesterol: boolean | null
+          has_postural_deviation: boolean | null
+          height: number | null
+          id: string
+          is_completed: boolean | null
+          meal_times_description: string | null
+          physical_activity_time: string | null
+          physical_restrictions: string | null
+          postural_deviation_description: string | null
+          practices_physical_activity: boolean | null
+          preferred_foods: string | null
+          training_duration_minutes: number | null
+          training_frequency_per_week: number | null
+          updated_at: string
+          weight: number | null
+          whatsapp: string | null
+        }
+        Insert: {
+          birth_date?: string | null
+          client_id: string
+          created_at?: string
+          daily_meals_description?: string | null
+          fitness_objective?: string | null
+          food_restrictions?: string | null
+          full_name?: string | null
+          gender?: string | null
+          has_cardiac_problems?: boolean | null
+          has_high_blood_pressure?: boolean | null
+          has_high_cholesterol?: boolean | null
+          has_postural_deviation?: boolean | null
+          height?: number | null
+          id?: string
+          is_completed?: boolean | null
+          meal_times_description?: string | null
+          physical_activity_time?: string | null
+          physical_restrictions?: string | null
+          postural_deviation_description?: string | null
+          practices_physical_activity?: boolean | null
+          preferred_foods?: string | null
+          training_duration_minutes?: number | null
+          training_frequency_per_week?: number | null
+          updated_at?: string
+          weight?: number | null
+          whatsapp?: string | null
+        }
+        Update: {
+          birth_date?: string | null
+          client_id?: string
+          created_at?: string
+          daily_meals_description?: string | null
+          fitness_objective?: string | null
+          food_restrictions?: string | null
+          full_name?: string | null
+          gender?: string | null
+          has_cardiac_problems?: boolean | null
+          has_high_blood_pressure?: boolean | null
+          has_high_cholesterol?: boolean | null
+          has_postural_deviation?: boolean | null
+          height?: number | null
+          id?: string
+          is_completed?: boolean | null
+          meal_times_description?: string | null
+          physical_activity_time?: string | null
+          physical_restrictions?: string | null
+          postural_deviation_description?: string | null
+          practices_physical_activity?: boolean | null
+          preferred_foods?: string | null
+          training_duration_minutes?: number | null
+          training_frequency_per_week?: number | null
+          updated_at?: string
+          weight?: number | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       client_checkins: {
         Row: {
           checkin_date: string

@@ -89,7 +89,7 @@ const Auth = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -100,7 +100,30 @@ const Auth = () => {
           description: error.message,
           variant: "destructive",
         });
-      } else {
+      } else if (data.user) {
+        // Verificar o tipo de usuário e anamnese
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("user_id", data.user.id)
+          .single();
+
+        if (profile?.user_type === "client") {
+          // Verificar se já completou a anamnese
+          const { data: anamnesis } = await supabase
+            .from("client_anamnesis")
+            .select("is_completed")
+            .eq("client_id", data.user.id)
+            .eq("is_completed", true)
+            .single();
+
+          if (!anamnesis) {
+            // Cliente não completou anamnese, redirecionar
+            navigate("/anamnesis");
+            return;
+          }
+        }
+        
         navigate("/");
       }
     } catch (error) {
