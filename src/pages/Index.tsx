@@ -48,7 +48,7 @@ const Index = () => {
 
     switch (activeTab) {
       case "home":
-        return <HomeSection onNavigate={setActiveTab} />;
+        return <HomeSection onNavigate={setActiveTab} userProfile={userProfile} />;
       case "personal":
         return <PersonalSection />;
       case "nutrition":

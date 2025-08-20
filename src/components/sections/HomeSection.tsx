@@ -4,9 +4,10 @@ import { Heart, Dumbbell, Apple, Calculator, Brain, TrendingUp, Target, Users } 
 
 interface HomeSectionProps {
   onNavigate: (section: string) => void;
+  userProfile?: any;
 }
 
-const HomeSection = ({ onNavigate }: HomeSectionProps) => {
+const HomeSection = ({ onNavigate, userProfile }: HomeSectionProps) => {
   const quickActions = [
     { id: "personal", label: "Treinar Hoje", icon: Dumbbell, color: "bg-primary" },
     { id: "nutrition", label: "Minha Dieta", icon: Apple, color: "bg-accent" },
@@ -30,6 +31,11 @@ const HomeSection = ({ onNavigate }: HomeSectionProps) => {
             className="h-16 w-auto"
           />
         </div>
+        {userProfile?.display_name && (
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Olá, {userProfile.display_name}!
+          </h1>
+        )}
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Sua jornada para uma vida mais saudável começa aqui. Conecte-se com profissionais especializados e alcance seus objetivos.
         </p>
