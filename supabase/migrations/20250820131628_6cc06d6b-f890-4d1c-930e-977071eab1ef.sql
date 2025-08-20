@@ -1,0 +1,1 @@
+UPDATE profiles SET display_name = 'Lucas Silva' WHERE email = 'lucaslobsouza@gmail.com';
