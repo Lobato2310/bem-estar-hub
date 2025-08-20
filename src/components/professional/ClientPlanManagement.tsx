@@ -120,17 +120,6 @@ const ClientPlanManagement = ({ client }: ClientPlanManagementProps) => {
     if (!user || !client || !workoutForm.name) return;
 
     try {
-      // First ensure professional-client relationship exists
-      await supabase
-        .from('professional_client_relationships')
-        .upsert({
-          professional_id: user.id,
-          client_id: client.user_id,
-          is_active: true
-        }, {
-          onConflict: 'professional_id,client_id'
-        });
-
       const { error } = await supabase
         .from('workout_plans')
         .insert({
@@ -158,17 +147,6 @@ const ClientPlanManagement = ({ client }: ClientPlanManagementProps) => {
     if (!user || !client || !nutritionForm.name) return;
 
     try {
-      // First ensure professional-client relationship exists
-      await supabase
-        .from('professional_client_relationships')
-        .upsert({
-          professional_id: user.id,
-          client_id: client.user_id,
-          is_active: true
-        }, {
-          onConflict: 'professional_id,client_id'
-        });
-
       const { error } = await supabase
         .from('nutrition_plans')
         .insert({
@@ -197,17 +175,6 @@ const ClientPlanManagement = ({ client }: ClientPlanManagementProps) => {
     if (!user || !client || !psychologyForm.goal_title) return;
 
     try {
-      // First ensure professional-client relationship exists
-      await supabase
-        .from('professional_client_relationships')
-        .upsert({
-          professional_id: user.id,
-          client_id: client.user_id,
-          is_active: true
-        }, {
-          onConflict: 'professional_id,client_id'
-        });
-
       const { error } = await supabase
         .from('psychology_goals')
         .insert({
