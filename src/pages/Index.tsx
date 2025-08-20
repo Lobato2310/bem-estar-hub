@@ -27,51 +27,39 @@ const Index = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
-        console.log("Index: Buscando perfil para usuário:", user.id);
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('user_id', user.id)
           .single();
-        
-        console.log("Index: Resultado da busca de perfil:", { profile, profileError: profileError?.message });
         
         if (profile) {
           setUserProfile(profile);
           
           // Se é cliente, verificar se completou anamnese
           if (profile.user_type === "client") {
-            console.log("Index: Usuário é cliente, verificando anamnese...");
-            const { data: anamnesis, error: anamnesisError } = await supabase
+            const { data: anamnesis } = await supabase
               .from("client_anamnesis")
               .select("is_completed")
               .eq("client_id", user.id)
               .eq("is_completed", true)
               .single();
             
-            console.log("Index: Resultado da busca de anamnese:", { anamnesis, anamnesisError: anamnesisError?.message });
-            
             setAnamnesisComplete(!!anamnesis);
             
             // Se não completou anamnese, redirecionar
             if (!anamnesis) {
-              console.log("Index: Anamnese não encontrada, redirecionando para /anamnesis");
               navigate("/anamnesis");
               return;
             }
           } else {
-            console.log("Index: Usuário é profissional, não precisa de anamnese");
             setAnamnesisComplete(true); // Profissionais não precisam de anamnese
           }
-        } else {
-          console.log("Index: Perfil não encontrado");
-          setAnamnesisComplete(false);
         }
       }
     };
 
     if (user) {
-      console.log("Index: Iniciando fetchUserProfile");
       fetchUserProfile();
     }
   }, [user, navigate]);

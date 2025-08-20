@@ -89,23 +89,18 @@ const Auth = () => {
 
     setIsLoading(true);
     try {
-      console.log("Iniciando login...");
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log("Resultado do login:", { data: !!data, error: error?.message });
-
       if (error) {
-        console.log("Erro no login:", error);
         toast({
           title: "Erro no login",
           description: error.message,
           variant: "destructive",
         });
       } else if (data.user) {
-        console.log("Login bem-sucedido, buscando perfil...");
         // Verificar o tipo de usuário e anamnese
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
@@ -113,10 +108,7 @@ const Auth = () => {
           .eq("user_id", data.user.id)
           .single();
 
-        console.log("Resultado da busca de perfil:", { profile, profileError: profileError?.message });
-
         if (profileError) {
-          console.log("Erro ao buscar perfil:", profileError);
           toast({
             title: "Erro",
             description: "Erro ao carregar perfil do usuário.",
@@ -126,7 +118,6 @@ const Auth = () => {
         }
 
         if (profile?.user_type === "client") {
-          console.log("Usuário é cliente, verificando anamnese...");
           // Verificar se já completou a anamnese
           const { data: anamnesis, error: anamnesisError } = await supabase
             .from("client_anamnesis")
@@ -135,21 +126,16 @@ const Auth = () => {
             .eq("is_completed", true)
             .single();
 
-          console.log("Resultado da busca de anamnese:", { anamnesis, anamnesisError: anamnesisError?.message });
-
           if (!anamnesis) {
-            console.log("Anamnese não encontrada, redirecionando para /anamnesis");
             // Cliente não completou anamnese, redirecionar
             navigate("/anamnesis");
             return;
           }
         }
         
-        console.log("Redirecionando para /");
         navigate("/");
       }
     } catch (error) {
-      console.log("Erro inesperado no login:", error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro inesperado.",
