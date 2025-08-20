@@ -102,15 +102,24 @@ const Auth = () => {
         });
       } else if (data.user) {
         // Verificar o tipo de usuário e anamnese
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("user_type")
           .eq("user_id", data.user.id)
           .single();
 
+        if (profileError) {
+          toast({
+            title: "Erro",
+            description: "Erro ao carregar perfil do usuário.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         if (profile?.user_type === "client") {
           // Verificar se já completou a anamnese
-          const { data: anamnesis } = await supabase
+          const { data: anamnesis, error: anamnesisError } = await supabase
             .from("client_anamnesis")
             .select("is_completed")
             .eq("client_id", data.user.id)
