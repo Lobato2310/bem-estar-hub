@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Video, Search } from "lucide-react";
+import { Plus, Edit, Video, Search, Upload, X } from "lucide-react";
 
 interface Exercise {
   id: string;
@@ -29,6 +29,7 @@ const ExerciseManagement = () => {
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -41,6 +42,90 @@ const ExerciseManagement = () => {
     difficulty: "",
     video_url: ""
   });
+
+  const handleVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Erro",
+        description: "Apenas arquivos de vídeo são permitidos (MP4, WebM, OGG, MOV)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+    if (file.size > maxSize) {
+      toast({
+        title: "Erro",
+        description: "O arquivo deve ter no máximo 50MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingVideo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('exercise-videos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('exercise-videos')
+        .getPublicUrl(fileName);
+
+      setFormData(prev => ({ ...prev, video_url: data.publicUrl }));
+      
+      toast({
+        title: "Sucesso",
+        description: "Vídeo enviado com sucesso!"
+      });
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar o vídeo",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const handleRemoveVideo = async () => {
+    if (formData.video_url) {
+      try {
+        // Extract filename from URL
+        const url = new URL(formData.video_url);
+        const fileName = url.pathname.split('/').pop();
+        
+        if (fileName && formData.video_url.includes('exercise-videos')) {
+          await supabase.storage
+            .from('exercise-videos')
+            .remove([fileName]);
+        }
+      } catch (error) {
+        console.error('Error removing video:', error);
+      }
+    }
+    
+    setFormData(prev => ({ ...prev, video_url: "" }));
+    toast({
+      title: "Sucesso",
+      description: "Vídeo removido com sucesso!"
+    });
+  };
 
   const categories = [
     "Peito", "Costas", "Ombros", "Bíceps", "Tríceps", "Pernas", "Glúteos", "Abdomen", "Cardio", "Funcional"
@@ -358,13 +443,54 @@ const ExerciseManagement = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="video_url">URL do Vídeo Demonstrativo</Label>
-              <Input
-                id="video_url"
-                value={formData.video_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
-                placeholder="https://youtube.com/watch?v=..."
-              />
+              <Label htmlFor="video_upload">Vídeo Demonstrativo</Label>
+              {formData.video_url ? (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 p-3 bg-muted rounded-lg">
+                    <Video className="h-4 w-4 text-primary" />
+                    <span className="text-sm flex-1">Vídeo carregado</span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleRemoveVideo}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <video
+                    src={formData.video_url}
+                    controls
+                    className="w-full h-32 rounded-lg object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                  <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Faça upload de um vídeo demonstrativo
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Formatos aceitos: MP4, WebM, OGG, MOV (máx. 50MB)
+                  </p>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                    id="video_upload"
+                    disabled={uploadingVideo}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('video_upload')?.click()}
+                    disabled={uploadingVideo}
+                  >
+                    {uploadingVideo ? "Enviando..." : "Selecionar Vídeo"}
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">

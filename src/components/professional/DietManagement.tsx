@@ -467,8 +467,8 @@ const DietManagement = () => {
                         <div>
                           <p className="text-sm font-medium mb-2">Alimentos:</p>
                           <div className="space-y-1">
-                            {meal.foods.map((food) => (
-                              <Badge key={food.id} variant="secondary" className="mr-1 mb-1">
+                            {meal.foods.map((food, foodIndex) => (
+                              <Badge key={`${meal.id}-food-${foodIndex}`} variant="secondary" className="mr-1 mb-1">
                                 {food.name} - {food.quantity} {food.unit}
                               </Badge>
                             ))}
