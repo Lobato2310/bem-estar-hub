@@ -38,17 +38,21 @@ const Index = () => {
           
           // Se é cliente, verificar se completou anamnese
           if (profile.user_type === "client") {
-            const { data: anamnesis } = await supabase
+            const { data: anamnesis, error: anamnesisError } = await supabase
               .from("client_anamnesis")
               .select("is_completed")
               .eq("client_id", user.id)
-              .eq("is_completed", true)
-              .single();
+              .maybeSingle();
             
-            setAnamnesisComplete(!!anamnesis);
+            if (anamnesisError) {
+              console.error("Erro ao verificar anamnese:", anamnesisError);
+            }
+            
+            const isComplete = anamnesis && anamnesis.is_completed;
+            setAnamnesisComplete(isComplete);
             
             // Se não completou anamnese, redirecionar
-            if (!anamnesis) {
+            if (!isComplete) {
               navigate("/anamnesis");
               return;
             }

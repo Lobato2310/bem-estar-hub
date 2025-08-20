@@ -123,10 +123,13 @@ const Auth = () => {
             .from("client_anamnesis")
             .select("is_completed")
             .eq("client_id", data.user.id)
-            .eq("is_completed", true)
-            .single();
+            .maybeSingle();
 
-          if (!anamnesis) {
+          if (anamnesisError) {
+            console.error("Erro ao verificar anamnese:", anamnesisError);
+          }
+
+          if (!anamnesis || !anamnesis.is_completed) {
             // Cliente não completou anamnese, redirecionar
             navigate("/anamnesis");
             return;
