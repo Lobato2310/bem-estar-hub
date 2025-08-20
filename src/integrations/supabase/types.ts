@@ -419,6 +419,30 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_client_relationships: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          professional_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          professional_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          professional_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -603,6 +627,10 @@ export type Database = {
     Functions: {
       is_professional: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      professional_has_client_access: {
+        Args: { client_user_id: string; prof_id: string }
         Returns: boolean
       }
     }
