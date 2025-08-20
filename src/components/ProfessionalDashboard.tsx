@@ -20,13 +20,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import DietManagement from "@/components/professional/DietManagement";
+import ClientSelector from "@/components/professional/ClientSelector";
+import ClientPlanManagement from "@/components/professional/ClientPlanManagement";
+import ClientAnamnesis from "@/components/professional/ClientAnamnesis";
 
 interface Client {
   id: string;
   user_id: string;
   display_name: string;
   email: string;
-  user_type: string;
+  created_at: string;
 }
 
 interface ClientStats {
@@ -49,6 +52,7 @@ const ProfessionalDashboard = () => {
     recentCheckins: 0
   });
   const [loading, setLoading] = useState(true);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const ADMIN_PASSWORD = "MyFitLifeAdmProf";
 
@@ -282,17 +286,28 @@ const ProfessionalDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button className="w-full">
+                <Button 
+                  className="w-full"
+                  onClick={() => setActiveTab('plans')}
+                >
                   <Activity className="h-4 w-4 mr-2" />
-                  Criar Plano de Treino
+                  Gerenciar Planos de Treino
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setActiveTab('nutrition')}
+                >
                   <Utensils className="h-4 w-4 mr-2" />
-                  Criar Plano Nutricional
+                  Gerenciar Planos Nutricionais
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setActiveTab('clients')}
+                >
                   <Brain className="h-4 w-4 mr-2" />
-                  Agendar Sessão
+                  Gerenciar Clientes
                 </Button>
               </CardContent>
             </Card>
@@ -314,33 +329,61 @@ const ProfessionalDashboard = () => {
         </TabsContent>
 
         <TabsContent value="clients" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lista de Clientes</CardTitle>
-              <CardDescription>
-                Gerencie todos os seus clientes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {clients.length > 0 ? (
-                <div className="space-y-4">
-                  {clients.map((client) => (
-                    <div key={client.id} className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Selecionar Cliente</CardTitle>
+                <CardDescription>
+                  Escolha um cliente para gerenciar
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ClientSelector 
+                  onClientSelect={(client) => setSelectedClient(client)}
+                  selectedClientId={selectedClient?.user_id}
+                />
+              </CardContent>
+            </Card>
+            
+            {selectedClient && (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Perfil do Cliente</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
                       <div>
-                        <h3 className="font-medium">{client.display_name || 'Nome não informado'}</h3>
-                        <p className="text-sm text-muted-foreground">{client.email}</p>
+                        <strong>Nome:</strong> {selectedClient.display_name || "Nome não informado"}
                       </div>
-                      <Badge variant="secondary">{client.user_type}</Badge>
+                      <div>
+                        <strong>Email:</strong> {selectedClient.email}
+                      </div>
+                      <div>
+                        <strong>Cliente desde:</strong> {new Date(selectedClient.created_at).toLocaleDateString('pt-BR')}
+                      </div>
                     </div>
-                  ))}
+                  </CardContent>
+                </Card>
+                
+                <div className="space-y-4">
+                  <Button 
+                    className="w-full"
+                    onClick={() => setActiveTab('client-plans')}
+                  >
+                    Gerenciar Planos
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setActiveTab('client-anamnesis')}
+                  >
+                    Ver Anamnese
+                  </Button>
                 </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-8">
-                  Nenhum cliente encontrado
-                </p>
-              )}
-            </CardContent>
-          </Card>
+              </>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="plans" className="space-y-6">
@@ -397,6 +440,34 @@ const ProfessionalDashboard = () => {
 
         <TabsContent value="diet-management" className="space-y-6">
           <DietManagement />
+        </TabsContent>
+
+        <TabsContent value="client-plans" className="space-y-6">
+          {selectedClient ? (
+            <ClientPlanManagement client={selectedClient} />
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Selecione um cliente na aba "Clientes" para gerenciar seus planos
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="client-anamnesis" className="space-y-6">
+          {selectedClient ? (
+            <ClientAnamnesis client={selectedClient} />
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Selecione um cliente na aba "Clientes" para ver sua anamnese
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
