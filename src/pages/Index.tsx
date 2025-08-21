@@ -110,7 +110,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <main className="pb-4">
+      <main className="pb-4 md:pb-8">
         {renderSection()}
       </main>
     </div>

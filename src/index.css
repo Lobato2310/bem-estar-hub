@@ -115,5 +115,52 @@ Cores: branco, verde claro, preto - sistema intuitivo e simples
 
   body {
     @apply bg-background text-foreground;
+    font-size: 16px; /* Base font size for mobile readability */
+  }
+  
+  /* Hide scrollbars but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Mobile-specific optimizations */
+  @media (max-width: 768px) {
+    .container {
+      @apply px-4;
+    }
+    
+    /* Better touch targets */
+    button, .clickable {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Improved text legibility on mobile */
+    h1 {
+      @apply text-2xl;
+    }
+    
+    h2 {
+      @apply text-xl;
+    }
+    
+    h3 {
+      @apply text-lg;
+    }
+    
+    /* Better mobile spacing and layout */
+    .mobile-safe-area {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    /* Improved form controls for mobile */
+    input, textarea, select {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
   }
 }

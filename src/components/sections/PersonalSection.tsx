@@ -243,14 +243,14 @@ const PersonalSection = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center space-x-3">
-          <Dumbbell className="h-10 w-10 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Personal Trainer</h1>
+      <div className="text-center space-y-3 md:space-y-4">
+        <div className="flex items-center justify-center space-x-2 md:space-x-3">
+          <Dumbbell className="h-8 w-8 md:h-10 md:w-10 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Personal Trainer</h1>
         </div>
-        <p className="text-lg text-muted-foreground">
+        <p className="text-base md:text-lg text-muted-foreground px-4">
           Treinos personalizados para alcançar seus objetivos
         </p>
       </div>
@@ -265,33 +265,33 @@ const PersonalSection = () => {
       />
 
       {/* Treino de hoje */}
-      <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary-light/20 border-primary/20">
+      <Card className="p-4 md:p-6 bg-gradient-to-r from-primary/10 to-primary-light/20 border-primary/20">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-foreground flex items-center space-x-2">
-            <Calendar className="h-5 w-5" />
+          <h2 className="text-lg md:text-xl font-semibold text-foreground flex items-center space-x-2">
+            <Calendar className="h-4 w-4 md:h-5 md:w-5" />
             <span>Treino de Hoje</span>
           </h2>
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
+          <div className="flex items-center space-x-2 text-xs md:text-sm text-muted-foreground">
+            <Clock className="h-3 w-3 md:h-4 md:w-4" />
             <span>{todayWorkout.duration}</span>
           </div>
         </div>
         
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium text-foreground">{todayWorkout.title}</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="space-y-3 md:space-y-4">
+          <h3 className="text-base md:text-lg font-medium text-foreground">{todayWorkout.title}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {todayWorkout.exercises.map((exercise, index) => (
-              <div key={index} className="p-2 bg-background rounded-lg border group cursor-pointer hover:bg-accent transition-colors">
+              <div key={index} className="p-3 bg-background rounded-lg border group cursor-pointer hover:bg-accent transition-colors min-h-[50px]">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-foreground">{exercise}</span>
+                  <span className="text-sm md:text-base text-foreground flex-1">{exercise}</span>
                   {isWorkoutActive && (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => handleExerciseWeight(exercise)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-6 w-6"
+                      className="opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity p-2 h-8 w-8 ml-2 flex-shrink-0"
                     >
-                      <Plus className="h-3 w-3" />
+                      <Plus className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -299,7 +299,7 @@ const PersonalSection = () => {
             ))}
           </div>
           {!isWorkoutActive && (
-            <Button className="w-full md:w-auto" onClick={handleStartWorkout}>
+            <Button className="w-full" onClick={handleStartWorkout}>
               <PlayCircle className="h-4 w-4 mr-2" />
               Iniciar Treino
             </Button>
@@ -308,30 +308,30 @@ const PersonalSection = () => {
       </Card>
 
       {/* Tipos de treino */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Tipos de Treino</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-4 md:space-y-6">
+        <h2 className="text-xl md:text-2xl font-semibold text-foreground">Tipos de Treino</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {workoutTypes.map((type, index) => {
             const Icon = type.icon;
             return (
-              <Card key={index} className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                <div className="space-y-4">
+              <Card key={index} className="p-4 md:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                <div className="space-y-3 md:space-y-4">
                   <div className="flex items-center space-x-3">
-                    <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="h-6 w-6 text-primary-foreground" />
+                    <div className="p-2 md:p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                      <Icon className="h-5 w-5 md:h-6 md:w-6 text-primary-foreground" />
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground">{type.title}</h3>
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base md:text-lg font-semibold text-foreground">{type.title}</h3>
+                      <div className="flex items-center space-x-2 text-xs md:text-sm text-muted-foreground">
+                        <Clock className="h-3 w-3 md:h-4 md:w-4" />
                         <span>{type.duration}</span>
                       </div>
                     </div>
                   </div>
-                   <p className="text-muted-foreground">{type.description}</p>
+                   <p className="text-sm md:text-base text-muted-foreground">{type.description}</p>
                    <Button 
                      variant="outline" 
-                     className="w-full"
+                     className="w-full min-h-[44px]"
                      onClick={() => {
                        setSelectedWorkoutType(type.title === "Musculação" ? "musculacao" : "cardio");
                        setShowWorkoutCalendar(true);
@@ -347,36 +347,36 @@ const PersonalSection = () => {
       </div>
 
       {/* Progresso */}
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center space-x-2">
-          <Trophy className="h-5 w-5" />
+      <Card className="p-4 md:p-6">
+        <h2 className="text-lg md:text-xl font-semibold text-foreground mb-4 flex items-center space-x-2">
+          <Trophy className="h-4 w-4 md:h-5 md:w-5" />
           <span>Seu Progresso</span>
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">0</p>
-            <p className="text-sm text-muted-foreground">Treinos Concluídos</p>
+        <div className="grid grid-cols-3 gap-3 md:gap-6">
+          <div className="text-center space-y-1 md:space-y-2">
+            <p className="text-xl md:text-2xl font-bold text-primary">0</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Treinos Concluídos</p>
           </div>
-          <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">0h</p>
-            <p className="text-sm text-muted-foreground">Tempo Total</p>
+          <div className="text-center space-y-1 md:space-y-2">
+            <p className="text-xl md:text-2xl font-bold text-primary">0h</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Tempo Total</p>
           </div>
-          <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">0kg</p>
-            <p className="text-sm text-muted-foreground">Peso Levantado</p>
+          <div className="text-center space-y-1 md:space-y-2">
+            <p className="text-xl md:text-2xl font-bold text-primary">0kg</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Peso Levantado</p>
           </div>
         </div>
       </Card>
 
       {/* Call to action */}
-      <Card className="p-6 bg-accent border-accent">
-        <div className="text-center space-y-4">
-          <Target className="h-12 w-12 text-accent-foreground mx-auto" />
-          <h3 className="text-xl font-semibold text-accent-foreground">Pronto para começar?</h3>
-          <p className="text-accent-foreground/80">
+      <Card className="p-4 md:p-6 bg-accent border-accent">
+        <div className="text-center space-y-3 md:space-y-4">
+          <Target className="h-10 w-10 md:h-12 md:w-12 text-accent-foreground mx-auto" />
+          <h3 className="text-lg md:text-xl font-semibold text-accent-foreground">Pronto para começar?</h3>
+          <p className="text-sm md:text-base text-accent-foreground/80 px-4">
             Configure seu perfil e objetivos para receber treinos personalizados
           </p>
-          <Button onClick={() => setShowGoalsDialog(true)}>Configurar Perfil</Button>
+          <Button onClick={() => setShowGoalsDialog(true)} className="min-h-[44px]">Configurar Perfil</Button>
         </div>
       </Card>
 

@@ -56,12 +56,12 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
   return (
     <nav className="bg-background border-b border-border">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14 md:h-16">
           <div className="flex items-center space-x-2">
             <img 
               src="/lovable-uploads/34fcfefb-cf55-4161-a65f-3135e5cf6fb0.png" 
               alt="MyFitLife Logo" 
-              className="h-8 w-auto"
+              className="h-6 md:h-8 w-auto"
             />
           </div>
           
@@ -107,7 +107,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
         
         {/* Mobile navigation */}
         <div className="md:hidden">
-          <div className="flex overflow-x-auto pb-2 space-x-1">
+          <div className="flex overflow-x-auto pb-3 space-x-2 scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -115,26 +115,33 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
                   className={`
-                    flex flex-col items-center space-y-1 p-2 rounded-lg min-w-0 flex-shrink-0 transition-all duration-300
+                    flex flex-col items-center space-y-1 px-3 py-2 rounded-lg min-w-0 flex-shrink-0 transition-all duration-300 min-h-[60px] min-w-[60px]
                     ${activeTab === tab.id 
-                      ? 'bg-primary text-primary-foreground' 
+                      ? 'bg-primary text-primary-foreground shadow-md' 
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                     }
                   `}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-xs font-medium truncate">{tab.label}</span>
+                  <Icon className="h-6 w-6" />
+                  <span className="text-xs font-medium text-center leading-tight">{tab.label}</span>
                 </button>
               );
             })}
           </div>
           
-          {/* Mobile updates for clients */}
-          {userProfile?.user_type === 'client' && (
-            <div className="mt-2 px-2">
-              <ClientUpdatesDialog />
-            </div>
-          )}
+          {/* Mobile updates and logout for clients */}
+          <div className="flex items-center justify-between mt-2 px-2">
+            {userProfile?.user_type === 'client' && <ClientUpdatesDialog />}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={signOut}
+              className="text-muted-foreground hover:text-foreground ml-auto"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              <span className="text-xs">Sair</span>
+            </Button>
+          </div>
         </div>
       </div>
     </nav>

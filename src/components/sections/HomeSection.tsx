@@ -21,39 +21,39 @@ const HomeSection = ({ onNavigate, userProfile }: HomeSectionProps) => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 md:space-y-8">
       {/* Header de boas-vindas */}
-      <div className="text-center space-y-4">
-        <div className="flex justify-center mb-4">
+      <div className="text-center space-y-3 md:space-y-4">
+        <div className="flex justify-center mb-3 md:mb-4">
           <img 
             src="/lovable-uploads/34fcfefb-cf55-4161-a65f-3135e5cf6fb0.png" 
             alt="MyFitLife Logo" 
-            className="h-16 w-auto"
+            className="h-12 md:h-16 w-auto"
           />
         </div>
         {userProfile?.display_name && (
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
             Olá, {userProfile.display_name}!
           </h1>
         )}
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
           Sua jornada para uma vida mais saudável começa aqui. Conecte-se com profissionais especializados e alcance seus objetivos.
         </p>
       </div>
 
       {/* Estatísticas rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="p-6 bg-card border border-border hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-accent rounded-lg">
-                  <Icon className="h-6 w-6 text-accent-foreground" />
+            <Card key={index} className="p-4 md:p-6 bg-card border border-border hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center space-x-3 md:space-x-4">
+                <div className="p-2 md:p-3 bg-accent rounded-lg flex-shrink-0">
+                  <Icon className="h-5 w-5 md:h-6 md:w-6 text-accent-foreground" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xl md:text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               </div>
             </Card>
@@ -62,9 +62,9 @@ const HomeSection = ({ onNavigate, userProfile }: HomeSectionProps) => {
       </div>
 
       {/* Ações rápidas */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground text-center">Acesso Rápido</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="space-y-4 md:space-y-6">
+        <h2 className="text-xl md:text-2xl font-semibold text-foreground text-center">Acesso Rápido</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
@@ -72,12 +72,12 @@ const HomeSection = ({ onNavigate, userProfile }: HomeSectionProps) => {
                 key={action.id}
                 onClick={() => onNavigate(action.id)}
                 variant="outline"
-                className="h-24 flex-col space-y-2 border-2 hover:scale-105 transition-all duration-300"
+                className="h-20 md:h-24 flex-col space-y-1 md:space-y-2 border-2 hover:scale-105 transition-all duration-300 min-h-[80px]"
               >
                 <div className={`p-2 rounded-lg ${action.color}`}>
-                  <Icon className="h-6 w-6 text-primary-foreground" />
+                  <Icon className="h-5 w-5 md:h-6 md:w-6 text-primary-foreground" />
                 </div>
-                <span className="font-medium">{action.label}</span>
+                <span className="font-medium text-sm md:text-base text-center leading-tight">{action.label}</span>
               </Button>
             );
           })}
@@ -85,39 +85,39 @@ const HomeSection = ({ onNavigate, userProfile }: HomeSectionProps) => {
       </div>
 
       {/* Seções dos profissionais */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground text-center">Nossos Profissionais</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer" 
+      <div className="space-y-4 md:space-y-6">
+        <h2 className="text-xl md:text-2xl font-semibold text-foreground text-center">Nossos Profissionais</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <Card className="p-4 md:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer min-h-[120px]" 
                 onClick={() => onNavigate("personal")}>
-            <div className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-                <Dumbbell className="h-8 w-8 text-primary-foreground" />
+            <div className="text-center space-y-3 md:space-y-4">
+              <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-primary rounded-full flex items-center justify-center">
+                <Dumbbell className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground">Personal Trainer</h3>
-              <p className="text-muted-foreground">Treinos personalizados de musculação e corrida</p>
+              <h3 className="text-lg md:text-xl font-semibold text-foreground">Personal Trainer</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Treinos personalizados de musculação e corrida</p>
             </div>
           </Card>
 
-          <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer" 
+          <Card className="p-4 md:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer min-h-[120px]" 
                 onClick={() => onNavigate("nutrition")}>
-            <div className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-                <Apple className="h-8 w-8 text-primary-foreground" />
+            <div className="text-center space-y-3 md:space-y-4">
+              <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-primary rounded-full flex items-center justify-center">
+                <Apple className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground">Nutricionista</h3>
-              <p className="text-muted-foreground">Bioimpedância e dietas personalizadas</p>
+              <h3 className="text-lg md:text-xl font-semibold text-foreground">Nutricionista</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Bioimpedância e dietas personalizadas</p>
             </div>
           </Card>
 
-          <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer" 
+          <Card className="p-4 md:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer min-h-[120px]" 
                 onClick={() => onNavigate("psychology")}>
-            <div className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-                <Brain className="h-8 w-8 text-primary-foreground" />
+            <div className="text-center space-y-3 md:space-y-4">
+              <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-primary rounded-full flex items-center justify-center">
+                <Brain className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground">Psicólogo</h3>
-              <p className="text-muted-foreground">Acompanhamento e motivação para seus objetivos</p>
+              <h3 className="text-lg md:text-xl font-semibold text-foreground">Psicólogo</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Acompanhamento e motivação para seus objetivos</p>
             </div>
           </Card>
         </div>
