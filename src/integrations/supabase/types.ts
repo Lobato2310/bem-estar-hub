@@ -584,6 +584,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          assinatura_ativa: boolean
+          created_at: string
+          data_expiracao: string | null
+          data_inicio: string | null
+          email: string
+          id: string
+          mercado_pago_payment_id: string | null
+          mercado_pago_status: string | null
+          plano: string | null
+          updated_at: string
+          user_id: string
+          valor_pago: number | null
+        }
+        Insert: {
+          assinatura_ativa?: boolean
+          created_at?: string
+          data_expiracao?: string | null
+          data_inicio?: string | null
+          email: string
+          id?: string
+          mercado_pago_payment_id?: string | null
+          mercado_pago_status?: string | null
+          plano?: string | null
+          updated_at?: string
+          user_id: string
+          valor_pago?: number | null
+        }
+        Update: {
+          assinatura_ativa?: boolean
+          created_at?: string
+          data_expiracao?: string | null
+          data_inicio?: string | null
+          email?: string
+          id?: string
+          mercado_pago_payment_id?: string | null
+          mercado_pago_status?: string | null
+          plano?: string | null
+          updated_at?: string
+          user_id?: string
+          valor_pago?: number | null
+        }
+        Relationships: []
+      }
       workout_plans: {
         Row: {
           client_id: string

@@ -6,7 +6,8 @@ import {
   Brain,
   Heart,
   LogOut,
-  Scale
+  Scale,
+  CreditCard
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     { id: "measurements", label: "Medidas", icon: Scale },
     { id: "calories", label: "Calorias", icon: Calculator },
     { id: "psychology", label: "Psicologia", icon: Brain },
+    { id: "subscription", label: "Assinatura", icon: CreditCard },
   ];
 
   return (
