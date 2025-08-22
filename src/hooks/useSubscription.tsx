@@ -26,6 +26,20 @@ export const useSubscription = () => {
     }
 
     try {
+      // Verificar se o usuário é profissional
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('user_id', user.id)
+        .single();
+
+      // Profissionais não precisam de assinatura
+      if (profile?.user_type === 'professional') {
+        setIsSubscribed(true);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("user_subscriptions")
         .select("*")
@@ -45,7 +59,7 @@ export const useSubscription = () => {
           (!data.data_expiracao || new Date(data.data_expiracao) > new Date());
         setIsSubscribed(isActive);
       } else {
-        // Criar registro vazio se não existir
+        // Criar registro vazio se não existir (apenas para clientes)
         const { error: insertError } = await supabase
           .from("user_subscriptions")
           .insert({

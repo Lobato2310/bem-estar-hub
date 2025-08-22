@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import HomeSection from "@/components/sections/HomeSection";
@@ -17,6 +18,7 @@ const Index = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [anamnesisComplete, setAnamnesisComplete] = useState<boolean | null>(null);
   const { user, loading } = useAuth();
+  const { isSubscribed, loading: subscriptionLoading } = useSubscription();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,7 +29,7 @@ const Index = () => {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (user) {
+      if (user && !subscriptionLoading) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -37,8 +39,15 @@ const Index = () => {
         if (profile) {
           setUserProfile(profile);
           
-          // Se é cliente, verificar se completou anamnese
+          // Se é cliente, verificar assinatura primeiro
           if (profile.user_type === "client") {
+            // Se não tem assinatura ativa, redirecionar para assinatura
+            if (!isSubscribed) {
+              setActiveTab("subscription");
+              return;
+            }
+
+            // Se tem assinatura ativa, verificar anamnese
             const { data: anamnesis, error: anamnesisError } = await supabase
               .from("client_anamnesis")
               .select("is_completed")
@@ -64,10 +73,10 @@ const Index = () => {
       }
     };
 
-    if (user) {
+    if (user && !subscriptionLoading) {
       fetchUserProfile();
     }
-  }, [user, navigate]);
+  }, [user, navigate, isSubscribed, subscriptionLoading]);
 
   const renderSection = () => {
     // Se o usuário for profissional, mostrar dashboard profissional na home
@@ -95,7 +104,7 @@ const Index = () => {
     }
   };
 
-  if (loading || !userProfile || anamnesisComplete === null) {
+  if (loading || subscriptionLoading || !userProfile || anamnesisComplete === null) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
