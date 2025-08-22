@@ -36,17 +36,23 @@ const Index = () => {
           .eq('user_id', user.id)
           .single();
         
+        console.log("User profile in Index:", profile);
+        console.log("Is subscribed:", isSubscribed);
+        
         if (profile) {
           setUserProfile(profile);
           
           // Se é cliente, verificar assinatura primeiro
           if (profile.user_type === "client") {
+            console.log("User is client, checking subscription status...");
             // Se não tem assinatura ativa, redirecionar para assinatura
             if (!isSubscribed) {
+              console.log("Client not subscribed, redirecting to subscription");
               setActiveTab("subscription");
               return;
             }
 
+            console.log("Client is subscribed, checking anamnesis...");
             // Se tem assinatura ativa, verificar anamnese
             const { data: anamnesis, error: anamnesisError } = await supabase
               .from("client_anamnesis")
@@ -63,10 +69,12 @@ const Index = () => {
             
             // Se não completou anamnese, redirecionar
             if (!isComplete) {
+              console.log("Anamnesis not complete, redirecting to anamnesis");
               navigate("/anamnesis");
               return;
             }
           } else {
+            console.log("User is professional, no subscription check needed");
             setAnamnesisComplete(true); // Profissionais não precisam de anamnese
           }
         }

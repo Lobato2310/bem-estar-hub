@@ -33,18 +33,26 @@ export const useSubscription = () => {
         .eq('user_id', user.id)
         .single();
 
+      console.log("Profile fetched:", profile);
+
       // Profissionais não precisam de assinatura
       if (profile?.user_type === 'professional') {
+        console.log("User is professional, setting isSubscribed to true");
         setIsSubscribed(true);
         setLoading(false);
         return;
       }
+
+      console.log("User is client, checking subscription...");
 
       const { data, error } = await supabase
         .from("user_subscriptions")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
+
+      console.log("Subscription data:", data);
+      console.log("Subscription error:", error);
 
       if (error) {
         console.error("Erro ao buscar assinatura:", error);
@@ -57,9 +65,11 @@ export const useSubscription = () => {
         // Verificar se a assinatura está ativa e não expirou
         const isActive = data.assinatura_ativa && 
           (!data.data_expiracao || new Date(data.data_expiracao) > new Date());
+        console.log("Subscription active:", isActive);
         setIsSubscribed(isActive);
       } else {
         // Criar registro vazio se não existir (apenas para clientes)
+        console.log("No subscription found, creating new record...");
         const { error: insertError } = await supabase
           .from("user_subscriptions")
           .insert({
@@ -80,6 +90,7 @@ export const useSubscription = () => {
           data_expiracao: null,
           valor_pago: null
         });
+        console.log("Setting isSubscribed to false for new client");
         setIsSubscribed(false);
       }
     } catch (error) {
