@@ -164,9 +164,10 @@ export default function Anamnesis() {
         description: "Seu perfil foi completado e você será redirecionado.",
       });
 
+      // Esperar um pouco mais e forçar reload da página para garantir que os dados sejam carregados
       setTimeout(() => {
-        navigate("/");
-      }, 1500);
+        window.location.href = "/";
+      }, 2000);
     } catch (error) {
       console.error("Erro ao salvar anamnese:", error);
       toast({
