@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import HomeSection from "@/components/sections/HomeSection";
@@ -18,10 +20,13 @@ const Index = () => {
     return urlParams.get('tab') || 'home';
   });
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [anamnesisComplete, setAnamnesisComplete] = useState<boolean | null>(null);
   const { user } = useAuth();
+  const { isSubscribed, loading: subscriptionLoading } = useSubscription();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUserData = async () => {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -31,12 +36,36 @@ const Index = () => {
         
         if (profile) {
           setUserProfile(profile);
+
+          // Se é cliente, verificar assinatura e anamnese
+          if (profile.user_type === "client" && !subscriptionLoading) {
+            // Verificar anamnese
+            const { data: anamnesis } = await supabase
+              .from("client_anamnesis")
+              .select("is_completed")
+              .eq("client_id", user.id)
+              .maybeSingle();
+            
+            const isAnamnesisComplete = anamnesis?.is_completed || false;
+            setAnamnesisComplete(isAnamnesisComplete);
+
+            // Lógica de redirecionamento para clientes
+            if (!isSubscribed && activeTab !== "subscription") {
+              setActiveTab("subscription");
+            } else if (isSubscribed && !isAnamnesisComplete) {
+              navigate("/anamnesis");
+            }
+          } else if (profile.user_type === "professional") {
+            setAnamnesisComplete(true);
+          }
         }
       }
     };
 
-    fetchUserProfile();
-  }, [user]);
+    if (!subscriptionLoading) {
+      fetchUserData();
+    }
+  }, [user, isSubscribed, subscriptionLoading, navigate, activeTab]);
 
   const renderSection = () => {
     // Se o usuário for profissional, mostrar dashboard profissional na home
@@ -63,6 +92,22 @@ const Index = () => {
         return <HomeSection onNavigate={setActiveTab} userProfile={userProfile} />;
     }
   };
+
+  // Loading state enquanto verifica dados do usuário
+  if (subscriptionLoading || !userProfile || (userProfile.user_type === "client" && anamnesisComplete === null)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <img 
+            src="/lovable-uploads/34fcfefb-cf55-4161-a65f-3135e5cf6fb0.png" 
+            alt="MyFitLife Logo" 
+            className="h-16 w-auto mx-auto mb-4"
+          />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

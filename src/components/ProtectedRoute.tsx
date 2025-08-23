@@ -99,7 +99,9 @@ const ProtectedRoute = ({
 
   // Verificar assinatura (apenas para clientes)
   if (requireSubscription && userProfile.user_type === "client" && !isSubscribed) {
-    return <Navigate to="/?tab=subscription" replace />;
+    // Usar window.location para garantir que a tab seja definida
+    window.location.href = "/?tab=subscription";
+    return null;
   }
 
   // Verificar anamnese (apenas para clientes)
