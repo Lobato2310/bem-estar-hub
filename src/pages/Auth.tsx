@@ -101,42 +101,16 @@ const Auth = () => {
           variant: "destructive",
         });
       } else if (data.user) {
-        // Verificar o tipo de usuário e anamnese
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("user_id", data.user.id)
-          .single();
-
-        if (profileError) {
-          toast({
-            title: "Erro",
-            description: "Erro ao carregar perfil do usuário.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (profile?.user_type === "client") {
-          // Verificar se já completou a anamnese
-          const { data: anamnesis, error: anamnesisError } = await supabase
-            .from("client_anamnesis")
-            .select("is_completed")
-            .eq("client_id", data.user.id)
-            .maybeSingle();
-
-          if (anamnesisError) {
-            console.error("Erro ao verificar anamnese:", anamnesisError);
-          }
-
-          if (!anamnesis || !anamnesis.is_completed) {
-            // Cliente não completou anamnese, redirecionar
-            navigate("/anamnesis");
-            return;
-          }
-        }
+        // Login bem-sucedido - redirecionar diretamente para evitar loops
+        toast({
+          title: "Login realizado!",
+          description: "Redirecionando...",
+        });
         
-        navigate("/");
+        // Usar window.location para forçar um reload completo e evitar loops
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
       }
     } catch (error) {
       toast({
