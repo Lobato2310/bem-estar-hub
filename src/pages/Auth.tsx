@@ -101,13 +101,12 @@ const Auth = () => {
           variant: "destructive",
         });
       } else if (data.user) {
-        // Login bem-sucedido - redirecionar diretamente para evitar loops
         toast({
           title: "Login realizado!",
           description: "Redirecionando...",
         });
         
-        // Usar window.location para forçar um reload completo e evitar loops
+        // Simples redirecionamento - o ProtectedRoute vai handle o resto
         setTimeout(() => {
           window.location.href = "/";
         }, 1000);
