@@ -48,7 +48,10 @@ const Index = () => {
             // Se não tem assinatura ativa, redirecionar para assinatura
             if (!isSubscribed) {
               console.log("Client not subscribed, redirecting to subscription");
-              setActiveTab("subscription");
+              // Só muda para subscription se não estiver já nela (evita loop)
+              if (activeTab !== "subscription") {
+                setActiveTab("subscription");
+              }
               return;
             }
 
@@ -84,7 +87,7 @@ const Index = () => {
     if (user && !subscriptionLoading) {
       fetchUserProfile();
     }
-  }, [user, navigate, isSubscribed, subscriptionLoading]);
+  }, [user, navigate, isSubscribed, subscriptionLoading, activeTab]);
 
   const renderSection = () => {
     // Se o usuário for profissional, mostrar dashboard profissional na home
