@@ -46,7 +46,7 @@ const SubscriptionSection = () => {
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-bold">Minha Assinatura</h1>
         <p className="text-muted-foreground">
-          Gerencie sua assinatura e acesse recursos premium
+          Gerencie seu plano de acompanhamento profissional
         </p>
       </div>
 
@@ -54,7 +54,7 @@ const SubscriptionSection = () => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between text-lg">
-            Status da Assinatura
+            Status do Plano Profissional
             <Badge variant={isSubscribed ? "default" : "secondary"}>
               {isSubscribed ? "ATIVA" : "INATIVA"}
             </Badge>
@@ -109,10 +109,10 @@ const SubscriptionSection = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-orange-900 dark:text-orange-100">
-                    Assinatura Necessária
+                    Plano Profissional Necessário
                   </h3>
                   <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
-                    Você precisa de uma assinatura ativa para acessar todos os recursos premium
+                    Contrate um plano de acompanhamento profissional para usar esta ferramenta de apoio
                   </p>
                 </div>
               </div>
@@ -129,7 +129,7 @@ const SubscriptionSection = () => {
           variant={isSubscribed ? "outline" : "default"}
         >
           <ExternalLink className="mr-2 h-5 w-5" />
-          {isSubscribed ? "Gerenciar Assinatura" : "Regularizar Assinatura"}
+          {isSubscribed ? "Gerenciar Plano Profissional" : "Contratar Plano Profissional"}
         </Button>
 
         <Button 
@@ -148,8 +148,9 @@ const SubscriptionSection = () => {
           <div className="text-center space-y-2">
             <h3 className="font-medium">Como funciona?</h3>
             <p className="text-sm text-muted-foreground">
-              Clique em "Regularizar Assinatura" para ser redirecionado ao site de pagamento. 
-              Após a confirmação do pagamento, seu acesso premium será ativado automaticamente.
+              Contrate profissionais qualificados (nutricionista, personal trainer e psicólogo) para acompanhamento online. 
+              Clique em "Contratar Plano Profissional" para ser redirecionado ao nosso site seguro de pagamento. 
+              O aplicativo é uma ferramenta de apoio gratuita, inclusa sem custo adicional, para você acompanhar os serviços contratados.
             </p>
           </div>
         </CardContent>
