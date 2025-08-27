@@ -51,42 +51,42 @@ export const DailyCheckinDialog = ({ open, onOpenChange }: DailyCheckinDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Calendar className="h-4 w-4" />
             Check-in Diário
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Data */}
           <div className="text-center">
-            <p className="text-lg font-semibold text-foreground">
+            <p className="text-base font-semibold text-foreground">
               {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>
-            <p className="text-sm text-muted-foreground">Como você está se sentindo hoje?</p>
+            <p className="text-xs text-muted-foreground">Como você está se sentindo hoje?</p>
           </div>
 
           {/* Humor */}
-          <Card className="p-4">
-            <div className="space-y-3">
+          <Card className="p-3">
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Heart className="h-5 w-5 text-primary" />
-                <Label className="text-sm font-medium">Como está seu humor hoje?</Label>
+                <Heart className="h-4 w-4 text-primary" />
+                <Label className="text-xs font-medium">Como está seu humor hoje?</Label>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {[1, 2, 3, 4, 5].map((level) => (
                   <button
                     key={level}
                     onClick={() => setMood(level)}
-                    className={`w-full p-3 text-left rounded-lg border transition-colors ${
+                    className={`w-full p-2 text-left rounded-lg border transition-colors ${
                       mood === level 
                         ? 'border-primary bg-primary/10 text-primary' 
                         : 'border-border hover:bg-accent'
                     }`}
                   >
-                    <span className="text-sm">{moodLabels[level - 1]}</span>
+                    <span className="text-xs">{moodLabels[level - 1]}</span>
                   </button>
                 ))}
               </div>
@@ -94,24 +94,24 @@ export const DailyCheckinDialog = ({ open, onOpenChange }: DailyCheckinDialogPro
           </Card>
 
           {/* Energia */}
-          <Card className="p-4">
-            <div className="space-y-3">
+          <Card className="p-3">
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                <Label className="text-sm font-medium">Como está sua energia hoje?</Label>
+                <Zap className="h-4 w-4 text-primary" />
+                <Label className="text-xs font-medium">Como está sua energia hoje?</Label>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {[1, 2, 3, 4, 5].map((level) => (
                   <button
                     key={level}
                     onClick={() => setEnergy(level)}
-                    className={`w-full p-3 text-left rounded-lg border transition-colors ${
+                    className={`w-full p-2 text-left rounded-lg border transition-colors ${
                       energy === level 
                         ? 'border-primary bg-primary/10 text-primary' 
                         : 'border-border hover:bg-accent'
                     }`}
                   >
-                    <span className="text-sm">{energyLabels[level - 1]}</span>
+                    <span className="text-xs">{energyLabels[level - 1]}</span>
                   </button>
                 ))}
               </div>
@@ -119,17 +119,17 @@ export const DailyCheckinDialog = ({ open, onOpenChange }: DailyCheckinDialogPro
           </Card>
 
           {/* Observações */}
-          <Card className="p-4">
-            <div className="space-y-3">
+          <Card className="p-3">
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
-                <Label className="text-sm font-medium">Observações (opcional)</Label>
+                <MessageSquare className="h-4 w-4 text-primary" />
+                <Label className="text-xs font-medium">Observações (opcional)</Label>
               </div>
               <Textarea
                 placeholder="Como foi seu dia? Algo importante aconteceu?"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="min-h-[80px]"
+                className="min-h-[60px] text-xs"
               />
             </div>
           </Card>

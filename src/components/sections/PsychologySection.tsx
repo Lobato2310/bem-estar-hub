@@ -92,10 +92,12 @@ const PsychologySection = () => {
                 </div>
                 <p className="text-foreground">{session.type}</p>
               </div>
-              <Button variant="outline" className="w-full">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                {session.status === 'Agendada' ? 'Entrar na Sessão' : 'Ver Relatório'}
-              </Button>
+              {session.status === 'Concluída' && (
+                <Button variant="outline" className="w-full">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Ver Relatório
+                </Button>
+              )}
             </div>
           </Card>
         ))}
@@ -133,35 +135,27 @@ const PsychologySection = () => {
           <TrendingUp className="h-5 w-5" />
           <span>Humor e Energia - Esta Semana</span>
         </h2>
-        <div className="grid grid-cols-7 gap-4">
+        <div className="grid grid-cols-7 gap-2 md:gap-4">
           {moodData.map((day, index) => (
             <div key={index} className="text-center space-y-2">
-              <p className="text-sm font-medium text-foreground">{day.day}</p>
-              <div className="space-y-1">
+              <p className="text-xs md:text-sm font-medium text-foreground">{day.day}</p>
+              <div className="space-y-2">
                 <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Humor</p>
-                  <div className="flex justify-center">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span
-                        key={star}
-                        className={`text-sm ${star <= day.mood ? 'text-yellow-400' : 'text-gray-300'}`}
-                      >
-                        ⭐
-                      </span>
-                    ))}
+                  <p className="text-xs text-muted-foreground mb-1">Humor</p>
+                  <div className="w-full bg-secondary rounded-full h-3 md:h-4">
+                    <div 
+                      className="bg-yellow-400 h-3 md:h-4 rounded-full transition-all duration-300" 
+                      style={{ width: `${(day.mood / 5) * 100}%` }}
+                    ></div>
                   </div>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Energia</p>
-                  <div className="flex justify-center">
-                    {[1, 2, 3, 4, 5].map((level) => (
-                      <div
-                        key={level}
-                        className={`w-2 h-3 mx-0.5 rounded-sm ${
-                          level <= day.energy ? 'bg-primary' : 'bg-gray-300'
-                        }`}
-                      />
-                    ))}
+                  <p className="text-xs text-muted-foreground mb-1">Energia</p>
+                  <div className="w-full bg-secondary rounded-full h-3 md:h-4">
+                    <div 
+                      className="bg-primary h-3 md:h-4 rounded-full transition-all duration-300" 
+                      style={{ width: `${(day.energy / 5) * 100}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
