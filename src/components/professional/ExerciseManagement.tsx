@@ -58,12 +58,12 @@ const ExerciseManagement = () => {
       return;
     }
 
-    // Validate file size (max 50MB)
-    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+    // Validate file size (max 150MB)
+    const maxSize = 150 * 1024 * 1024; // 150MB in bytes
     if (file.size > maxSize) {
       toast({
         title: "Erro",
-        description: "O arquivo deve ter no máximo 50MB",
+        description: "O arquivo deve ter no máximo 150MB",
         variant: "destructive"
       });
       return;
@@ -471,7 +471,7 @@ const ExerciseManagement = () => {
                     Faça upload de um vídeo demonstrativo
                   </p>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Formatos aceitos: MP4, WebM, OGG, MOV (máx. 50MB)
+                    Formatos aceitos: MP4, WebM, OGG, MOV (máx. 150MB)
                   </p>
                   <input
                     type="file"
