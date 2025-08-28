@@ -52,14 +52,22 @@ serve(async (req) => {
       // Tentar encontrar usuário pelo external_reference ou email
       let targetUserId = userId;
       if (!targetUserId && userEmail) {
-        const { data: profiles } = await supabaseClient
+        logStep("Buscando usuário pelo email", { userEmail });
+        const { data: profiles, error: profileError } = await supabaseClient
           .from("profiles")
           .select("user_id")
           .eq("email", userEmail)
           .maybeSingle();
         
+        if (profileError) {
+          logStep("Erro ao buscar perfil", profileError);
+        }
+        
         if (profiles) {
           targetUserId = profiles.user_id;
+          logStep("Usuário encontrado pelo email", { targetUserId });
+        } else {
+          logStep("Usuário não encontrado pelo email");
         }
       }
 

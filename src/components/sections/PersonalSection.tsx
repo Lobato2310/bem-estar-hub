@@ -60,12 +60,7 @@ const PersonalSection = () => {
     },
   ];
 
-  const todayWorkout = {
-    title: "Treino de Peito e Tríceps",
-    exercises: ["Supino reto", "Supino inclinado", "Crucifixo", "Tríceps testa"],
-    duration: "50 min",
-    completed: false
-  };
+  const [todayWorkout, setTodayWorkout] = useState<any>(null);
 
   const handleStartWorkout = async () => {
     if (!user) return;

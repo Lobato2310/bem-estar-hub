@@ -11,6 +11,8 @@ import { Activity, Utensils, Brain, Plus, Edit, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import WorkoutPlanEditor from "./WorkoutPlanEditor";
+import WorkoutPlanDetailEditor from "./WorkoutPlanDetailEditor";
 
 interface Client {
   id: string;
@@ -259,45 +261,11 @@ const ClientPlanManagement = ({ client }: ClientPlanManagementProps) => {
         </TabsList>
 
         <TabsContent value="workout" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Planos de Treino</h3>
-            <Dialog open={showWorkoutDialog} onOpenChange={setShowWorkoutDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Plano
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Criar Plano de Treino</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="workout-name">Nome do Plano</Label>
-                    <Input
-                      id="workout-name"
-                      value={workoutForm.name}
-                      onChange={(e) => setWorkoutForm(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Ex: Treino de Hipertrofia"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="workout-description">Descrição</Label>
-                    <Textarea
-                      id="workout-description"
-                      value={workoutForm.description}
-                      onChange={(e) => setWorkoutForm(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Descreva o objetivo do plano..."
-                    />
-                  </div>
-                  <Button onClick={createWorkoutPlan} className="w-full">
-                    Criar Plano
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <WorkoutPlanEditor 
+            clientId={client.user_id}
+            professionalId={user?.id || ""}
+            onPlanCreated={loadClientPlans}
+          />
 
           <div className="grid gap-4">
             {workoutPlans.length > 0 ? (
@@ -312,15 +280,36 @@ const ClientPlanManagement = ({ client }: ClientPlanManagementProps) => {
                         </CardTitle>
                         <CardDescription>{plan.description}</CardDescription>
                       </div>
-                      <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
-                        {plan.status}
-                      </Badge>
+                      <div className="flex gap-2">
+                        <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
+                          {plan.status}
+                        </Badge>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Editar
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl">
+                            <DialogHeader>
+                              <DialogTitle>Editar {plan.name}</DialogTitle>
+                            </DialogHeader>
+                            <WorkoutPlanDetailEditor planId={plan.id} />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      Criado em: {new Date(plan.created_at).toLocaleDateString('pt-BR')}
-                    </p>
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-muted-foreground">
+                        Exercícios: {Array.isArray(plan.exercises) ? plan.exercises.length : 0}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Criado em: {new Date(plan.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               ))
