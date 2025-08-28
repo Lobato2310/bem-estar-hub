@@ -260,47 +260,60 @@ const PersonalSection = () => {
       />
 
       {/* Treino de hoje */}
-      <Card className="p-4 md:p-6 bg-gradient-to-r from-primary/10 to-primary-light/20 border-primary/20">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg md:text-xl font-semibold text-foreground flex items-center space-x-2">
-            <Calendar className="h-4 w-4 md:h-5 md:w-5" />
-            <span>Treino de Hoje</span>
-          </h2>
-          <div className="flex items-center space-x-2 text-xs md:text-sm text-muted-foreground">
-            <Clock className="h-3 w-3 md:h-4 md:w-4" />
-            <span>{todayWorkout.duration}</span>
+      {todayWorkout ? (
+        <Card className="p-4 md:p-6 bg-gradient-to-r from-primary/10 to-primary-light/20 border-primary/20">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg md:text-xl font-semibold text-foreground flex items-center space-x-2">
+              <Calendar className="h-4 w-4 md:h-5 md:w-5" />
+              <span>Treino de Hoje</span>
+            </h2>
+            <div className="flex items-center space-x-2 text-xs md:text-sm text-muted-foreground">
+              <Clock className="h-3 w-3 md:h-4 md:w-4" />
+              <span>{todayWorkout.duration}</span>
+            </div>
           </div>
-        </div>
-        
-        <div className="space-y-3 md:space-y-4">
-          <h3 className="text-base md:text-lg font-medium text-foreground">{todayWorkout.title}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {todayWorkout.exercises.map((exercise, index) => (
-              <div key={index} className="p-3 bg-background rounded-lg border group cursor-pointer hover:bg-accent transition-colors min-h-[50px]">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm md:text-base text-foreground flex-1">{exercise}</span>
-                  {isWorkoutActive && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleExerciseWeight(exercise)}
-                      className="opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity p-2 h-8 w-8 ml-2 flex-shrink-0"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
+          
+          <div className="space-y-3 md:space-y-4">
+            <h3 className="text-base md:text-lg font-medium text-foreground">{todayWorkout.title}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {todayWorkout.exercises?.map((exercise, index) => (
+                <div key={index} className="p-3 bg-background rounded-lg border group cursor-pointer hover:bg-accent transition-colors min-h-[50px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm md:text-base text-foreground flex-1">{exercise}</span>
+                    {isWorkoutActive && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleExerciseWeight(exercise)}
+                        className="opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity p-2 h-8 w-8 ml-2 flex-shrink-0"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )) || []}
+            </div>
+            {!isWorkoutActive && (
+              <Button className="w-full" onClick={handleStartWorkout}>
+                <PlayCircle className="h-4 w-4 mr-2" />
+                Iniciar Treino
+              </Button>
+            )}
           </div>
-          {!isWorkoutActive && (
-            <Button className="w-full" onClick={handleStartWorkout}>
-              <PlayCircle className="h-4 w-4 mr-2" />
-              Iniciar Treino
+        </Card>
+      ) : (
+        <Card className="p-4 md:p-6 bg-gradient-to-r from-muted/50 to-muted/20">
+          <div className="text-center space-y-4">
+            <Calendar className="h-12 w-12 text-muted-foreground mx-auto" />
+            <h3 className="text-lg font-medium text-foreground">Nenhum treino programado</h3>
+            <p className="text-muted-foreground">Seu personal trainer ainda não criou um plano de treino para hoje.</p>
+            <Button variant="outline" onClick={() => setShowGoalsDialog(true)}>
+              Configurar Perfil
             </Button>
-          )}
-        </div>
-      </Card>
+          </div>
+        </Card>
+      )}
 
       {/* Tipos de treino */}
       <div className="space-y-4 md:space-y-6">
