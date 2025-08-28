@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, BrowserRouter, HashRouter } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -11,6 +12,8 @@ import Anamnesis from "./pages/Anamnesis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+const isNative = Capacitor.isNativePlatform();
+const Router = isNative ? HashRouter : BrowserRouter;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -18,36 +21,36 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <Router>
           <Routes>
-            <Route 
-              path="/" 
+            <Route
+              path="/"
               element={
                 <ProtectedRoute requireAuth>
                   <Index />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/auth" 
+            <Route
+              path="/auth"
               element={
                 <ProtectedRoute requireAuth={false}>
                   <Auth />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/anamnesis" 
+            <Route
+              path="/anamnesis"
               element={
                 <ProtectedRoute requireAuth requireSubscription>
                   <Anamnesis />
                 </ProtectedRoute>
-              } 
+              }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
+        </Router>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

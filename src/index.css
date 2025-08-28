@@ -164,3 +164,17 @@ Cores: branco, verde claro, preto - sistema intuitivo e simples
     }
   }
 }
+
+/* --- Ajustes para mobile (Capacitor) --- */
+:root { 
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --safe-left: env(safe-area-inset-left);
+  --safe-right: env(safe-area-inset-right);
+}
+
+.safe-pb { padding-bottom: calc(1rem + var(--safe-bottom)); }
+.safe-pt { padding-top: calc(1rem + var(--safe-top)); }
+
+/* Corrige bug do 100vh no mobile */
+.h-100dvh { height: 100dvh; }
