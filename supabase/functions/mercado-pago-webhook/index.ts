@@ -50,15 +50,50 @@ serve(async (req) => {
     // Aceitar diferentes tipos de notificação (payment, application, etc.)
     if (body.type === "payment" || body.action === "payment.created" || body.action === "payment.updated") {
       const paymentId = body.data?.id || body.id;
-      const userId = body.external_reference;
-      const userEmail = body.payer?.email;
+      
+      logStep("Dados iniciais do webhook", { 
+        paymentId, 
+        bodyType: body.type,
+        bodyAction: body.action,
+        bodyData: body.data,
+        fullBody: body 
+      });
 
-      logStep("Processando pagamento", { paymentId, userId, userEmail, fullBody: body });
+      // Se temos um payment ID, buscar detalhes do pagamento no Mercado Pago
+      if (!paymentId) {
+        logStep("Payment ID não encontrado no webhook");
+        throw new Error("Payment ID não encontrado no webhook");
+      }
 
-      // Determinar status baseado no status do Mercado Pago
-      const mpStatus = body.status || body.data?.status || "pending";
-      // PIX payments are usually "approved" immediately
+      // Buscar detalhes do pagamento usando a API do Mercado Pago
+      const accessToken = Deno.env.get("TOKEN_MP");
+      if (!accessToken) {
+        throw new Error("TOKEN_MP não configurado");
+      }
+
+      logStep("Buscando detalhes do pagamento no MP", { paymentId });
+      const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!paymentResponse.ok) {
+        const errorText = await paymentResponse.text();
+        logStep("Erro ao buscar pagamento no MP", { status: paymentResponse.status, error: errorText });
+        throw new Error(`Erro ao buscar pagamento: ${paymentResponse.status} - ${errorText}`);
+      }
+
+      const paymentData = await paymentResponse.json();
+      logStep("Dados do pagamento obtidos", paymentData);
+
+      const userId = paymentData.external_reference;
+      const userEmail = paymentData.payer?.email;
+      const mpStatus = paymentData.status;
       const assinaturaAtiva = mpStatus === "approved";
+
+      logStep("Processando pagamento", { paymentId, userId, userEmail, mpStatus, assinaturaAtiva });
       
       logStep("Status do pagamento", { mpStatus, assinaturaAtiva });
       
@@ -123,7 +158,7 @@ serve(async (req) => {
         data_expiracao: assinaturaAtiva ? dataExpiracaoStr : null,
         mercado_pago_payment_id: paymentId,
         mercado_pago_status: mpStatus,
-        valor_pago: body.transaction_amount || 0,
+        valor_pago: paymentData.transaction_amount || 0,
         updated_at: new Date().toISOString()
       };
 
