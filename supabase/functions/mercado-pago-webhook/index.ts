@@ -19,7 +19,11 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Webhook iniciado");
+    logStep("Webhook iniciado", { 
+      method: req.method, 
+      url: req.url,
+      headers: Object.fromEntries(req.headers.entries())
+    });
 
     // Criar cliente Supabase com service role para bypass RLS
     const supabaseClient = createClient(
@@ -28,20 +32,35 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const body = await req.json();
-    logStep("Body recebido", body);
+    let body;
+    try {
+      body = await req.json();
+      logStep("Body recebido", body);
+    } catch (error) {
+      logStep("Erro ao parsear JSON", error);
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
 
-    // Verificar se é uma notificação de pagamento
-    if (body.type === "payment") {
-      const paymentId = body.data.id;
-      const userId = body.external_reference; // Deve vir do site externo
+    // Verificar diferentes tipos de notificação do Mercado Pago
+    logStep("Analisando tipo de notificação", { type: body.type, action: body.action });
+    
+    // Aceitar diferentes tipos de notificação (payment, application, etc.)
+    if (body.type === "payment" || body.action === "payment.created" || body.action === "payment.updated") {
+      const paymentId = body.data?.id || body.id;
+      const userId = body.external_reference;
       const userEmail = body.payer?.email;
 
-      logStep("Processando pagamento", { paymentId, userId, userEmail });
+      logStep("Processando pagamento", { paymentId, userId, userEmail, fullBody: body });
 
       // Determinar status baseado no status do Mercado Pago
-      const mpStatus = body.status || body.data?.status;
+      const mpStatus = body.status || body.data?.status || "pending";
+      // PIX payments are usually "approved" immediately
       const assinaturaAtiva = mpStatus === "approved";
+      
+      logStep("Status do pagamento", { mpStatus, assinaturaAtiva });
       
       // Calcular datas baseado no plano (assumindo mensal por padrão)
       const dataInicio = new Date().toISOString().split('T')[0];
@@ -68,6 +87,25 @@ serve(async (req) => {
           logStep("Usuário encontrado pelo email", { targetUserId });
         } else {
           logStep("Usuário não encontrado pelo email");
+        }
+      }
+
+      // Se ainda não temos userId, tentar buscar na tabela user_subscriptions pelo email
+      if (!targetUserId && userEmail) {
+        logStep("Tentando buscar usuário na tabela user_subscriptions", { userEmail });
+        const { data: subscription, error: subError } = await supabaseClient
+          .from("user_subscriptions")
+          .select("user_id")
+          .eq("email", userEmail)
+          .maybeSingle();
+        
+        if (subError) {
+          logStep("Erro ao buscar na user_subscriptions", subError);
+        }
+        
+        if (subscription) {
+          targetUserId = subscription.user_id;
+          logStep("Usuário encontrado na user_subscriptions", { targetUserId });
         }
       }
 
@@ -114,9 +152,12 @@ serve(async (req) => {
     }
 
     // Se não for um webhook de pagamento, retornar sucesso sem processar
+    logStep("Webhook recebido mas não é de pagamento", { type: body.type, action: body.action });
     return new Response(JSON.stringify({ 
       success: true, 
-      message: "Webhook recebido mas não processado" 
+      message: "Webhook recebido mas não processado",
+      type: body.type,
+      action: body.action
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

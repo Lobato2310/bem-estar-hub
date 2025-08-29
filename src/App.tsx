@@ -2,8 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, BrowserRouter, HashRouter } from "react-router-dom";
-import { Capacitor } from "@capacitor/core";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -12,8 +11,6 @@ import Anamnesis from "./pages/Anamnesis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
-const isNative = Capacitor.isNativePlatform();
-const Router = isNative ? HashRouter : BrowserRouter;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -21,7 +18,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <Router>
+        <BrowserRouter>
           <Routes>
             <Route
               path="/"
@@ -50,7 +47,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Router>
+        </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
