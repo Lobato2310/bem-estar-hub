@@ -111,29 +111,32 @@ serve(async (req) => {
           .from("profiles")
           .select("user_id")
           .eq("email", userEmail)
-          .single();
+          .maybeSingle();
         
         if (profileError) {
           logStep("Erro ao buscar perfil pelo email", profileError);
+        }
+        
+        if (profiles) {
+          targetUserId = profiles.user_id;
+          logStep("Usuário encontrado no profiles", { targetUserId });
+        } else {
+          logStep("Usuário não encontrado no profiles, tentando user_subscriptions");
           // Se não encontrou por email, tentar buscar na tabela user_subscriptions
           const { data: subscription, error: subError } = await supabaseClient
             .from("user_subscriptions")
             .select("user_id")
             .eq("email", userEmail)
-            .single();
+            .maybeSingle();
           
           if (subError) {
             logStep("Erro ao buscar na user_subscriptions pelo email", subError);
-            throw new Error(`Usuário não encontrado para o email: ${userEmail}`);
           }
           
           if (subscription) {
             targetUserId = subscription.user_id;
             logStep("Usuário encontrado na user_subscriptions", { targetUserId });
           }
-        } else {
-          targetUserId = profiles.user_id;
-          logStep("Usuário encontrado no profiles", { targetUserId });
         }
       }
 
