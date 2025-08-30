@@ -111,41 +111,34 @@ serve(async (req) => {
           .from("profiles")
           .select("user_id")
           .eq("email", userEmail)
-          .maybeSingle();
+          .single();
         
         if (profileError) {
-          logStep("Erro ao buscar perfil", profileError);
-        }
-        
-        if (profiles) {
-          targetUserId = profiles.user_id;
-          logStep("Usuário encontrado pelo email", { targetUserId });
+          logStep("Erro ao buscar perfil pelo email", profileError);
+          // Se não encontrou por email, tentar buscar na tabela user_subscriptions
+          const { data: subscription, error: subError } = await supabaseClient
+            .from("user_subscriptions")
+            .select("user_id")
+            .eq("email", userEmail)
+            .single();
+          
+          if (subError) {
+            logStep("Erro ao buscar na user_subscriptions pelo email", subError);
+            throw new Error(`Usuário não encontrado para o email: ${userEmail}`);
+          }
+          
+          if (subscription) {
+            targetUserId = subscription.user_id;
+            logStep("Usuário encontrado na user_subscriptions", { targetUserId });
+          }
         } else {
-          logStep("Usuário não encontrado pelo email");
-        }
-      }
-
-      // Se ainda não temos userId, tentar buscar na tabela user_subscriptions pelo email
-      if (!targetUserId && userEmail) {
-        logStep("Tentando buscar usuário na tabela user_subscriptions", { userEmail });
-        const { data: subscription, error: subError } = await supabaseClient
-          .from("user_subscriptions")
-          .select("user_id")
-          .eq("email", userEmail)
-          .maybeSingle();
-        
-        if (subError) {
-          logStep("Erro ao buscar na user_subscriptions", subError);
-        }
-        
-        if (subscription) {
-          targetUserId = subscription.user_id;
-          logStep("Usuário encontrado na user_subscriptions", { targetUserId });
+          targetUserId = profiles.user_id;
+          logStep("Usuário encontrado no profiles", { targetUserId });
         }
       }
 
       if (!targetUserId) {
-        throw new Error("Não foi possível identificar o usuário");
+        throw new Error(`Não foi possível identificar o usuário. External reference: ${userId}, Email: ${userEmail}`);
       }
 
       // Atualizar ou criar registro de assinatura
