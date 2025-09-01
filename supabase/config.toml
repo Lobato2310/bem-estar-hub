@@ -1,4 +1,4 @@
-project_id = "kobjfrzukzwmexowsfxr"
+project_id = "qmathgcutdcdjxtlrhsh"
 
 [api]
 enabled = true
@@ -7,5 +7,5 @@ schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
-[functions.mercado-pago-webhook]
+[functions.webhook]
 verify_jwt = false
