@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Calendar, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -46,26 +46,10 @@ interface WorkoutPlanEditorProps {
 const WorkoutPlanEditor = ({ clientId, professionalId, onPlanCreated }: WorkoutPlanEditorProps) => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
-  const [showExerciseDialog, setShowExerciseDialog] = useState(false);
   const [planForm, setPlanForm] = useState({
     name: "",
     description: "",
     training_days: 3
-  });
-  const [currentPlan, setCurrentPlan] = useState<WorkoutPlan>({
-    id: "",
-    name: "",
-    description: "",
-    exercises: [],
-    training_days: []
-  });
-  const [exerciseForm, setExerciseForm] = useState({
-    exercise_id: "",
-    sets: 3,
-    reps: "8-12",
-    weight: "",
-    rest_time: "60-90s",
-    notes: ""
   });
 
   const loadExercises = async () => {
@@ -89,23 +73,28 @@ const WorkoutPlanEditor = ({ clientId, professionalId, onPlanCreated }: WorkoutP
   };
 
   const createWorkoutPlan = async () => {
-    if (!planForm.name || planForm.training_days < 1) {
+    if (!planForm.name || planForm.training_days < 2) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
     try {
       const trainingDays = generateTrainingDays(planForm.training_days);
+      const planGroupId = crypto.randomUUID();
       
       // Criar um plano para cada dia de treino
-      for (const day of trainingDays) {
+      for (let i = 0; i < trainingDays.length; i++) {
+        const day = trainingDays[i];
         const planData = {
           client_id: clientId,
           professional_id: professionalId,
           name: `${planForm.name} - Treino ${day}`,
-          description: `${planForm.description} - Treino ${day}`,
+          description: `${planForm.description} - Dia ${i + 1} da semana (Treino ${day})`,
           status: "active",
-          exercises: []
+          exercises: [],
+          training_day: day,
+          plan_group_id: planGroupId,
+          days_per_week: planForm.training_days
         };
 
         const { error } = await supabase
@@ -125,62 +114,6 @@ const WorkoutPlanEditor = ({ clientId, professionalId, onPlanCreated }: WorkoutP
     }
   };
 
-  const addExerciseToPlan = async (planId: string) => {
-    if (!exerciseForm.exercise_id) {
-      toast.error("Selecione um exercício");
-      return;
-    }
-
-    try {
-      const selectedExercise = exercises.find(ex => ex.id === exerciseForm.exercise_id);
-      if (!selectedExercise) return;
-
-      const exerciseData = {
-        exercise_id: exerciseForm.exercise_id,
-        exercise_name: selectedExercise.name,
-        exercise_description: selectedExercise.description,
-        sets: exerciseForm.sets,
-        reps: exerciseForm.reps,
-        weight: exerciseForm.weight,
-        rest_time: exerciseForm.rest_time,
-        notes: exerciseForm.notes
-      };
-
-      // Buscar o plano atual
-      const { data: planData, error: fetchError } = await supabase
-        .from("workout_plans")
-        .select("exercises")
-        .eq("id", planId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const currentExercises = Array.isArray(planData.exercises) ? planData.exercises : [];
-      const updatedExercises = [...currentExercises, exerciseData];
-
-      const { error: updateError } = await supabase
-        .from("workout_plans")
-        .update({ exercises: updatedExercises })
-        .eq("id", planId);
-
-      if (updateError) throw updateError;
-
-      toast.success("Exercício adicionado ao plano!");
-      setExerciseForm({
-        exercise_id: "",
-        sets: 3,
-        reps: "8-12",
-        weight: "",
-        rest_time: "60-90s",
-        notes: ""
-      });
-      setShowExerciseDialog(false);
-    } catch (error) {
-      console.error("Erro ao adicionar exercício:", error);
-      toast.error("Erro ao adicionar exercício");
-    }
-  };
-
   useEffect(() => {
     loadExercises();
   }, []);
@@ -188,7 +121,15 @@ const WorkoutPlanEditor = ({ clientId, professionalId, onPlanCreated }: WorkoutP
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Editor de Planos de Treino</h3>
+        <div>
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Editor de Planos de Treino
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Crie planos organizados por dias da semana (A, B, C, D, E)
+          </p>
+        </div>
         <Dialog open={showPlanDialog} onOpenChange={setShowPlanDialog}>
           <DialogTrigger asChild>
             <Button>
@@ -208,6 +149,9 @@ const WorkoutPlanEditor = ({ clientId, professionalId, onPlanCreated }: WorkoutP
                   onChange={(e) => setPlanForm(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Ex: Hipertrofia Iniciante"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Será criado um plano para cada dia: "{planForm.name} - Treino A", "{planForm.name} - Treino B", etc.
+                </p>
               </div>
               <div>
                 <Label>Descrição</Label>
@@ -234,18 +178,46 @@ const WorkoutPlanEditor = ({ clientId, professionalId, onPlanCreated }: WorkoutP
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2">
-                <Badge variant="outline">
-                  Serão criados: {generateTrainingDays(planForm.training_days).join(", ")}
-                </Badge>
+              <div className="rounded-lg bg-muted/50 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="h-4 w-4" />
+                  <span className="text-sm font-medium">Planos que serão criados:</span>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {generateTrainingDays(planForm.training_days).map((day) => (
+                    <Badge key={day} variant="outline">
+                      Treino {day}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Cada treino corresponde a um dia da semana e terá exercícios específicos.
+                </p>
               </div>
               <Button onClick={createWorkoutPlan} className="w-full">
-                Criar Planos
+                Criar {generateTrainingDays(planForm.training_days).length} Planos
               </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
+      
+      <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-dashed">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-2">
+            <Calendar className="h-8 w-8 mx-auto text-muted-foreground" />
+            <h4 className="font-medium">Sistema de Treinos Organizados</h4>
+            <p className="text-sm text-muted-foreground">
+              Configure quantos dias o cliente treina por semana e o sistema criará automaticamente 
+              os planos separados por letra (A, B, C, D, E).
+            </p>
+            <div className="flex justify-center gap-2 mt-3">
+              <Badge variant="secondary">3 dias = A, B, C</Badge>
+              <Badge variant="secondary">5 dias = A, B, C, D, E</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

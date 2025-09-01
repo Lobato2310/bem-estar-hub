@@ -33,6 +33,9 @@ interface WorkoutPlan {
   status: string;
   exercises: any;
   created_at: string;
+  training_day?: string;
+  plan_group_id?: string;
+  days_per_week?: number;
 }
 
 interface NutritionPlan {
@@ -85,7 +88,9 @@ const ClientPlanManagement = ({ client }: ClientPlanManagementProps) => {
         .from('workout_plans')
         .select('*')
         .eq('client_id', client.user_id)
-        .eq('professional_id', user.id);
+        .eq('professional_id', user.id)
+        .order('plan_group_id', { ascending: true })
+        .order('training_day', { ascending: true });
 
       if (workoutError) throw workoutError;
       setWorkoutPlans(workoutData || []);
@@ -269,50 +274,125 @@ const ClientPlanManagement = ({ client }: ClientPlanManagementProps) => {
 
           <div className="grid gap-4">
             {workoutPlans.length > 0 ? (
-              workoutPlans.map((plan) => (
-                <Card key={plan.id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <Activity className="h-5 w-5" />
-                          {plan.name}
-                        </CardTitle>
-                        <CardDescription>{plan.description}</CardDescription>
-                      </div>
-                      <div className="flex gap-2">
-                        <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
-                          {plan.status}
-                        </Badge>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4 mr-1" />
-                              Editar
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl">
-                            <DialogHeader>
-                              <DialogTitle>Editar {plan.name}</DialogTitle>
-                            </DialogHeader>
-                            <WorkoutPlanDetailEditor planId={plan.id} />
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm text-muted-foreground">
-                        Exercícios: {Array.isArray(plan.exercises) ? plan.exercises.length : 0}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Criado em: {new Date(plan.created_at).toLocaleDateString('pt-BR')}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+              (() => {
+                // Agrupar planos por plan_group_id
+                const groupedPlans = workoutPlans.reduce((groups, plan) => {
+                  const groupId = plan.plan_group_id || 'individual';
+                  if (!groups[groupId]) {
+                    groups[groupId] = [];
+                  }
+                  groups[groupId].push(plan);
+                  return groups;
+                }, {} as Record<string, WorkoutPlan[]>);
+
+                return Object.entries(groupedPlans).map(([groupId, plans]) => {
+                  const isGrouped = groupId !== 'individual';
+                  const groupName = isGrouped ? plans[0]?.name.split(' - Treino ')[0] : '';
+                  
+                  if (isGrouped) {
+                    // Mostrar como grupo de treinos A, B, C, etc.
+                    return (
+                      <Card key={groupId} className="border-2">
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="flex items-center gap-2">
+                                <Activity className="h-5 w-5" />
+                                {groupName}
+                              </CardTitle>
+                              <CardDescription>
+                                {plans[0]?.days_per_week} dias por semana - Treinos: {plans.map(p => p.training_day).join(', ')}
+                              </CardDescription>
+                            </div>
+                            <Badge variant="default">
+                              Plano Completo
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {plans.map((plan) => (
+                              <div key={plan.id} className="border rounded-lg p-3 bg-muted/50">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex-1">
+                                    <h5 className="font-medium">Treino {plan.training_day}</h5>
+                                    <p className="text-sm text-muted-foreground">
+                                      Exercícios: {Array.isArray(plan.exercises) ? plan.exercises.length : 0}
+                                    </p>
+                                  </div>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button variant="outline" size="sm">
+                                        <Edit className="h-4 w-4 mr-1" />
+                                        Editar
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-4xl">
+                                      <DialogHeader>
+                                        <DialogTitle>Editar {plan.name}</DialogTitle>
+                                      </DialogHeader>
+                                      <WorkoutPlanDetailEditor planId={plan.id} />
+                                    </DialogContent>
+                                  </Dialog>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-3 text-sm text-muted-foreground">
+                            Criado em: {new Date(plans[0]?.created_at).toLocaleDateString('pt-BR')}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  } else {
+                    // Mostrar planos individuais (sem agrupamento)
+                    return plans.map((plan) => (
+                      <Card key={plan.id}>
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="flex items-center gap-2">
+                                <Activity className="h-5 w-5" />
+                                {plan.name}
+                              </CardTitle>
+                              <CardDescription>{plan.description}</CardDescription>
+                            </div>
+                            <div className="flex gap-2">
+                              <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
+                                {plan.status}
+                              </Badge>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    Editar
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-4xl">
+                                  <DialogHeader>
+                                    <DialogTitle>Editar {plan.name}</DialogTitle>
+                                  </DialogHeader>
+                                  <WorkoutPlanDetailEditor planId={plan.id} />
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex justify-between items-center">
+                            <p className="text-sm text-muted-foreground">
+                              Exercícios: {Array.isArray(plan.exercises) ? plan.exercises.length : 0}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Criado em: {new Date(plan.created_at).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ));
+                  }
+                });
+              })()
             ) : (
               <p className="text-center text-muted-foreground py-8">
                 Nenhum plano de treino criado ainda
