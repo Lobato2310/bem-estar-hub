@@ -633,34 +633,43 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          days_per_week: number | null
           description: string | null
           exercises: Json | null
           id: string
           name: string
+          plan_group_id: string | null
           professional_id: string
           status: string | null
+          training_day: string | null
           updated_at: string
         }
         Insert: {
           client_id: string
           created_at?: string
+          days_per_week?: number | null
           description?: string | null
           exercises?: Json | null
           id?: string
           name: string
+          plan_group_id?: string | null
           professional_id: string
           status?: string | null
+          training_day?: string | null
           updated_at?: string
         }
         Update: {
           client_id?: string
           created_at?: string
+          days_per_week?: number | null
           description?: string | null
           exercises?: Json | null
           id?: string
           name?: string
+          plan_group_id?: string | null
           professional_id?: string
           status?: string | null
+          training_day?: string | null
           updated_at?: string
         }
         Relationships: []
