@@ -48,12 +48,21 @@ serve(async (req) => {
       headers: Object.fromEntries(req.headers.entries())
     });
 
-    // Criar cliente Supabase com service role para bypass RLS
+    // Log do webhook para debug
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // Primeiro, vamos logar que o webhook foi chamado
+    await supabaseClient.from("webhook_logs").insert({
+      method: req.method,
+      url: req.url,
+      headers: Object.fromEntries(req.headers.entries()),
+      body: null, // Será atualizado depois
+      processed: false
+    }).catch(err => console.log("Erro ao inserir log inicial:", err));
 
     const rawBody = await req.text();
     let body;
@@ -61,6 +70,16 @@ serve(async (req) => {
     try {
       body = JSON.parse(rawBody);
       logStep("Body recebido", body);
+      
+      // Atualizar log com o body
+      await supabaseClient.from("webhook_logs").insert({
+        method: req.method,
+        url: req.url,
+        headers: Object.fromEntries(req.headers.entries()),
+        body: body,
+        processed: false
+      }).catch(err => console.log("Erro ao inserir log completo:", err));
+      
     } catch (error) {
       logStep("Erro ao parsear JSON", error);
       return new Response(JSON.stringify({ error: "Invalid JSON body" }), {

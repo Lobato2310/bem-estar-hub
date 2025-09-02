@@ -629,6 +629,42 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_logs: {
+        Row: {
+          body: Json | null
+          created_at: string | null
+          error_message: string | null
+          headers: Json | null
+          id: string
+          method: string | null
+          processed: boolean | null
+          url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          body?: Json | null
+          created_at?: string | null
+          error_message?: string | null
+          headers?: Json | null
+          id?: string
+          method?: string | null
+          processed?: boolean | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          body?: Json | null
+          created_at?: string | null
+          error_message?: string | null
+          headers?: Json | null
+          id?: string
+          method?: string | null
+          processed?: boolean | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       workout_plans: {
         Row: {
           client_id: string
