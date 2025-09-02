@@ -69,11 +69,11 @@ serve(async (req) => {
       });
     }
 
-    // Verificar assinatura do webhook (opcional, para maior segurança)
-    const webhookSecret = "a1679ab75ff6c0d14e2f59e22a9bb422ff73c041cf7715c634d87eaadc21de4c";
+    // Verificar assinatura do webhook usando secret do Supabase
+    const webhookSecret = Deno.env.get("MERCADO_PAGO_WEBHOOK_SECRET");
     const signature = req.headers.get("x-signature");
     
-    if (signature) {
+    if (signature && webhookSecret) {
       const isValidSignature = await verifyWebhookSignature(rawBody, signature, webhookSecret);
       if (!isValidSignature) {
         logStep("Assinatura inválida do webhook");
@@ -83,6 +83,8 @@ serve(async (req) => {
         });
       }
       logStep("Assinatura do webhook verificada com sucesso");
+    } else {
+      logStep("Webhook sem assinatura ou secret não configurado", { hasSignature: !!signature, hasSecret: !!webhookSecret });
     }
 
     // Verificar diferentes tipos de notificação do Mercado Pago
@@ -107,8 +109,12 @@ serve(async (req) => {
       }
 
       // Buscar detalhes do pagamento usando a API do Mercado Pago
-      const accessToken = "APP_USR-4509347798827406-082014-47e04487bcf84f32ddb96d17ee712d91-212342502";
+      const accessToken = Deno.env.get("TOKEN_MP");
       logStep("Verificando TOKEN_MP", { hasToken: !!accessToken });
+
+      if (!accessToken) {
+        throw new Error("TOKEN_MP não configurado");
+      }
 
       logStep("Buscando detalhes do pagamento no MP", { paymentId, tokenLength: accessToken.length });
       
@@ -131,15 +137,9 @@ serve(async (req) => {
         logStep("Dados do pagamento obtidos", paymentData);
       } catch (fetchError) {
         logStep("Erro de rede/fetch ao acessar MP", fetchError);
-        // Para teste, vamos simular dados mínimos usando os dados do webhook
-        paymentData = {
-          id: paymentId,
-          status: "approved", // assumir aprovado para teste
-          external_reference: body.user_id?.toString(),
-          payer: { email: "teste@exemplo.com" },
-          transaction_amount: 229.90
-        };
-        logStep("Usando dados simulados para teste", paymentData);
+        // Erro crítico - não simular dados, relançar o erro
+        logStep("ERRO CRÍTICO: Não foi possível buscar dados do pagamento", fetchError);
+        throw fetchError;
       }
 
       const userId = paymentData.external_reference;
