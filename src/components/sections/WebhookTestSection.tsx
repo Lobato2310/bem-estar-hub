@@ -24,7 +24,7 @@ export const WebhookTestSection = () => {
         id: "test_payment_123"
       };
 
-      const response = await fetch('https://kobjfrzukzwmexowsfxr.supabase.co/functions/v1/webhook', {
+      const response = await fetch('https://qmathgcutdcdjxtlrhsh.supabase.co/functions/v1/webhook', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
