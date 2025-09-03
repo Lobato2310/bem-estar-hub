@@ -65,7 +65,6 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
 
   const rightTabs = [
     { id: "subscription", label: "Assinatura", icon: CreditCard },
-    { id: "webhook-test", label: "Teste Webhook", icon: TestTube2 },
   ];
 
   return (

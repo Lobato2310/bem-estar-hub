@@ -55,30 +55,12 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Primeiro, vamos logar que o webhook foi chamado
-    await supabaseClient.from("webhook_logs").insert({
-      method: req.method,
-      url: req.url,
-      headers: Object.fromEntries(req.headers.entries()),
-      body: null, // Será atualizado depois
-      processed: false
-    }).catch(err => console.log("Erro ao inserir log inicial:", err));
-
     const rawBody = await req.text();
     let body;
     
     try {
       body = JSON.parse(rawBody);
       logStep("Body recebido", body);
-      
-      // Atualizar log com o body
-      await supabaseClient.from("webhook_logs").insert({
-        method: req.method,
-        url: req.url,
-        headers: Object.fromEntries(req.headers.entries()),
-        body: body,
-        processed: false
-      }).catch(err => console.log("Erro ao inserir log completo:", err));
       
     } catch (error) {
       logStep("Erro ao parsear JSON", error);

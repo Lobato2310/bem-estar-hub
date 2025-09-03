@@ -12,7 +12,7 @@ import PsychologySection from "@/components/sections/PsychologySection";
 import MeasurementsSection from "@/components/sections/MeasurementsSection";
 import SubscriptionSection from "@/components/sections/SubscriptionSection";
 import ProfessionalDashboard from "@/components/ProfessionalDashboard";
-import { WebhookTestSection } from "@/components/sections/WebhookTestSection";
+
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState(() => {
@@ -89,8 +89,6 @@ const Index = () => {
         return <PsychologySection />;
       case "subscription":
         return <SubscriptionSection />;
-      case "webhook-test":
-        return <WebhookTestSection />;
       default:
         return <HomeSection onNavigate={setActiveTab} userProfile={userProfile} />;
     }
