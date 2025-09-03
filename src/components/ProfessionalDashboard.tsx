@@ -34,9 +34,6 @@ interface Client {
 
 interface ClientStats {
   totalClients: number;
-  activeWorkouts: number;
-  activePlans: number;
-  recentCheckins: number;
 }
 
 const ProfessionalDashboard = () => {
@@ -46,10 +43,7 @@ const ProfessionalDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [clients, setClients] = useState<Client[]>([]);
   const [stats, setStats] = useState<ClientStats>({
-    totalClients: 0,
-    activeWorkouts: 0,
-    activePlans: 0,
-    recentCheckins: 0
+    totalClients: 0
   });
   const [loading, setLoading] = useState(true);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -99,41 +93,9 @@ const ProfessionalDashboard = () => {
 
       // Calcular estatísticas básicas
       const totalClients = clientsData?.length || 0;
-      
-      // Carregar planos de treino ativos
-      const { data: workoutPlans, error: workoutError } = await supabase
-        .from('workout_plans')
-        .select('*')
-        .eq('professional_id', user.id)
-        .eq('status', 'active');
-
-      if (workoutError) console.error('Erro ao carregar planos de treino:', workoutError);
-
-      // Carregar planos nutricionais ativos
-      const { data: nutritionPlans, error: nutritionError } = await supabase
-        .from('nutrition_plans')
-        .select('*')
-        .eq('professional_id', user.id)
-        .eq('status', 'active');
-
-      if (nutritionError) console.error('Erro ao carregar planos nutricionais:', nutritionError);
-
-      // Carregar check-ins recentes (últimos 7 dias)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { data: recentCheckins, error: checkinsError } = await supabase
-        .from('client_checkins')
-        .select('*')
-        .gte('created_at', sevenDaysAgo.toISOString());
-
-      if (checkinsError) console.error('Erro ao carregar check-ins:', checkinsError);
 
       setStats({
-        totalClients,
-        activeWorkouts: workoutPlans?.length || 0,
-        activePlans: nutritionPlans?.length || 0,
-        recentCheckins: recentCheckins?.length || 0
+        totalClients
       });
 
     } catch (error) {
@@ -212,8 +174,11 @@ const ProfessionalDashboard = () => {
       </div>
 
       {/* Estatísticas Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => setActiveTab('clients')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -221,46 +186,7 @@ const ProfessionalDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalClients}</div>
             <p className="text-xs text-muted-foreground">
-              clientes ativos
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Planos de Treino</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeWorkouts}</div>
-            <p className="text-xs text-muted-foreground">
-              planos ativos
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Planos Nutricionais</CardTitle>
-            <Utensils className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activePlans}</div>
-            <p className="text-xs text-muted-foreground">
-              planos ativos
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Check-ins Recentes</CardTitle>
-            <Heart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.recentCheckins}</div>
-            <p className="text-xs text-muted-foreground">
-              últimos 7 dias
+              clique para gerenciar clientes
             </p>
           </CardContent>
         </Card>
@@ -387,35 +313,19 @@ const ProfessionalDashboard = () => {
         </TabsContent>
 
         <TabsContent value="plans" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Planos de Treino</CardTitle>
-                <CardDescription>
-                  Gerencie os planos de treino dos seus clientes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-center py-8">
-                  {stats.activeWorkouts} planos de treino ativos
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Planos Nutricionais</CardTitle>
-                <CardDescription>
-                  Gerencie os planos nutricionais dos seus clientes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-center py-8">
-                  {stats.activePlans} planos nutricionais ativos
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Planos de Treino</CardTitle>
+              <CardDescription>
+                Gerencie os planos de treino baseados na frequência semanal dos clientes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-center py-8">
+                Os planos de treino agora são organizados por dias da semana (A, B, C, etc.)
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="nutrition" className="space-y-6">
