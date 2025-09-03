@@ -150,7 +150,7 @@ export const WebhookTestSection = () => {
           </div>
 
           <div className="text-sm text-muted-foreground">
-            <p><strong>URL do Webhook:</strong> https://kobjfrzukzwmexowsfxr.supabase.co/functions/v1/webhook</p>
+            <p><strong>URL do Webhook:</strong> https://qmathgcutdcdjxtlrhsh.supabase.co/functions/v1/webhook</p>
             <p><strong>Usuário logado:</strong> {user?.email}</p>
             <p><strong>User ID:</strong> {user?.id}</p>
           </div>
