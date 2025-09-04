@@ -313,25 +313,19 @@ export type Database = {
       }
       motivational_phrases: {
         Row: {
-          author: string | null
-          category: string | null
-          created_at: string
-          id: string
-          phrase: string
+          categoria: string | null
+          criado_em: string | null
+          frase: string | null
         }
         Insert: {
-          author?: string | null
-          category?: string | null
-          created_at?: string
-          id?: string
-          phrase: string
+          categoria?: string | null
+          criado_em?: string | null
+          frase?: string | null
         }
         Update: {
-          author?: string | null
-          category?: string | null
-          created_at?: string
-          id?: string
-          phrase?: string
+          categoria?: string | null
+          criado_em?: string | null
+          frase?: string | null
         }
         Relationships: []
       }
@@ -707,6 +701,39 @@ export type Database = {
           status?: string | null
           training_day?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      workout_schedules: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          professional_id: string
+          scheduled_date: string
+          status: string | null
+          updated_at: string
+          workout_plan_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          professional_id: string
+          scheduled_date: string
+          status?: string | null
+          updated_at?: string
+          workout_plan_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          professional_id?: string
+          scheduled_date?: string
+          status?: string | null
+          updated_at?: string
+          workout_plan_id?: string
         }
         Relationships: []
       }
