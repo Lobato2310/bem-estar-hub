@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award } from "lucide-react";
 import { DailyCheckinDialog } from "@/components/psychology/DailyCheckinDialog";
 import { AchievementsDialog } from "@/components/psychology/AchievementsDialog";
+import { supabase } from "@/integrations/supabase/client";
 const PsychologySection = () => {
   const [showCheckinDialog, setShowCheckinDialog] = useState(false);
   const [showAchievementsDialog, setShowAchievementsDialog] = useState(false);
+  const [dailyMotivation, setDailyMotivation] = useState<string>("");
   const sessions = [{
     date: "Próxima Sessão",
     time: "Quinta, 15:00",
@@ -18,6 +20,7 @@ const PsychologySection = () => {
     type: "Definição de Metas",
     status: "Concluída"
   }];
+
   const weeklyGoals = [{
     goal: "Fazer exercícios 4x na semana",
     progress: 75,
@@ -34,7 +37,7 @@ const PsychologySection = () => {
     completed: 4,
     total: 7
   }];
-  const motivationalQuotes = ["O sucesso é a soma de pequenos esforços repetidos dia após dia.", "Cada dia é uma nova oportunidade para ser melhor que ontem.", "Você é mais forte do que imagina e mais capaz do que acredita."];
+
   const moodData = [{
     day: "Seg",
     mood: 4,
@@ -64,6 +67,62 @@ const PsychologySection = () => {
     mood: 4,
     energy: 4
   }];
+
+  // Fetch daily motivational phrase
+  useEffect(() => {
+    const fetchDailyMotivation = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('motivational_phrases')
+          .select('frase')
+          .order('criado_em', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching motivational phrases:', error);
+          setDailyMotivation("O sucesso é a soma de pequenos esforços repetidos dia após dia.");
+          return;
+        }
+
+        if (data && data.length > 0) {
+          // Get today's date and create a hash based on date + period (AM/PM)
+          const now = new Date();
+          const todayStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+          
+          // Two periods: before 12:00 (period 0) and after 12:00 (period 1)
+          const period = now.getHours() >= 12 ? 1 : 0;
+          const seedString = `${todayStr}-${period}`;
+          
+          // Create a simple hash based on the date and period
+          let hash = 0;
+          for (let i = 0; i < seedString.length; i++) {
+            const char = seedString.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+          }
+          
+          const phraseIndex = Math.abs(hash) % data.length;
+          setDailyMotivation(data[phraseIndex].frase || "O sucesso é a soma de pequenos esforços repetidos dia após dia.");
+        } else {
+          setDailyMotivation("O sucesso é a soma de pequenos esforços repetidos dia após dia.");
+        }
+      } catch (error) {
+        console.error('Error in fetchDailyMotivation:', error);
+        setDailyMotivation("O sucesso é a soma de pequenos esforços repetidos dia após dia.");
+      }
+    };
+
+    fetchDailyMotivation();
+    
+    // Set up an interval to check every minute if it's 12:00 PM and update if needed
+    const interval = setInterval(() => {
+      const now = new Date();
+      if (now.getHours() === 12 && now.getMinutes() === 0) {
+        fetchDailyMotivation();
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, []);
   return <div className="max-w-6xl mx-auto p-6 space-y-8">
       {/* Header */}
       <div className="text-center space-y-4">
@@ -82,7 +141,7 @@ const PsychologySection = () => {
           <Heart className="h-8 w-8 text-primary mx-auto" />
           <h2 className="text-xl font-semibold text-foreground">Motivação do Dia</h2>
           <p className="text-lg text-foreground italic">
-            "{motivationalQuotes[0]}"
+            "{dailyMotivation}"
           </p>
         </div>
       </Card>

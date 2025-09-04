@@ -75,22 +75,36 @@ const WorkoutCalendar = ({ workoutType, viewMode = "client", clientId }: Workout
 
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     
-    const { data, error } = await supabase
+    // Fetch schedules and their associated workout plans separately to avoid join issues
+    const { data: scheduleData, error: scheduleError } = await supabase
       .from('workout_schedules')
-      .select(`
-        *,
-        workout_plans (*)
-      `)
+      .select('*')
       .eq('client_id', targetClientId)
       .eq('scheduled_date', dateStr)
       .order('created_at', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching scheduled workouts:', error);
+    if (scheduleError) {
+      console.error('Error fetching scheduled workouts:', scheduleError);
       return;
     }
 
-    setScheduledWorkouts(data || []);
+    // Fetch the associated workout plans
+    const schedulesWithPlans = await Promise.all(
+      (scheduleData || []).map(async (schedule) => {
+        const { data: planData } = await supabase
+          .from('workout_plans')
+          .select('*')
+          .eq('id', schedule.workout_plan_id)
+          .single();
+        
+        return {
+          ...schedule,
+          workout_plans: planData
+        };
+      })
+    );
+
+    setScheduledWorkouts(schedulesWithPlans);
   };
 
   const fetchAvailablePlans = async () => {

@@ -43,7 +43,50 @@ const PersonalSection = () => {
       }
     };
 
+    const fetchTodayWorkout = async () => {
+      if (user) {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        const { data: scheduleData, error } = await supabase
+          .from('workout_schedules')
+          .select('*')
+          .eq('client_id', user.id)
+          .eq('scheduled_date', today)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching today workout:', error);
+          return;
+        }
+
+        if (scheduleData?.workout_plan_id) {
+          // Fetch the workout plan separately
+          const { data: planData, error: planError } = await supabase
+            .from('workout_plans')
+            .select('*')
+            .eq('id', scheduleData.workout_plan_id)
+            .single();
+
+          if (planError) {
+            console.error('Error fetching workout plan:', planError);
+            return;
+          }
+
+          if (planData) {
+            setTodayWorkout({
+              title: planData.name,
+              duration: "45-60 min",
+              exercises: Array.isArray(planData.exercises) 
+                ? planData.exercises.map((ex: any) => ex.exercise_name).filter(Boolean)
+                : []
+            });
+          }
+        }
+      }
+    };
+
     fetchUserProfile();
+    fetchTodayWorkout();
   }, [user]);
   const workoutTypes = [
     { 
@@ -225,7 +268,11 @@ const PersonalSection = () => {
 
           <TabsContent value="workouts" className="mt-6">
             {selectedClient ? (
-              <WorkoutCalendar workoutType="musculacao" viewMode="professional" />
+              <WorkoutCalendar 
+                workoutType="musculacao" 
+                viewMode="professional" 
+                clientId={selectedClient.user_id}
+              />
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 Selecione um cliente na aba "Clientes" para gerenciar seus treinos
@@ -415,7 +462,7 @@ const PersonalSection = () => {
               Calendário de Treinos - {selectedWorkoutType === "musculacao" ? "Musculação" : "Corrida/Cardio"}
             </DialogTitle>
           </DialogHeader>
-          <WorkoutCalendar workoutType={selectedWorkoutType} />
+          <WorkoutCalendar workoutType={selectedWorkoutType} clientId={user?.id} />
         </DialogContent>
       </Dialog>
     </div>
