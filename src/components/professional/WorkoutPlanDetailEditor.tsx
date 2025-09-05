@@ -198,7 +198,7 @@ const WorkoutPlanDetailEditor = ({ planId }: WorkoutPlanDetailEditorProps) => {
   const planExercises = Array.isArray(plan.exercises) ? plan.exercises : [];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 h-full overflow-y-auto max-h-[80vh]">
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-semibold">{plan.name}</h3>

@@ -11,6 +11,7 @@ import WorkoutTimer from "@/components/workout/WorkoutTimer";
 import WorkoutFeedbackDialog from "@/components/workout/WorkoutFeedbackDialog";
 import ClientGoalsDialog from "@/components/profile/ClientGoalsDialog";
 import ExerciseWeightDialog from "@/components/workout/ExerciseWeightDialog";
+import ExerciseDetailsDialog from "@/components/workout/ExerciseDetailsDialog";
 import WorkoutCalendar from "@/components/workout/WorkoutCalendar";
 import ExerciseManagement from "@/components/professional/ExerciseManagement";
 import ClientSelector from "@/components/professional/ClientSelector";
@@ -30,6 +31,8 @@ const PersonalSection = () => {
   const [selectedWorkoutType, setSelectedWorkoutType] = useState<"musculacao" | "cardio">("musculacao");
   const [userProfile, setUserProfile] = useState<any>(null);
   const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [showExerciseDetailsDialog, setShowExerciseDetailsDialog] = useState(false);
+  const [selectedExerciseDetails, setSelectedExerciseDetails] = useState<any>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -72,14 +75,45 @@ const PersonalSection = () => {
             return;
           }
 
-          if (planData) {
-            setTodayWorkout({
-              title: planData.name,
-              duration: "45-60 min",
-              exercises: Array.isArray(planData.exercises) 
-                ? planData.exercises.map((ex: any) => ex.exercise_name).filter(Boolean)
-                : []
-            });
+          if (planData && Array.isArray(planData.exercises)) {
+            // Get exercise IDs from the plan
+            const exerciseIds = planData.exercises
+              .map((ex: any) => ex.exercise_id)
+              .filter(Boolean);
+
+            if (exerciseIds.length > 0) {
+              // Fetch full exercise details
+              const { data: exercisesData, error: exercisesError } = await supabase
+                .from('exercises')
+                .select('*')
+                .in('id', exerciseIds);
+
+              if (exercisesError) {
+                console.error('Error fetching exercises:', exercisesError);
+                return;
+              }
+
+              // Map exercises with their plan data
+              const exercisesWithPlanData = planData.exercises.map((planEx: any) => {
+                const exerciseDetail = exercisesData?.find(ex => ex.id === planEx.exercise_id);
+                return {
+                  ...planEx,
+                  exerciseDetail
+                };
+              });
+
+              setTodayWorkout({
+                title: planData.name,
+                duration: "45-60 min",
+                exercises: exercisesWithPlanData
+              });
+            } else {
+              setTodayWorkout({
+                title: planData.name,
+                duration: "45-60 min",
+                exercises: []
+              });
+            }
           }
         }
       }
@@ -170,6 +204,11 @@ const PersonalSection = () => {
   const handleExerciseWeight = (exerciseName: string) => {
     setSelectedExercise(exerciseName);
     setShowExerciseDialog(true);
+  };
+
+  const handleExerciseDetails = (exercise: any) => {
+    setSelectedExerciseDetails(exercise.exerciseDetail);
+    setShowExerciseDetailsDialog(true);
   };
 
   const handleSaveExerciseLog = async (data: {
@@ -324,14 +363,23 @@ const PersonalSection = () => {
             <h3 className="text-base md:text-lg font-medium text-foreground">{todayWorkout.title}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {todayWorkout.exercises?.map((exercise, index) => (
-                <div key={index} className="p-3 bg-background rounded-lg border group cursor-pointer hover:bg-accent transition-colors min-h-[50px]">
+                <div 
+                  key={index} 
+                  className="p-3 bg-background rounded-lg border group cursor-pointer hover:bg-accent transition-colors min-h-[50px]"
+                  onClick={() => handleExerciseDetails(exercise)}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm md:text-base text-foreground flex-1">{exercise}</span>
+                    <span className="text-sm md:text-base text-foreground flex-1">
+                      {exercise.exercise_name || exercise}
+                    </span>
                     {isWorkoutActive && (
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleExerciseWeight(exercise)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExerciseWeight(exercise.exercise_name || exercise);
+                        }}
                         className="opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity p-2 h-8 w-8 ml-2 flex-shrink-0"
                       >
                         <Plus className="h-4 w-4" />
@@ -452,6 +500,12 @@ const PersonalSection = () => {
         onClose={() => setShowExerciseDialog(false)}
         exerciseName={selectedExercise}
         onSubmit={handleSaveExerciseLog}
+      />
+
+      <ExerciseDetailsDialog
+        isOpen={showExerciseDetailsDialog}
+        onClose={() => setShowExerciseDetailsDialog(false)}
+        exercise={selectedExerciseDetails}
       />
 
       {/* Workout Calendar Dialog */}
