@@ -33,6 +33,7 @@ const PersonalSection = () => {
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showExerciseDetailsDialog, setShowExerciseDetailsDialog] = useState(false);
   const [selectedExerciseDetails, setSelectedExerciseDetails] = useState<any>(null);
+  const [workoutStats, setWorkoutStats] = useState({ total_workouts: 0, total_time_minutes: 0 });
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -43,6 +44,20 @@ const PersonalSection = () => {
           .eq('user_id', user.id)
           .single();
         setUserProfile(data);
+      }
+    };
+
+    const fetchWorkoutStats = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('workout_stats')
+          .select('total_workouts, total_time_minutes')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!error && data) {
+          setWorkoutStats(data);
+        }
       }
     };
 
@@ -120,6 +135,7 @@ const PersonalSection = () => {
     };
 
     fetchUserProfile();
+    fetchWorkoutStats();
     fetchTodayWorkout();
   }, [user]);
   const workoutTypes = [
@@ -176,12 +192,34 @@ const PersonalSection = () => {
     if (!currentWorkoutSession) return;
 
     try {
-      // For now, just store locally since workout_sessions table doesn't exist
+      const durationMinutes = Math.round(workoutDuration / 60);
+      
+      // Store workout locally
       localStorage.setItem(`workout_${currentWorkoutSession}`, JSON.stringify({
         endTime: new Date().toISOString(),
-        duration: Math.round(workoutDuration / 60),
+        duration: durationMinutes,
         ...feedback
       }));
+
+      // Update workout stats in database
+      const { error } = await supabase.rpc('increment_workout_stats', {
+        workout_duration_minutes: durationMinutes
+      });
+
+      if (error) {
+        console.error('Error updating workout stats:', error);
+      } else {
+        // Refresh stats
+        const { data } = await supabase
+          .from('workout_stats')
+          .select('total_workouts, total_time_minutes')
+          .eq('user_id', user?.id)
+          .single();
+        
+        if (data) {
+          setWorkoutStats(data);
+        }
+      }
 
       setIsWorkoutActive(false);
       setCurrentWorkoutSession(null);
@@ -455,18 +493,16 @@ const PersonalSection = () => {
           <Trophy className="h-4 w-4 md:h-5 md:w-5" />
           <span>Seu Progresso</span>
         </h2>
-        <div className="grid grid-cols-3 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 gap-3 md:gap-6">
           <div className="text-center space-y-1 md:space-y-2">
-            <p className="text-xl md:text-2xl font-bold text-primary">0</p>
+            <p className="text-xl md:text-2xl font-bold text-primary">{workoutStats.total_workouts}</p>
             <p className="text-xs md:text-sm text-muted-foreground">Treinos Concluídos</p>
           </div>
           <div className="text-center space-y-1 md:space-y-2">
-            <p className="text-xl md:text-2xl font-bold text-primary">0h</p>
+            <p className="text-xl md:text-2xl font-bold text-primary">
+              {Math.floor(workoutStats.total_time_minutes / 60)}h {workoutStats.total_time_minutes % 60}min
+            </p>
             <p className="text-xs md:text-sm text-muted-foreground">Tempo Total</p>
-          </div>
-          <div className="text-center space-y-1 md:space-y-2">
-            <p className="text-xl md:text-2xl font-bold text-primary">0kg</p>
-            <p className="text-xs md:text-sm text-muted-foreground">Peso Levantado</p>
           </div>
         </div>
       </Card>

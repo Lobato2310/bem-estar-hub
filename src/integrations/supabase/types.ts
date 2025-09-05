@@ -745,11 +745,42 @@ export type Database = {
           },
         ]
       }
+      workout_stats: {
+        Row: {
+          created_at: string
+          id: string
+          total_time_minutes: number
+          total_workouts: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          total_time_minutes?: number
+          total_workouts?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          total_time_minutes?: number
+          total_workouts?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      increment_workout_stats: {
+        Args: { workout_duration_minutes: number }
+        Returns: undefined
+      }
       is_current_user_professional: {
         Args: Record<PropertyKey, never>
         Returns: boolean
