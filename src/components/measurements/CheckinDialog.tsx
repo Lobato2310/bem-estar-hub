@@ -51,8 +51,8 @@ const CheckinDialog = ({ open, onOpenChange, checkinDate, checkinType }: Checkin
 
   const uploadPhoto = async (file: File, filename: string): Promise<string | null> => {
     const { data, error } = await supabase.storage
-      .from('exercise-videos')
-      .upload(`checkin-photos/${user?.id}/${filename}`, file);
+      .from('checkin-photos')
+      .upload(`${user?.id}/${filename}`, file);
     
     if (error) {
       console.error('Erro ao fazer upload da foto:', error);

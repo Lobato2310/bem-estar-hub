@@ -103,35 +103,44 @@ export type Database = {
       }
       client_checkins: {
         Row: {
+          back_photo_url: string | null
           checkin_date: string
           client_id: string
           created_at: string
           energy: number | null
+          front_photo_url: string | null
           id: string
           mood: number | null
           notes: string | null
+          side_photo_url: string | null
           sleep_quality: number | null
           stress_level: number | null
         }
         Insert: {
+          back_photo_url?: string | null
           checkin_date?: string
           client_id: string
           created_at?: string
           energy?: number | null
+          front_photo_url?: string | null
           id?: string
           mood?: number | null
           notes?: string | null
+          side_photo_url?: string | null
           sleep_quality?: number | null
           stress_level?: number | null
         }
         Update: {
+          back_photo_url?: string | null
           checkin_date?: string
           client_id?: string
           created_at?: string
           energy?: number | null
+          front_photo_url?: string | null
           id?: string
           mood?: number | null
           notes?: string | null
+          side_photo_url?: string | null
           sleep_quality?: number | null
           stress_level?: number | null
         }
