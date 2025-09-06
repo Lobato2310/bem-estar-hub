@@ -104,44 +104,68 @@ export type Database = {
       client_checkins: {
         Row: {
           back_photo_url: string | null
+          belly_circumference: number | null
           checkin_date: string
+          checkin_type: string | null
           client_id: string
           created_at: string
           energy: number | null
           front_photo_url: string | null
+          hip_circumference: number | null
           id: string
+          left_thigh: number | null
           mood: number | null
+          next_goal: string | null
           notes: string | null
+          observations: string | null
+          right_thigh: number | null
           side_photo_url: string | null
           sleep_quality: number | null
+          status: string | null
           stress_level: number | null
         }
         Insert: {
           back_photo_url?: string | null
+          belly_circumference?: number | null
           checkin_date?: string
+          checkin_type?: string | null
           client_id: string
           created_at?: string
           energy?: number | null
           front_photo_url?: string | null
+          hip_circumference?: number | null
           id?: string
+          left_thigh?: number | null
           mood?: number | null
+          next_goal?: string | null
           notes?: string | null
+          observations?: string | null
+          right_thigh?: number | null
           side_photo_url?: string | null
           sleep_quality?: number | null
+          status?: string | null
           stress_level?: number | null
         }
         Update: {
           back_photo_url?: string | null
+          belly_circumference?: number | null
           checkin_date?: string
+          checkin_type?: string | null
           client_id?: string
           created_at?: string
           energy?: number | null
           front_photo_url?: string | null
+          hip_circumference?: number | null
           id?: string
+          left_thigh?: number | null
           mood?: number | null
+          next_goal?: string | null
           notes?: string | null
+          observations?: string | null
+          right_thigh?: number | null
           side_photo_url?: string | null
           sleep_quality?: number | null
+          status?: string | null
           stress_level?: number | null
         }
         Relationships: []
