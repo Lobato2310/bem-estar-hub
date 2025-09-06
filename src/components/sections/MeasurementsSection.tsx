@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import CheckinCalendar from "@/components/measurements/CheckinCalendar";
-import CheckinHistoryDialog from "@/components/measurements/CheckinHistoryDialog";
+import MeasurementsCheckinHistoryDialog from "@/components/measurements/MeasurementsCheckinHistoryDialog";
 
 const MeasurementsSection = () => {
   const [measurements, setMeasurements] = useState([]);
@@ -235,7 +235,7 @@ const MeasurementsSection = () => {
       </div>
 
       {/* Dialogs */}
-      <CheckinHistoryDialog
+      <MeasurementsCheckinHistoryDialog
         open={isHistoryDialogOpen}
         onOpenChange={setIsHistoryDialogOpen}
       />

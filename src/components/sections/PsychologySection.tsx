@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award } from "lucide-react";
 import { DailyCheckinDialog } from "@/components/psychology/DailyCheckinDialog";
 import { AchievementsDialog } from "@/components/psychology/AchievementsDialog";
+import PsychologyCheckinHistoryDialog from "@/components/psychology/PsychologyCheckinHistoryDialog";
 import { supabase } from "@/integrations/supabase/client";
 const PsychologySection = () => {
   const [showCheckinDialog, setShowCheckinDialog] = useState(false);
   const [showAchievementsDialog, setShowAchievementsDialog] = useState(false);
+  const [showPsychologyHistoryDialog, setShowPsychologyHistoryDialog] = useState(false);
   const [dailyMotivation, setDailyMotivation] = useState<string>("");
   const sessions = [{
     date: "Próxima Sessão",
@@ -163,9 +165,13 @@ const PsychologySection = () => {
                 </div>
                 
               </div>
-              {session.status === 'Concluída' && <Button variant="outline" className="w-full">
+              {session.status === 'Concluída' && <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowPsychologyHistoryDialog(true)}
+              >
                   <MessageSquare className="h-4 w-4 mr-2" />
-                  Ver Relatório
+                  Ver Relatórios das Sessões
                 </Button>}
             </div>
           </Card>)}
@@ -271,6 +277,11 @@ const PsychologySection = () => {
       <DailyCheckinDialog open={showCheckinDialog} onOpenChange={setShowCheckinDialog} />
       
       <AchievementsDialog open={showAchievementsDialog} onOpenChange={setShowAchievementsDialog} />
+      
+      <PsychologyCheckinHistoryDialog 
+        open={showPsychologyHistoryDialog} 
+        onOpenChange={setShowPsychologyHistoryDialog} 
+      />
     </div>;
 };
 export default PsychologySection;
