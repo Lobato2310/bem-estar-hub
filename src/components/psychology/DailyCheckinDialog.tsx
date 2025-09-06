@@ -8,6 +8,8 @@ import { Heart, Zap, MessageSquare, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DailyCheckinDialogProps {
   open: boolean;
@@ -15,6 +17,7 @@ interface DailyCheckinDialogProps {
 }
 
 export const DailyCheckinDialog = ({ open, onOpenChange }: DailyCheckinDialogProps) => {
+  const { user } = useAuth();
   const [mood, setMood] = useState(0);
   const [energy, setEnergy] = useState(0);
   const [notes, setNotes] = useState("");
@@ -26,10 +29,26 @@ export const DailyCheckinDialog = ({ open, onOpenChange }: DailyCheckinDialogPro
       return;
     }
 
+    if (!user) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      // Aqui você salvaria no banco de dados
-      // await supabase.from('daily_checkins').insert({...})
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { error } = await supabase
+        .from('client_checkins')
+        .insert({
+          client_id: user.id,
+          mood,
+          energy,
+          notes: notes || null,
+          checkin_date: today
+        });
+
+      if (error) throw error;
       
       toast.success("Check-in diário registrado com sucesso!");
       onOpenChange(false);
