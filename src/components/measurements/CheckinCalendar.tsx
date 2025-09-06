@@ -113,10 +113,14 @@ const CheckinCalendar = ({ userProfile }: CheckinCalendarProps) => {
   };
 
   const canDoCheckin = (date: Date) => {
-    const today = new Date();
-    const diffTime = date.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays >= -1 && diffDays <= 1; // Permite 1 dia antes ou depois
+    // TEMPORÁRIO: Permitir check-in em qualquer data para testes
+    return true;
+    
+    // Código original comentado para teste:
+    // const today = new Date();
+    // const diffTime = date.getTime() - today.getTime();
+    // const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // return diffDays >= -1 && diffDays <= 1; // Permite 1 dia antes ou depois
   };
 
   const handleCheckinClick = (date: Date, type: 'monthly' | 'biweekly') => {
