@@ -72,6 +72,8 @@ const MeasurementsCheckinHistoryDialog = ({ open, onOpenChange }: MeasurementsCh
   const getPhotoUrl = async (path: string | null) => {
     if (!path) return null;
     
+    console.log('Tentando gerar URL para foto:', path);
+    
     try {
       const { data, error } = await supabase.storage
         .from('checkin-photos')
@@ -82,6 +84,7 @@ const MeasurementsCheckinHistoryDialog = ({ open, onOpenChange }: MeasurementsCh
         return null;
       }
       
+      console.log('URL gerada com sucesso:', data.signedUrl);
       return data.signedUrl;
     } catch (error) {
       console.error('Erro ao acessar foto:', error);
@@ -104,6 +107,13 @@ const MeasurementsCheckinHistoryDialog = ({ open, onOpenChange }: MeasurementsCh
   const loadPhotos = async () => {
     if (!selectedCheckin) return;
     
+    console.log('Carregando fotos para check-in:', selectedCheckin.id);
+    console.log('URLs das fotos:', {
+      front: selectedCheckin.front_photo_url,
+      side: selectedCheckin.side_photo_url,
+      back: selectedCheckin.back_photo_url
+    });
+    
     const urls: {[key: string]: string} = {};
     
     if (selectedCheckin.front_photo_url) {
@@ -121,6 +131,7 @@ const MeasurementsCheckinHistoryDialog = ({ open, onOpenChange }: MeasurementsCh
       if (url) urls.back = url;
     }
     
+    console.log('URLs finais geradas:', urls);
     setPhotoUrls(urls);
   };
 
@@ -164,44 +175,56 @@ const MeasurementsCheckinHistoryDialog = ({ open, onOpenChange }: MeasurementsCh
                   <Camera className="h-5 w-5 text-blue-500" />
                   Fotos de Progresso
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {frontPhotoUrl && (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-center">Frente</p>
-                      <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
-                        <img 
-                          src={frontPhotoUrl} 
-                          alt="Foto frontal" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {sidePhotoUrl && (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-center">Perfil</p>
-                      <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
-                        <img 
-                          src={sidePhotoUrl} 
-                          alt="Foto de perfil" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {backPhotoUrl && (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-center">Costas</p>
-                      <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
-                        <img 
-                          src={backPhotoUrl} 
-                          alt="Foto das costas" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                   {frontPhotoUrl && (
+                     <div className="space-y-2">
+                       <p className="text-sm font-medium text-center">Frente</p>
+                       <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden cursor-pointer">
+                         <img 
+                           src={frontPhotoUrl} 
+                           alt="Foto frontal" 
+                           className="w-full h-full object-cover"
+                           onError={(e) => {
+                             console.error('Erro ao carregar foto frontal:', e);
+                             e.currentTarget.style.display = 'none';
+                           }}
+                         />
+                       </div>
+                     </div>
+                   )}
+                   {sidePhotoUrl && (
+                     <div className="space-y-2">
+                       <p className="text-sm font-medium text-center">Perfil</p>
+                       <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden cursor-pointer">
+                         <img 
+                           src={sidePhotoUrl} 
+                           alt="Foto de perfil" 
+                           className="w-full h-full object-cover"
+                           onError={(e) => {
+                             console.error('Erro ao carregar foto de perfil:', e);
+                             e.currentTarget.style.display = 'none';
+                           }}
+                         />
+                       </div>
+                     </div>
+                   )}
+                   {backPhotoUrl && (
+                     <div className="space-y-2">
+                       <p className="text-sm font-medium text-center">Costas</p>
+                       <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden cursor-pointer">
+                         <img 
+                           src={backPhotoUrl} 
+                           alt="Foto das costas" 
+                           className="w-full h-full object-cover"
+                           onError={(e) => {
+                             console.error('Erro ao carregar foto das costas:', e);
+                             e.currentTarget.style.display = 'none';
+                           }}
+                         />
+                       </div>
+                     </div>
+                   )}
+                 </div>
               </Card>
             )}
 
