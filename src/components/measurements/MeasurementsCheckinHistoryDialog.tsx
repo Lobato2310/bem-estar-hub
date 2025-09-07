@@ -36,6 +36,7 @@ const MeasurementsCheckinHistoryDialog = ({ open, onOpenChange }: MeasurementsCh
   const [checkins, setCheckins] = useState<MeasurementsCheckin[]>([]);
   const [selectedCheckin, setSelectedCheckin] = useState<MeasurementsCheckin | null>(null);
   const [loading, setLoading] = useState(false);
+  const [photoUrls, setPhotoUrls] = useState<{[key: string]: string}>({});
   const { user } = useAuth();
 
   useEffect(() => {
@@ -68,10 +69,24 @@ const MeasurementsCheckinHistoryDialog = ({ open, onOpenChange }: MeasurementsCh
     }
   };
 
-  const getPhotoUrl = (path: string | null) => {
+  const getPhotoUrl = async (path: string | null) => {
     if (!path) return null;
-    const { data } = supabase.storage.from('checkin-photos').getPublicUrl(path);
-    return data.publicUrl;
+    
+    try {
+      const { data, error } = await supabase.storage
+        .from('checkin-photos')
+        .createSignedUrl(path, 3600); // URL válida por 1 hora
+      
+      if (error) {
+        console.error('Erro ao gerar URL da foto:', error);
+        return null;
+      }
+      
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Erro ao acessar foto:', error);
+      return null;
+    }
   };
 
   const getCheckinTypeText = (type: string | null) => {
@@ -80,10 +95,39 @@ const MeasurementsCheckinHistoryDialog = ({ open, onOpenChange }: MeasurementsCh
     return 'Check-in';
   };
 
+  useEffect(() => {
+    if (selectedCheckin) {
+      loadPhotos();
+    }
+  }, [selectedCheckin]);
+
+  const loadPhotos = async () => {
+    if (!selectedCheckin) return;
+    
+    const urls: {[key: string]: string} = {};
+    
+    if (selectedCheckin.front_photo_url) {
+      const url = await getPhotoUrl(selectedCheckin.front_photo_url);
+      if (url) urls.front = url;
+    }
+    
+    if (selectedCheckin.side_photo_url) {
+      const url = await getPhotoUrl(selectedCheckin.side_photo_url);
+      if (url) urls.side = url;
+    }
+    
+    if (selectedCheckin.back_photo_url) {
+      const url = await getPhotoUrl(selectedCheckin.back_photo_url);
+      if (url) urls.back = url;
+    }
+    
+    setPhotoUrls(urls);
+  };
+
   if (selectedCheckin) {
-    const frontPhotoUrl = getPhotoUrl(selectedCheckin.front_photo_url);
-    const sidePhotoUrl = getPhotoUrl(selectedCheckin.side_photo_url);
-    const backPhotoUrl = getPhotoUrl(selectedCheckin.back_photo_url);
+    const frontPhotoUrl = photoUrls.front;
+    const sidePhotoUrl = photoUrls.side;
+    const backPhotoUrl = photoUrls.back;
 
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
