@@ -219,15 +219,15 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
             <div className="p-2 bg-green-100 rounded-lg">
               <Activity className="h-5 w-5 text-green-600" />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Nível de Disciplina</p>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className={disciplineLevel.color}>
-                  {disciplineLevel.level}
-                </Badge>
-                <span className="font-medium">{disciplineLevel.percentage.toFixed(0)}%</span>
+              <div>
+                <p className="text-sm text-muted-foreground">Nível de Disciplina</p>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded-md text-xs font-medium ${disciplineLevel.color}`}>
+                    {disciplineLevel.level}
+                  </span>
+                  <span className="font-medium">{disciplineLevel.percentage.toFixed(0)}%</span>
+                </div>
               </div>
-            </div>
           </div>
         </Card>
 
