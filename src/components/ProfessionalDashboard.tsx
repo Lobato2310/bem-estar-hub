@@ -23,6 +23,7 @@ import DietManagement from "@/components/professional/DietManagement";
 import ClientSelector from "@/components/professional/ClientSelector";
 import ClientPlanManagement from "@/components/professional/ClientPlanManagement";
 import ClientAnamnesis from "@/components/professional/ClientAnamnesis";
+import ReportsSection from "@/components/sections/ReportsSection";
 
 interface Client {
   id: string;
@@ -381,19 +382,7 @@ const ProfessionalDashboard = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Relatórios e Análises</CardTitle>
-              <CardDescription>
-                Acompanhe o progresso dos seus clientes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-center py-8">
-                Funcionalidade em desenvolvimento
-              </p>
-            </CardContent>
-          </Card>
+          <ReportsSection />
         </TabsContent>
       </Tabs>
     </div>

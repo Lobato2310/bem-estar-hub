@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, User, Target, Eye, BarChart3 } from "lucide-react";
-import ClientEvolutionDialog from "./ClientEvolutionDialog";
+import { Search, User, Eye } from "lucide-react";
 
 interface Client {
   id: string;
@@ -25,8 +24,6 @@ const ClientSelector = ({ onClientSelect, selectedClientId }: ClientSelectorProp
   const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [evolutionDialogOpen, setEvolutionDialogOpen] = useState(false);
-  const [selectedClientForEvolution, setSelectedClientForEvolution] = useState<Client | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -59,12 +56,6 @@ const ClientSelector = ({ onClientSelect, selectedClientId }: ClientSelectorProp
     client.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const handleViewEvolution = (client: Client, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedClientForEvolution(client);
-    setEvolutionDialogOpen(true);
-  };
 
   return (
     <div className="space-y-4">
@@ -127,14 +118,6 @@ const ClientSelector = ({ onClientSelect, selectedClientId }: ClientSelectorProp
                      <Button
                        variant="ghost"
                        size="sm"
-                       onClick={(e) => handleViewEvolution(client, e)}
-                       title="Ver Evolução"
-                     >
-                       <BarChart3 className="h-4 w-4" />
-                     </Button>
-                     <Button
-                       variant="ghost"
-                       size="sm"
                        onClick={(e) => {
                          e.stopPropagation();
                          onClientSelect(client);
@@ -150,16 +133,6 @@ const ClientSelector = ({ onClientSelect, selectedClientId }: ClientSelectorProp
           ))
         )}
       </div>
-      
-      {/* Evolution Dialog */}
-      {selectedClientForEvolution && (
-        <ClientEvolutionDialog
-          open={evolutionDialogOpen}
-          onOpenChange={setEvolutionDialogOpen}
-          clientId={selectedClientForEvolution.user_id}
-          clientName={selectedClientForEvolution.display_name || "Cliente"}
-        />
-      )}
     </div>
   );
 };
