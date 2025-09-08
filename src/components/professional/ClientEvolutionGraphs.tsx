@@ -41,12 +41,17 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
   const loadEvolutionData = async () => {
     setLoading(true);
     try {
+      console.log('Loading evolution data for client:', clientId);
+      
       // Buscar dados de medidas corporais
       const { data: measurements, error: measurementError } = await supabase
         .from('client_measurements')
         .select('measured_at, weight, body_fat, muscle_mass')
         .eq('client_id', clientId)
         .order('measured_at', { ascending: true });
+
+      console.log('Measurements data:', measurements);
+      console.log('Measurement error:', measurementError);
 
       if (measurementError) throw measurementError;
 
@@ -68,6 +73,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
         muscMass: m.muscle_mass
       })) || [];
 
+      console.log('Processed physical data:', processedPhysical);
       setPhysicalData(processedPhysical);
 
       // Buscar dados de disciplina - workout stats

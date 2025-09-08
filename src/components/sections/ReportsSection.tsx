@@ -18,12 +18,14 @@ const ReportsSection = () => {
   const [showEvolution, setShowEvolution] = useState(false);
 
   const handleClientSelect = (client: Client) => {
+    console.log('Client selected in ReportsSection:', client);
     setSelectedClient(client);
     setShowEvolution(false);
   };
 
   const handleViewEvolution = () => {
     if (selectedClient) {
+      console.log('Viewing evolution for client:', selectedClient);
       setShowEvolution(true);
     }
   };
