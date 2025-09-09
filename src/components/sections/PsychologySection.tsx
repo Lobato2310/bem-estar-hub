@@ -221,8 +221,8 @@ const PsychologySection = () => {
               </div>
             </div>)}
         </div>
-          <Button variant="outline" className="w-full mt-4" onClick={() => setShowCheckinDialog(true)}>
-            Registrar Hoje
+          <Button variant="outline" className="w-full mt-4" onClick={() => setShowPsychologyHistoryDialog(true)}>
+            Ver Histórico
           </Button>
       </Card>
 

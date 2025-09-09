@@ -61,7 +61,7 @@ const PersonalSection = () => {
       }
     };
 
-    const fetchTodayWorkout = async () => {
+  const fetchTodayWorkout = async () => {
       if (user) {
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
         
@@ -108,12 +108,14 @@ const PersonalSection = () => {
                 return;
               }
 
-              // Map exercises with their plan data
+              // Map exercises with their plan data (with description and video)
               const exercisesWithPlanData = planData.exercises.map((planEx: any) => {
                 const exerciseDetail = exercisesData?.find(ex => ex.id === planEx.exercise_id);
                 return {
                   ...planEx,
-                  exerciseDetail
+                  exerciseDetail,
+                  description: exerciseDetail?.description,
+                  video_url: exerciseDetail?.video_url
                 };
               });
 
@@ -403,25 +405,38 @@ const PersonalSection = () => {
               {todayWorkout.exercises?.map((exercise, index) => (
                 <div 
                   key={index} 
-                  className="p-3 bg-background rounded-lg border group cursor-pointer hover:bg-accent transition-colors min-h-[50px]"
+                  className="p-3 bg-background rounded-lg border group cursor-pointer hover:bg-accent transition-colors"
                   onClick={() => handleExerciseDetails(exercise)}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm md:text-base text-foreground flex-1">
-                      {exercise.exercise_name || exercise}
-                    </span>
-                    {isWorkoutActive && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExerciseWeight(exercise.exercise_name || exercise);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity p-2 h-8 w-8 ml-2 flex-shrink-0"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm md:text-base font-medium text-foreground">
+                        {exercise.exercise_name || exercise}
+                      </span>
+                      {isWorkoutActive && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExerciseWeight(exercise.exercise_name || exercise);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity p-2 h-8 w-8 ml-2 flex-shrink-0"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    {exercise.description && (
+                      <p className="text-xs md:text-sm text-muted-foreground">
+                        {exercise.description}
+                      </p>
+                    )}
+                    {exercise.video_url && (
+                      <div className="flex items-center text-xs text-primary">
+                        <PlayCircle className="h-3 w-3 mr-1" />
+                        Vídeo disponível
+                      </div>
                     )}
                   </div>
                 </div>
@@ -439,8 +454,8 @@ const PersonalSection = () => {
         <Card className="p-4 md:p-6 bg-gradient-to-r from-muted/50 to-muted/20">
           <div className="text-center space-y-4">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto" />
-            <h3 className="text-lg font-medium text-foreground">Nenhum treino programado</h3>
-            <p className="text-muted-foreground">Seu personal trainer ainda não criou um plano de treino para hoje.</p>
+            <h3 className="text-lg font-medium text-foreground">Nenhum treino programado para hoje</h3>
+            <p className="text-muted-foreground">Seu personal trainer ainda não agendou um treino para hoje.</p>
             <Button variant="outline" onClick={() => setShowGoalsDialog(true)}>
               Configurar Perfil
             </Button>
