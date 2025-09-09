@@ -22,7 +22,6 @@ const PsychologySection = () => {
     type: "Definição de Metas",
     status: "Concluída"
   }];
-
   const weeklyGoals = [{
     goal: "Fazer exercícios 4x na semana",
     progress: 75,
@@ -39,7 +38,6 @@ const PsychologySection = () => {
     completed: 4,
     total: 7
   }];
-
   const moodData = [{
     day: "Seg",
     mood: 4,
@@ -74,34 +72,33 @@ const PsychologySection = () => {
   useEffect(() => {
     const fetchDailyMotivation = async () => {
       try {
-        const { data, error } = await supabase
-          .from('motivational_phrases')
-          .select('frase')
-          .order('criado_em', { ascending: false });
-
+        const {
+          data,
+          error
+        } = await supabase.from('motivational_phrases').select('frase').order('criado_em', {
+          ascending: false
+        });
         if (error) {
           console.error('Error fetching motivational phrases:', error);
           setDailyMotivation("O sucesso é a soma de pequenos esforços repetidos dia após dia.");
           return;
         }
-
         if (data && data.length > 0) {
           // Get today's date and create a hash based on date + period (AM/PM)
           const now = new Date();
           const todayStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
-          
+
           // Two periods: before 12:00 (period 0) and after 12:00 (period 1)
           const period = now.getHours() >= 12 ? 1 : 0;
           const seedString = `${todayStr}-${period}`;
-          
+
           // Create a simple hash based on the date and period
           let hash = 0;
           for (let i = 0; i < seedString.length; i++) {
             const char = seedString.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
+            hash = (hash << 5) - hash + char;
             hash = hash & hash; // Convert to 32-bit integer
           }
-          
           const phraseIndex = Math.abs(hash) % data.length;
           setDailyMotivation(data[phraseIndex].frase || "O sucesso é a soma de pequenos esforços repetidos dia após dia.");
         } else {
@@ -112,9 +109,8 @@ const PsychologySection = () => {
         setDailyMotivation("O sucesso é a soma de pequenos esforços repetidos dia após dia.");
       }
     };
-
     fetchDailyMotivation();
-    
+
     // Set up an interval to check every minute if it's 12:00 PM and update if needed
     const interval = setInterval(() => {
       const now = new Date();
@@ -165,11 +161,7 @@ const PsychologySection = () => {
                 </div>
                 
               </div>
-              {session.status === 'Concluída' && <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setShowPsychologyHistoryDialog(true)}
-              >
+              {session.status === 'Concluída' && <Button variant="outline" className="w-full" onClick={() => setShowPsychologyHistoryDialog(true)}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Ver Relatórios das Sessões
                 </Button>}
@@ -181,7 +173,7 @@ const PsychologySection = () => {
       <Card className="p-6">
         <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center space-x-2">
           <Target className="h-5 w-5" />
-          <span>Metas desta Semana</span>
+          <span>Metas desta Quinzena</span>
         </h2>
         <div className="space-y-4">
           {weeklyGoals.map((goal, index) => <div key={index} className="space-y-2">
@@ -278,10 +270,7 @@ const PsychologySection = () => {
       
       <AchievementsDialog open={showAchievementsDialog} onOpenChange={setShowAchievementsDialog} />
       
-      <PsychologyCheckinHistoryDialog 
-        open={showPsychologyHistoryDialog} 
-        onOpenChange={setShowPsychologyHistoryDialog} 
-      />
+      <PsychologyCheckinHistoryDialog open={showPsychologyHistoryDialog} onOpenChange={setShowPsychologyHistoryDialog} />
     </div>;
 };
 export default PsychologySection;
