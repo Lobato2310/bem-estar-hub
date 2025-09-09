@@ -2,12 +2,17 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award, BookOpen, Users } from "lucide-react";
+import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award, BookOpen, Users, Eye } from "lucide-react";
+import { ProfessionalClientCheckinDialog } from "@/components/psychology/ProfessionalClientCheckinDialog";
+import { SessionManagementDialog } from "@/components/psychology/SessionManagementDialog";
 
 const ProfessionalPsychologySection = () => {
   const [unlocked, setUnlocked] = useState(false);
   const [pwd, setPwd] = useState("");
   const [error, setError] = useState("");
+  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [showCheckinDialog, setShowCheckinDialog] = useState(false);
+  const [showSessionDialog, setShowSessionDialog] = useState(false);
 
   const handleUnlock = () => {
     if (pwd === "psicologia123") {
@@ -45,7 +50,7 @@ const ProfessionalPsychologySection = () => {
 
   const clients = [
     {
-      id: 1,
+      id: "550e8400-e29b-41d4-a716-446655440001",
       name: "Ana Silva",
       lastSession: "2024-01-15",
       nextSession: "2024-01-22",
@@ -54,7 +59,7 @@ const ProfessionalPsychologySection = () => {
       progress: 75
     },
     {
-      id: 2,
+      id: "550e8400-e29b-41d4-a716-446655440002",
       name: "Carlos Santos",
       lastSession: "2024-01-14",
       nextSession: "2024-01-21",
@@ -63,7 +68,7 @@ const ProfessionalPsychologySection = () => {
       progress: 60
     },
     {
-      id: 3,
+      id: "550e8400-e29b-41d4-a716-446655440003",
       name: "Maria Oliveira",
       lastSession: "2024-01-10",
       nextSession: "2024-01-24",
@@ -72,6 +77,16 @@ const ProfessionalPsychologySection = () => {
       progress: 85
     }
   ];
+
+  const handleViewCheckins = (client: any) => {
+    setSelectedClient(client);
+    setShowCheckinDialog(true);
+  };
+
+  const handleManageSession = (client: any) => {
+    setSelectedClient(client);
+    setShowSessionDialog(true);
+  };
 
   const psychologyStats = [
     { label: "Clientes Ativos", value: "12", icon: Users },
@@ -141,12 +156,21 @@ const ProfessionalPsychologySection = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Sessão
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleManageSession(client)}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Sessões
                   </Button>
-                  <Button variant="outline" size="sm">
-                    Perfil
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewCheckins(client)}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Check-ins
                   </Button>
                 </div>
               </div>
@@ -253,6 +277,24 @@ const ProfessionalPsychologySection = () => {
           </div>
         </Card>
       </div>
+
+      {/* Dialogs */}
+      {selectedClient && (
+        <>
+          <ProfessionalClientCheckinDialog
+            open={showCheckinDialog}
+            onOpenChange={setShowCheckinDialog}
+            clientId={selectedClient.id}
+            clientName={selectedClient.name}
+          />
+          <SessionManagementDialog
+            open={showSessionDialog}
+            onOpenChange={setShowSessionDialog}
+            clientId={selectedClient.id}
+            clientName={selectedClient.name}
+          />
+        </>
+      )}
     </div>
   );
 };

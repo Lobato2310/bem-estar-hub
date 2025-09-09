@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MessageSquare, User, Heart, Zap } from "lucide-react";
+import { Calendar, MessageSquare, User, Heart, Zap, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,7 @@ type PsychologyCheckin = {
   mood: number | null;
   stress_level: number | null;
   sleep_quality: number | null;
+  sleep_hours: number | null;
   energy: number | null;
   notes: string | null;
   created_at: string;
@@ -43,7 +44,7 @@ const PsychologyCheckinHistoryDialog = ({ open, onOpenChange }: PsychologyChecki
     try {
       const { data, error } = await supabase
         .from('client_checkins')
-        .select('id, checkin_date, client_id, mood, stress_level, sleep_quality, energy, notes, created_at')
+        .select('id, checkin_date, client_id, mood, stress_level, sleep_quality, sleep_hours, energy, notes, created_at')
         .eq('client_id', user?.id)
         .not('mood', 'is', null) // Apenas check-ins que têm dados psicológicos
         .order('checkin_date', { ascending: false });
@@ -60,29 +61,21 @@ const PsychologyCheckinHistoryDialog = ({ open, onOpenChange }: PsychologyChecki
 
   const getMoodText = (mood: number | null) => {
     if (!mood) return 'Não informado';
-    if (mood >= 8) return 'Excelente';
-    if (mood >= 6) return 'Bom';
-    if (mood >= 4) return 'Regular';
-    if (mood >= 2) return 'Ruim';
-    return 'Muito ruim';
+    const labels = ["Muito baixo", "Baixo", "Neutro", "Bom", "Excelente"];
+    return labels[mood - 1] || "N/A";
   };
 
   const getEnergyText = (energy: number | null) => {
     if (!energy) return 'Não informado';
-    if (energy >= 8) return 'Muita energia';
-    if (energy >= 6) return 'Boa energia';
-    if (energy >= 4) return 'Energia moderada';
-    if (energy >= 2) return 'Pouca energia';
-    return 'Muito cansado';
+    const labels = ["Muito baixa", "Baixa", "Moderada", "Alta", "Muito alta"];
+    return labels[energy - 1] || "N/A";
   };
 
   const getMoodColor = (mood: number | null) => {
     if (!mood) return 'text-muted-foreground';
-    if (mood >= 8) return 'text-green-600';
-    if (mood >= 6) return 'text-green-500';
-    if (mood >= 4) return 'text-yellow-500';
-    if (mood >= 2) return 'text-orange-500';
-    return 'text-red-500';
+    if (mood <= 2) return "text-red-500";
+    if (mood === 3) return "text-yellow-500";
+    return "text-green-500";
   };
 
   if (selectedCheckin) {
@@ -113,21 +106,29 @@ const PsychologyCheckinHistoryDialog = ({ open, onOpenChange }: PsychologyChecki
                 <Heart className="h-5 w-5 text-pink-500" />
                 Estado Emocional e Físico
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="text-center space-y-2">
                   <div className={`text-3xl font-bold ${getMoodColor(selectedCheckin.mood)}`}>
-                    {selectedCheckin.mood ? `${selectedCheckin.mood}/10` : '--'}
+                    {selectedCheckin.mood ? `${selectedCheckin.mood}/5` : '--'}
                   </div>
                   <p className="text-sm font-medium text-foreground">Humor</p>
                   <p className="text-xs text-muted-foreground">{getMoodText(selectedCheckin.mood)}</p>
                 </div>
                 <div className="text-center space-y-2">
                   <div className="text-3xl font-bold text-blue-600">
-                    {selectedCheckin.energy ? `${selectedCheckin.energy}/10` : '--'}
+                    {selectedCheckin.energy ? `${selectedCheckin.energy}/5` : '--'}
                   </div>
                   <p className="text-sm font-medium text-foreground">Energia</p>
                   <p className="text-xs text-muted-foreground">{getEnergyText(selectedCheckin.energy)}</p>
                 </div>
+                {selectedCheckin.sleep_hours && (
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl font-bold text-indigo-600">
+                      {selectedCheckin.sleep_hours}h
+                    </div>
+                    <p className="text-sm font-medium text-foreground">Horas de Sono</p>
+                  </div>
+                )}
                 <div className="text-center space-y-2">
                   <div className="text-3xl font-bold text-purple-600">
                     {selectedCheckin.stress_level ? `${selectedCheckin.stress_level}/10` : '--'}
@@ -135,7 +136,7 @@ const PsychologyCheckinHistoryDialog = ({ open, onOpenChange }: PsychologyChecki
                   <p className="text-sm font-medium text-foreground">Estresse</p>
                 </div>
                 <div className="text-center space-y-2">
-                  <div className="text-3xl font-bold text-indigo-600">
+                  <div className="text-3xl font-bold text-green-600">
                     {selectedCheckin.sleep_quality ? `${selectedCheckin.sleep_quality}/10` : '--'}
                   </div>
                   <p className="text-sm font-medium text-foreground">Qualidade do Sono</p>
@@ -208,13 +209,19 @@ const PsychologyCheckinHistoryDialog = ({ open, onOpenChange }: PsychologyChecki
                       {checkin.mood && (
                         <span className="flex items-center gap-1">
                           <Heart className="h-3 w-3" />
-                          Humor: {checkin.mood}/10
+                          Humor: {checkin.mood}/5
                         </span>
                       )}
                       {checkin.energy && (
                         <span className="flex items-center gap-1">
                           <Zap className="h-3 w-3" />
-                          Energia: {checkin.energy}/10
+                          Energia: {checkin.energy}/5
+                        </span>
+                      )}
+                      {checkin.sleep_hours && (
+                        <span className="flex items-center gap-1">
+                          <Moon className="h-3 w-3" />
+                          Sono: {checkin.sleep_hours}h
                         </span>
                       )}
                     </div>

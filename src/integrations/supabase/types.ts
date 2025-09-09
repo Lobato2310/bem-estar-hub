@@ -120,6 +120,7 @@ export type Database = {
           observations: string | null
           right_thigh: number | null
           side_photo_url: string | null
+          sleep_hours: number | null
           sleep_quality: number | null
           status: string | null
           stress_level: number | null
@@ -142,6 +143,7 @@ export type Database = {
           observations?: string | null
           right_thigh?: number | null
           side_photo_url?: string | null
+          sleep_hours?: number | null
           sleep_quality?: number | null
           status?: string | null
           stress_level?: number | null
@@ -164,6 +166,7 @@ export type Database = {
           observations?: string | null
           right_thigh?: number | null
           side_photo_url?: string | null
+          sleep_hours?: number | null
           sleep_quality?: number | null
           status?: string | null
           stress_level?: number | null
