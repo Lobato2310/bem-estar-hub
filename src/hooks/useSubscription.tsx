@@ -46,9 +46,9 @@ export const useSubscription = () => {
       console.log("User is client, checking subscription...");
 
       const { data, error } = await supabase
-        .from("user_subscriptions")
+        .from("assinaturas" as any)
         .select("*")
-        .eq("user_id", user.id)
+        .eq("id_usuario", user.id)
         .maybeSingle();
 
       console.log("Subscription data:", data);
@@ -61,19 +61,20 @@ export const useSubscription = () => {
       }
 
       if (data) {
-        setSubscription(data);
+        setSubscription(data as unknown as SubscriptionData);
         // Verificar se a assinatura está ativa e não expirou
-        const isActive = data.assinatura_ativa && 
-          (!data.data_expiracao || new Date(data.data_expiracao) > new Date());
+        const subscriptionData = data as any;
+        const isActive = subscriptionData.assinatura_ativa && 
+          (!subscriptionData.data_expiracao || new Date(subscriptionData.data_expiracao) > new Date());
         console.log("Subscription active:", isActive);
         setIsSubscribed(isActive);
       } else {
         // Criar registro vazio se não existir (apenas para clientes)
         console.log("No subscription found, creating new record...");
         const { error: insertError } = await supabase
-          .from("user_subscriptions")
+          .from("assinaturas" as any)
           .insert({
-            user_id: user.id,
+            id_usuario: user.id,
             email: user.email || "",
             assinatura_ativa: false
           });
@@ -126,8 +127,8 @@ export const useSubscription = () => {
         {
           event: "*",
           schema: "public",
-          table: "user_subscriptions",
-          filter: `user_id=eq.${user.id}`,
+          table: "assinaturas",
+          filter: `id_usuario=eq.${user.id}`,
         },
         () => {
           refreshSubscription();
