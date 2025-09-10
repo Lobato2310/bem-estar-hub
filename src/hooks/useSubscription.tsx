@@ -108,7 +108,7 @@ export const useSubscription = () => {
   };
 
   const openExternalCheckout = () => {
-    const checkoutUrl = `https://myfitlife-hub.lovable.app/?user_id=${user?.id}&email=${user?.email}`;
+    const checkoutUrl = `https://myfitlifewebsite.lovable.app//?user_id=${user?.id}&email=${user?.email}`;
     window.open(checkoutUrl, "_blank");
   };
 
