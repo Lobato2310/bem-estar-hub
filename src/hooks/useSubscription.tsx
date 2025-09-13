@@ -46,7 +46,7 @@ export const useSubscription = () => {
       console.log("User is client, checking subscription...");
 
       const { data, error } = await supabase
-        .from("assinaturas" as any)
+        .from("assinaturas")
         .select("*")
         .eq("id_usuario", user.id)
         .maybeSingle();
@@ -61,28 +61,13 @@ export const useSubscription = () => {
       }
 
       if (data) {
-        setSubscription(data as unknown as SubscriptionData);
-        // Verificar se a assinatura está ativa e não expirou
-        const subscriptionData = data as any;
-        const isActive = subscriptionData.assinatura_ativa && 
-          (!subscriptionData.data_expiracao || new Date(subscriptionData.data_expiracao) > new Date());
+        setSubscription(data as SubscriptionData);
+        // Verificar apenas se a assinatura está ativa
+        const isActive = data.assinatura_ativa === true;
         console.log("Subscription active:", isActive);
         setIsSubscribed(isActive);
       } else {
-        // Criar registro vazio se não existir (apenas para clientes)
-        console.log("No subscription found, creating new record...");
-        const { error: insertError } = await supabase
-          .from("assinaturas" as any)
-          .insert({
-            id_usuario: user.id,
-            email: user.email || "",
-            assinatura_ativa: false
-          });
-
-        if (insertError) {
-          console.error("Erro ao criar registro de assinatura:", insertError);
-        }
-        
+        // Não deveria acontecer mais com o trigger automático
         setSubscription({
           id: "",
           assinatura_ativa: false,
@@ -91,7 +76,7 @@ export const useSubscription = () => {
           data_expiracao: null,
           valor_pago: null
         });
-        console.log("Setting isSubscribed to false for new client");
+        console.log("No subscription found, setting isSubscribed to false");
         setIsSubscribed(false);
       }
     } catch (error) {
