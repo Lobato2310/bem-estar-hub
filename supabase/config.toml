@@ -1,4 +1,4 @@
-project_id = "qmathgcutdcdjxtlrhsh"
+project_id = "kobjfrzukzwmexowsfxr"
 
 [api]
 enabled = true
@@ -8,4 +8,7 @@ extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [functions.webhook]
+verify_jwt = false
+
+[functions.send-payment-confirmation]
 verify_jwt = false

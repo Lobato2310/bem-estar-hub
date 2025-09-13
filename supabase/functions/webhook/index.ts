@@ -199,23 +199,23 @@ serve(async (req) => {
         throw new Error(`Não foi possível identificar o usuário. External reference: ${userId}, Email: ${userEmail}`);
       }
 
-      // Atualizar ou criar registro de assinatura
+      // Atualizar registro de assinatura na tabela correta
       const subscriptionData = {
-        user_id: targetUserId,
+        id_usuario: targetUserId,
         email: userEmail || "",
         assinatura_ativa: assinaturaAtiva,
         plano: "mensal",
         data_inicio: assinaturaAtiva ? dataInicio : null,
         data_expiracao: assinaturaAtiva ? dataExpiracaoStr : null,
-        mercado_pago_payment_id: paymentId,
+        mercado_payment_id: paymentId,
         mercado_pago_status: mpStatus,
         valor_pago: paymentData.transaction_amount || 0,
-        updated_at: new Date().toISOString()
+        atualizado_em: new Date().toISOString()
       };
 
       const { data, error } = await supabaseClient
-        .from("user_subscriptions")
-        .upsert(subscriptionData, { onConflict: "user_id" });
+        .from("assinaturas")
+        .upsert(subscriptionData, { onConflict: "id_usuario" });
 
       if (error) {
         logStep("Erro ao atualizar assinatura", error);
@@ -227,6 +227,42 @@ serve(async (req) => {
         assinaturaAtiva, 
         paymentId 
       });
+
+      // Enviar email de confirmação APENAS se o pagamento foi aprovado
+      if (assinaturaAtiva && mpStatus === "approved") {
+        try {
+          // Buscar nome do usuário para personalizar o email
+          const { data: userProfile } = await supabaseClient
+            .from("profiles")
+            .select("display_name")
+            .eq("user_id", targetUserId)
+            .single();
+
+          const userName = userProfile?.display_name || "Cliente";
+
+          logStep("Enviando email de confirmação", { userEmail, userName });
+
+          // Chamar edge function para enviar email
+          const emailResponse = await supabaseClient.functions.invoke('send-payment-confirmation', {
+            body: {
+              userEmail,
+              userName,
+              plano: "mensal",
+              valorPago: paymentData.transaction_amount || 0,
+              dataExpiracao: dataExpiracaoStr
+            }
+          });
+
+          if (emailResponse.error) {
+            logStep("Erro ao enviar email de confirmação", emailResponse.error);
+          } else {
+            logStep("Email de confirmação enviado com sucesso");
+          }
+        } catch (emailError) {
+          logStep("Erro ao processar envio de email", emailError);
+          // Não falhar o webhook por erro de email
+        }
+      }
 
       return new Response(JSON.stringify({ 
         success: true, 
