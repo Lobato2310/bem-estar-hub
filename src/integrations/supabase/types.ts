@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      assinaturas: {
+        Row: {
+          assinatura_ativa: boolean | null
+          atualizado_em: string | null
+          criado_em: string | null
+          data_expiracao: string | null
+          data_inicio: string | null
+          email: string
+          id: string
+          id_usuario: string
+          mercado_pago_status: string | null
+          mercado_payment_id: string | null
+          plano: string | null
+          valor_pago: number | null
+        }
+        Insert: {
+          assinatura_ativa?: boolean | null
+          atualizado_em?: string | null
+          criado_em?: string | null
+          data_expiracao?: string | null
+          data_inicio?: string | null
+          email: string
+          id?: string
+          id_usuario: string
+          mercado_pago_status?: string | null
+          mercado_payment_id?: string | null
+          plano?: string | null
+          valor_pago?: number | null
+        }
+        Update: {
+          assinatura_ativa?: boolean | null
+          atualizado_em?: string | null
+          criado_em?: string | null
+          data_expiracao?: string | null
+          data_inicio?: string | null
+          email?: string
+          id?: string
+          id_usuario?: string
+          mercado_pago_status?: string | null
+          mercado_payment_id?: string | null
+          plano?: string | null
+          valor_pago?: number | null
+        }
+        Relationships: []
+      }
       client_anamnesis: {
         Row: {
           birth_date: string | null
@@ -611,51 +656,6 @@ export type Database = {
           id?: number
           proteina?: number | null
           sodio?: number | null
-        }
-        Relationships: []
-      }
-      user_subscriptions: {
-        Row: {
-          assinatura_ativa: boolean
-          created_at: string
-          data_expiracao: string | null
-          data_inicio: string | null
-          email: string
-          id: string
-          mercado_pago_payment_id: string | null
-          mercado_pago_status: string | null
-          plano: string | null
-          updated_at: string
-          user_id: string
-          valor_pago: number | null
-        }
-        Insert: {
-          assinatura_ativa?: boolean
-          created_at?: string
-          data_expiracao?: string | null
-          data_inicio?: string | null
-          email: string
-          id?: string
-          mercado_pago_payment_id?: string | null
-          mercado_pago_status?: string | null
-          plano?: string | null
-          updated_at?: string
-          user_id: string
-          valor_pago?: number | null
-        }
-        Update: {
-          assinatura_ativa?: boolean
-          created_at?: string
-          data_expiracao?: string | null
-          data_inicio?: string | null
-          email?: string
-          id?: string
-          mercado_pago_payment_id?: string | null
-          mercado_pago_status?: string | null
-          plano?: string | null
-          updated_at?: string
-          user_id?: string
-          valor_pago?: number | null
         }
         Relationships: []
       }
