@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award, BookOpen, Users, Eye } from "lucide-react";
+import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award, BookOpen, Users, Eye, BarChart3 } from "lucide-react";
 import { ProfessionalClientCheckinDialog } from "@/components/psychology/ProfessionalClientCheckinDialog";
 import { SessionManagementDialog } from "@/components/psychology/SessionManagementDialog";
+import { GoalsAchievementsDialog } from "@/components/psychology/GoalsAchievementsDialog";
+import { WeeklyHistoryDialog } from "@/components/psychology/WeeklyHistoryDialog";
 
 const ProfessionalPsychologySection = () => {
   const [unlocked, setUnlocked] = useState(false);
@@ -13,6 +15,8 @@ const ProfessionalPsychologySection = () => {
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showCheckinDialog, setShowCheckinDialog] = useState(false);
   const [showSessionDialog, setShowSessionDialog] = useState(false);
+  const [showGoalsAchievementsDialog, setShowGoalsAchievementsDialog] = useState(false);
+  const [showWeeklyHistoryDialog, setShowWeeklyHistoryDialog] = useState(false);
 
   const handleUnlock = () => {
     if (pwd === "psicologia123") {
@@ -86,6 +90,16 @@ const ProfessionalPsychologySection = () => {
   const handleManageSession = (client: any) => {
     setSelectedClient(client);
     setShowSessionDialog(true);
+  };
+
+  const handleViewGoalsAchievements = (client: any) => {
+    setSelectedClient(client);
+    setShowGoalsAchievementsDialog(true);
+  };
+
+  const handleViewWeeklyHistory = (client: any) => {
+    setSelectedClient(client);
+    setShowWeeklyHistoryDialog(true);
   };
 
   const psychologyStats = [
@@ -167,10 +181,18 @@ const ProfessionalPsychologySection = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => handleViewCheckins(client)}
+                    onClick={() => handleViewGoalsAchievements(client)}
                   >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Check-ins
+                    <Award className="h-4 w-4 mr-2" />
+                    Metas
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewWeeklyHistory(client)}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Histórico
                   </Button>
                 </div>
               </div>
@@ -254,12 +276,12 @@ const ProfessionalPsychologySection = () => {
         <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
           <div className="text-center space-y-4">
             <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
-              <Target className="h-6 w-6 text-primary-foreground" />
+              <Award className="h-6 w-6 text-primary-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">Definir Metas</h3>
-            <p className="text-muted-foreground">Estabeleça objetivos personalizados para cada cliente</p>
+            <h3 className="text-lg font-semibold text-foreground">Conquistas e Metas</h3>
+            <p className="text-muted-foreground">Gerencie conquistas e defina metas para os clientes</p>
             <Button variant="outline" className="w-full">
-              Criar Meta
+              Gerenciar
             </Button>
           </div>
         </Card>
@@ -267,7 +289,7 @@ const ProfessionalPsychologySection = () => {
         <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
           <div className="text-center space-y-4">
             <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
-              <Award className="h-6 w-6 text-primary-foreground" />
+              <BarChart3 className="h-6 w-6 text-primary-foreground" />
             </div>
             <h3 className="text-lg font-semibold text-foreground">Relatórios</h3>
             <p className="text-muted-foreground">Gere relatórios de progresso e evolução</p>
@@ -290,6 +312,18 @@ const ProfessionalPsychologySection = () => {
           <SessionManagementDialog
             open={showSessionDialog}
             onOpenChange={setShowSessionDialog}
+            clientId={selectedClient.id}
+            clientName={selectedClient.name}
+          />
+          <GoalsAchievementsDialog
+            open={showGoalsAchievementsDialog}
+            onOpenChange={setShowGoalsAchievementsDialog}
+            clientId={selectedClient.id}
+            clientName={selectedClient.name}
+          />
+          <WeeklyHistoryDialog
+            open={showWeeklyHistoryDialog}
+            onOpenChange={setShowWeeklyHistoryDialog}
             clientId={selectedClient.id}
             clientName={selectedClient.name}
           />

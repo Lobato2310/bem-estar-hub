@@ -213,19 +213,47 @@ serve(async (req) => {
         atualizado_em: new Date().toISOString()
       };
 
-      const { data, error } = await supabaseClient
+      // Primeiro, verificar se já existe registro na tabela assinaturas
+      const { data: existingSubscription } = await supabaseClient
         .from("assinaturas")
-        .upsert(subscriptionData, { onConflict: "id_usuario" });
+        .select("id")
+        .eq("id_usuario", targetUserId)
+        .maybeSingle();
 
-      if (error) {
-        logStep("Erro ao atualizar assinatura", error);
-        throw error;
+      let subscriptionResult;
+      if (existingSubscription) {
+        // Atualizar registro existente
+        subscriptionResult = await supabaseClient
+          .from("assinaturas")
+          .update({
+            email: userEmail || "",
+            assinatura_ativa: assinaturaAtiva,
+            plano: "mensal",
+            data_inicio: assinaturaAtiva ? dataInicio : null,
+            data_expiracao: assinaturaAtiva ? dataExpiracaoStr : null,
+            mercado_payment_id: paymentId,
+            mercado_pago_status: mpStatus,
+            valor_pago: paymentData.transaction_amount || 0,
+            atualizado_em: new Date().toISOString()
+          })
+          .eq("id_usuario", targetUserId);
+      } else {
+        // Inserir novo registro
+        subscriptionResult = await supabaseClient
+          .from("assinaturas")
+          .insert(subscriptionData);
       }
 
-      logStep("Assinatura atualizada com sucesso", { 
+      if (subscriptionResult.error) {
+        logStep("Erro ao atualizar/inserir assinatura", subscriptionResult.error);
+        throw subscriptionResult.error;
+      }
+
+      logStep("Assinatura atualizada/inserida com sucesso", { 
         targetUserId, 
         assinaturaAtiva, 
-        paymentId 
+        paymentId,
+        existingRecord: !!existingSubscription
       });
 
       // Enviar email de confirmação APENAS se o pagamento foi aprovado
