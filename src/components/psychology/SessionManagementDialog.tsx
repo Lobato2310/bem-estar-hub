@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, FileText, Save } from "lucide-react";
+import { Calendar, Clock, FileText, Save, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -39,6 +39,9 @@ export const SessionManagementDialog = ({
   const [recentSessions, setRecentSessions] = useState<SessionData[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showNewReportForm, setShowNewReportForm] = useState(false);
+  const [newReportDate, setNewReportDate] = useState("");
+  const [newReportNotes, setNewReportNotes] = useState("");
 
   useEffect(() => {
     if (open && clientId) {
@@ -121,6 +124,38 @@ export const SessionManagementDialog = ({
     }
   };
 
+  const handleAddNewReport = async () => {
+    if (!newReportDate || !newReportNotes.trim() || !user) {
+      toast.error("Por favor, preencha a data e as observações do relatório");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('psychology_sessions')
+        .insert({
+          client_id: clientId,
+          professional_id: user.id,
+          session_date: newReportDate,
+          session_notes: newReportNotes
+        });
+
+      if (error) throw error;
+      
+      toast.success("Relatório adicionado com sucesso!");
+      setNewReportDate("");
+      setNewReportNotes("");
+      setShowNewReportForm(false);
+      loadRecentSessions();
+    } catch (error) {
+      console.error('Erro ao adicionar relatório:', error);
+      toast.error("Erro ao adicionar relatório");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -161,10 +196,67 @@ export const SessionManagementDialog = ({
 
           {/* Sessões recentes */}
           <Card className="p-4">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Sessões Recentes
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Sessões e Relatórios
+              </h3>
+              {user && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowNewReportForm(!showNewReportForm)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Relatório
+                </Button>
+              )}
+            </div>
+
+            {/* Form para novo relatório */}
+            {showNewReportForm && user && (
+              <Card className="p-4 mb-4 border-primary/20 bg-primary/5">
+                <h4 className="font-semibold mb-3">Adicionar Novo Relatório</h4>
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="new-report-date">Data da Sessão</Label>
+                    <Input
+                      id="new-report-date"
+                      type="date"
+                      value={newReportDate}
+                      onChange={(e) => setNewReportDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="new-report-notes">Observações da Sessão</Label>
+                    <Textarea
+                      id="new-report-notes"
+                      placeholder="Adicione suas observações sobre esta sessão..."
+                      value={newReportNotes}
+                      onChange={(e) => setNewReportNotes(e.target.value)}
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleAddNewReport}
+                      disabled={submitting || !newReportDate || !newReportNotes.trim()}
+                      className="flex-1"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar Relatório
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowNewReportForm(false)}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
             
             {loading ? (
               <p>Carregando sessões...</p>

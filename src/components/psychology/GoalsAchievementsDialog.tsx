@@ -35,13 +35,15 @@ interface GoalsAchievementsDialogProps {
   onOpenChange: (open: boolean) => void;
   clientId: string;
   clientName: string;
+  isProfessional?: boolean; // Nova prop para identificar se é contexto profissional
 }
 
 export const GoalsAchievementsDialog = ({ 
   open, 
   onOpenChange, 
   clientId, 
-  clientName 
+  clientName,
+  isProfessional = false
 }: GoalsAchievementsDialogProps) => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -212,17 +214,19 @@ export const GoalsAchievementsDialog = ({
                   {achievements.length} conquista(s) registrada(s)
                 </p>
               </div>
-              <Button 
-                onClick={() => setShowAddAchievementForm(!showAddAchievementForm)} 
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Nova Conquista
-              </Button>
+              {isProfessional && (
+                <Button 
+                  onClick={() => setShowAddAchievementForm(!showAddAchievementForm)} 
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Nova Conquista
+                </Button>
+              )}
             </div>
 
             {/* Form para nova conquista */}
-            {showAddAchievementForm && (
+            {showAddAchievementForm && isProfessional && (
               <Card className="p-4 border-primary/20 bg-primary/5">
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -318,17 +322,19 @@ export const GoalsAchievementsDialog = ({
                   {goals.length} meta(s) definida(s)
                 </p>
               </div>
-              <Button 
-                onClick={() => setShowAddGoalForm(!showAddGoalForm)} 
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Nova Meta
-              </Button>
+              {isProfessional && (
+                <Button 
+                  onClick={() => setShowAddGoalForm(!showAddGoalForm)} 
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Nova Meta
+                </Button>
+              )}
             </div>
 
             {/* Form para nova meta */}
-            {showAddGoalForm && (
+            {showAddGoalForm && isProfessional && (
               <Card className="p-4 border-primary/20 bg-primary/5">
                 <div className="space-y-4">
                   <div className="space-y-2">

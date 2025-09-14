@@ -320,6 +320,7 @@ const ProfessionalPsychologySection = () => {
             onOpenChange={setShowGoalsAchievementsDialog}
             clientId={selectedClient.id}
             clientName={selectedClient.name}
+            isProfessional={true}
           />
           <WeeklyHistoryDialog
             open={showWeeklyHistoryDialog}

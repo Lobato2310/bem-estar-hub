@@ -3,13 +3,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Brain, Calendar, MessageSquare, TrendingUp, Target, Heart, Award } from "lucide-react";
 import { DailyCheckinDialog } from "@/components/psychology/DailyCheckinDialog";
-import { AchievementsDialog } from "@/components/psychology/AchievementsDialog";
+import { GoalsAchievementsDialog } from "@/components/psychology/GoalsAchievementsDialog";
 import PsychologyCheckinHistoryDialog from "@/components/psychology/PsychologyCheckinHistoryDialog";
+import { WeeklyHistoryDialog } from "@/components/psychology/WeeklyHistoryDialog";
+import { ClientSessionReportsDialog } from "@/components/psychology/ClientSessionReportsDialog";
 import { supabase } from "@/integrations/supabase/client";
 const PsychologySection = () => {
   const [showCheckinDialog, setShowCheckinDialog] = useState(false);
-  const [showAchievementsDialog, setShowAchievementsDialog] = useState(false);
+  const [showGoalsAchievementsDialog, setShowGoalsAchievementsDialog] = useState(false);
   const [showPsychologyHistoryDialog, setShowPsychologyHistoryDialog] = useState(false);
+  const [showWeeklyHistoryDialog, setShowWeeklyHistoryDialog] = useState(false);
+  const [showSessionReportsDialog, setShowSessionReportsDialog] = useState(false);
   const [dailyMotivation, setDailyMotivation] = useState<string>("");
   const sessions = [{
     date: "Próxima Sessão",
@@ -161,7 +165,7 @@ const PsychologySection = () => {
                 </div>
                 
               </div>
-              {session.status === 'Concluída' && <Button variant="outline" className="w-full" onClick={() => setShowPsychologyHistoryDialog(true)}>
+              {session.status === 'Concluída' && <Button variant="outline" className="w-full" onClick={() => setShowSessionReportsDialog(true)}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Ver Relatórios das Sessões
                 </Button>}
@@ -221,20 +225,20 @@ const PsychologySection = () => {
               </div>
             </div>)}
         </div>
-          <Button variant="outline" className="w-full mt-4" onClick={() => setShowPsychologyHistoryDialog(true)}>
+          <Button variant="outline" className="w-full mt-4" onClick={() => setShowWeeklyHistoryDialog(true)}>
             Ver Histórico
           </Button>
       </Card>
 
       {/* Recursos de bem-estar */}
       <div className="grid grid-cols-1 gap-6">
-        <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group" onClick={() => setShowAchievementsDialog(true)}>
+        <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group" onClick={() => setShowGoalsAchievementsDialog(true)}>
           <div className="text-center space-y-4">
             <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
               <Award className="h-6 w-6 text-primary-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">Conquistas</h3>
-            <p className="text-muted-foreground">Acompanhe seu progresso e celebre vitórias</p>
+            <h3 className="text-lg font-semibold text-foreground">Conquistas e Metas</h3>
+            <p className="text-muted-foreground">Acompanhe seu progresso, conquistas e metas</p>
             <Button variant="outline" className="w-full">
               Ver Todas
             </Button>
@@ -268,9 +272,26 @@ const PsychologySection = () => {
       {/* Dialogs */}
       <DailyCheckinDialog open={showCheckinDialog} onOpenChange={setShowCheckinDialog} />
       
-      <AchievementsDialog open={showAchievementsDialog} onOpenChange={setShowAchievementsDialog} />
+      <GoalsAchievementsDialog 
+        open={showGoalsAchievementsDialog} 
+        onOpenChange={setShowGoalsAchievementsDialog}
+        clientId="current-user" // Para cliente atual
+        clientName="Você"
+      />
       
       <PsychologyCheckinHistoryDialog open={showPsychologyHistoryDialog} onOpenChange={setShowPsychologyHistoryDialog} />
+      
+      <WeeklyHistoryDialog 
+        open={showWeeklyHistoryDialog} 
+        onOpenChange={setShowWeeklyHistoryDialog}
+        clientId="current-user"
+        clientName="Você"
+      />
+      
+      <ClientSessionReportsDialog 
+        open={showSessionReportsDialog} 
+        onOpenChange={setShowSessionReportsDialog}
+      />
     </div>;
 };
 export default PsychologySection;
