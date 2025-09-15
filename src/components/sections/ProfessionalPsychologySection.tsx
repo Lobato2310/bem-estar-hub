@@ -201,30 +201,29 @@ const ProfessionalPsychologySection = () => {
         </div>
       </Card>
 
-      {/* Sessões Agendadas */}
+      {/* Última Sessão */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>Próximas Sessões</span>
+            <span>Última Sessão</span>
           </h3>
           <div className="space-y-3">
             <div className="p-3 bg-primary/10 rounded-lg">
               <div className="flex justify-between items-center">
                 <div>
                   <p className="font-medium">Ana Silva</p>
-                  <p className="text-sm text-muted-foreground">Hoje, 14:00</p>
+                  <p className="text-sm text-muted-foreground">15/01/2024, 14:00</p>
                 </div>
-                <Button size="sm">Iniciar</Button>
-              </div>
-            </div>
-            <div className="p-3 bg-accent rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium">Carlos Santos</p>
-                  <p className="text-sm text-muted-foreground">Amanhã, 16:00</p>
-                </div>
-                <Button variant="outline" size="sm">Agendar</Button>
+                <Button 
+                  size="sm"
+                  onClick={() => handleManageSession({
+                    id: "550e8400-e29b-41d4-a716-446655440001",
+                    name: "Ana Silva"
+                  })}
+                >
+                  Ver Relatórios das Sessões
+                </Button>
               </div>
             </div>
           </div>
@@ -280,8 +279,15 @@ const ProfessionalPsychologySection = () => {
             </div>
             <h3 className="text-lg font-semibold text-foreground">Conquistas e Metas</h3>
             <p className="text-muted-foreground">Gerencie conquistas e defina metas para os clientes</p>
-            <Button variant="outline" className="w-full">
-              Gerenciar
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleViewGoalsAchievements({
+                id: "550e8400-e29b-41d4-a716-446655440001",
+                name: "Clientes Geral"
+              })}
+            >
+              Ver Todas
             </Button>
           </div>
         </Card>
