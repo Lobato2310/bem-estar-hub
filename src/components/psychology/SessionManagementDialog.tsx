@@ -194,23 +194,76 @@ export const SessionManagementDialog = ({
             </div>
           </Card>
 
+          {/* Adicionar relatório da última sessão */}
+          <Card className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Relatório da Última Sessão
+              </h3>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowNewReportForm(!showNewReportForm)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Relatório
+              </Button>
+            </div>
+
+            {/* Form para relatório da última sessão */}
+            {showNewReportForm && (
+              <Card className="p-4 mb-4 border-primary/20 bg-primary/5">
+                <h4 className="font-semibold mb-3">Relatório da Última Sessão</h4>
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="last-session-date">Data da Sessão</Label>
+                    <Input
+                      id="last-session-date"
+                      type="date"
+                      value={newReportDate}
+                      onChange={(e) => setNewReportDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="last-session-notes">Observações da Sessão</Label>
+                    <Textarea
+                      id="last-session-notes"
+                      placeholder="Adicione suas observações sobre esta sessão..."
+                      value={newReportNotes}
+                      onChange={(e) => setNewReportNotes(e.target.value)}
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleAddNewReport}
+                      disabled={submitting || !newReportDate || !newReportNotes.trim()}
+                      className="flex-1"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar Relatório
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowNewReportForm(false)}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
+          </Card>
+
           {/* Sessões recentes */}
           <Card className="p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Sessões e Relatórios
+                Histórico de Sessões
               </h3>
-              {user && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowNewReportForm(!showNewReportForm)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Relatório
-                </Button>
-              )}
             </div>
 
             {/* Form para novo relatório */}
