@@ -2,9 +2,13 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { FileText, Calendar, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -28,6 +32,9 @@ export const ClientSessionReportsDialog = ({
   const { user } = useAuth();
   const [recentSessions, setRecentSessions] = useState<SessionData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newReportDate, setNewReportDate] = useState("");
+  const [newReportNotes, setNewReportNotes] = useState("");
 
   useEffect(() => {
     if (open && user) {
@@ -56,6 +63,35 @@ export const ClientSessionReportsDialog = ({
     }
   };
 
+  const handleAddReport = async () => {
+    if (!newReportDate || !newReportNotes.trim() || !user) {
+      toast.error("Por favor, preencha todos os campos");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('psychology_sessions')
+        .insert({
+          client_id: user.id,
+          professional_id: user.id, // Cliente pode criar seus próprios relatórios
+          session_date: newReportDate,
+          session_notes: newReportNotes
+        });
+
+      if (error) throw error;
+      
+      toast.success("Relatório adicionado com sucesso!");
+      setNewReportDate("");
+      setNewReportNotes("");
+      setShowAddForm(false);
+      loadRecentSessions();
+    } catch (error) {
+      console.error('Erro ao adicionar relatório:', error);
+      toast.error("Erro ao adicionar relatório");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -67,6 +103,56 @@ export const ClientSessionReportsDialog = ({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Botão para adicionar novo relatório */}
+          <Card className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Adicionar Novo Relatório
+              </h3>
+              <Button 
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Novo Relatório
+              </Button>
+            </div>
+
+            {/* Formulário para adicionar relatório */}
+            {showAddForm && (
+              <div className="space-y-4 p-4 border rounded-lg">
+                <div>
+                  <Label htmlFor="report-date">Data da Sessão</Label>
+                  <Input
+                    id="report-date"
+                    type="date"
+                    value={newReportDate}
+                    onChange={(e) => setNewReportDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="report-notes">Relatório da Sessão</Label>
+                  <Textarea
+                    id="report-notes"
+                    placeholder="Adicione as observações da sessão..."
+                    value={newReportNotes}
+                    onChange={(e) => setNewReportNotes(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleAddReport} className="flex-1">
+                    Salvar Relatório
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowAddForm(false)} className="flex-1">
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+
           <Card className="p-4">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5" />

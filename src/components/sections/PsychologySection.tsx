@@ -277,6 +277,7 @@ const PsychologySection = () => {
         onOpenChange={setShowGoalsAchievementsDialog}
         clientId="current-user" // Para cliente atual
         clientName="Você"
+        isProfessional={true} // Permitir que cliente também adicione metas/conquistas
       />
       
       <PsychologyCheckinHistoryDialog open={showPsychologyHistoryDialog} onOpenChange={setShowPsychologyHistoryDialog} />
