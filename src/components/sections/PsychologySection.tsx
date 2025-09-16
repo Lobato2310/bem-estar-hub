@@ -7,6 +7,7 @@ import { GoalsAchievementsDialog } from "@/components/psychology/GoalsAchievemen
 import PsychologyCheckinHistoryDialog from "@/components/psychology/PsychologyCheckinHistoryDialog";
 import { WeeklyHistoryDialog } from "@/components/psychology/WeeklyHistoryDialog";
 import { ClientSessionReportsDialog } from "@/components/psychology/ClientSessionReportsDialog";
+import { EditNextSessionDialog } from "@/components/psychology/EditNextSessionDialog";
 import { supabase } from "@/integrations/supabase/client";
 const PsychologySection = () => {
   const [showCheckinDialog, setShowCheckinDialog] = useState(false);
@@ -14,6 +15,7 @@ const PsychologySection = () => {
   const [showPsychologyHistoryDialog, setShowPsychologyHistoryDialog] = useState(false);
   const [showWeeklyHistoryDialog, setShowWeeklyHistoryDialog] = useState(false);
   const [showSessionReportsDialog, setShowSessionReportsDialog] = useState(false);
+  const [showEditNextSessionDialog, setShowEditNextSessionDialog] = useState(false);
   const [dailyMotivation, setDailyMotivation] = useState<string>("");
   const sessions = [{
     date: "Próxima Sessão",
@@ -165,6 +167,12 @@ const PsychologySection = () => {
                 </div>
                 
               </div>
+              {session.status === 'Agendada' && (
+                <Button variant="outline" className="w-full" onClick={() => setShowEditNextSessionDialog(true)}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Editar Próxima Sessão
+                </Button>
+              )}
               {session.status === 'Concluída' && <Button variant="outline" className="w-full" onClick={() => setShowSessionReportsDialog(true)}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Ver Relatórios das Sessões
@@ -292,6 +300,14 @@ const PsychologySection = () => {
       <ClientSessionReportsDialog 
         open={showSessionReportsDialog} 
         onOpenChange={setShowSessionReportsDialog}
+      />
+      
+      <EditNextSessionDialog
+        open={showEditNextSessionDialog}
+        onOpenChange={setShowEditNextSessionDialog}
+        clientName="Você"
+        currentDate="2024-01-25"
+        currentTime="15:00"
       />
     </div>;
 };

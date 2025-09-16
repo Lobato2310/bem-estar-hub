@@ -24,7 +24,7 @@ import ClientSelector from "@/components/professional/ClientSelector";
 import ClientPlanManagement from "@/components/professional/ClientPlanManagement";
 import ClientAnamnesis from "@/components/professional/ClientAnamnesis";
 import ReportsSection from "@/components/sections/ReportsSection";
-import { EditNextSessionDialog } from "@/components/psychology/EditNextSessionDialog";
+
 
 interface Client {
   id: string;
@@ -49,7 +49,6 @@ const ProfessionalDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [showEditNextSessionDialog, setShowEditNextSessionDialog] = useState(false);
 
   const ADMIN_PASSWORD = "MyFitLifeAdmProf";
 
@@ -197,12 +196,11 @@ const ProfessionalDashboard = () => {
 
       {/* Tabs de Conteúdo */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="clients">Clientes</TabsTrigger>
           <TabsTrigger value="plans">Planos</TabsTrigger>
           <TabsTrigger value="nutrition">Nutrição</TabsTrigger>
-          <TabsTrigger value="psychology">Psicologia</TabsTrigger>
           <TabsTrigger value="analytics">Relatórios</TabsTrigger>
         </TabsList>
 
@@ -384,81 +382,12 @@ const ProfessionalDashboard = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="psychology" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sessões de Psicologia</CardTitle>
-                <CardDescription>
-                  Gerencie as sessões psicológicas dos seus clientes
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Próxima Sessão</h4>
-                      <p className="text-sm text-muted-foreground">Ana Silva - 22/01/2024 às 15:00</p>
-                    </div>
-                    <Button 
-                      size="sm"
-                      onClick={() => setShowEditNextSessionDialog(true)}
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Última Sessão</h4>
-                      <p className="text-sm text-muted-foreground">João Santos - 20/01/2024 às 14:00</p>
-                    </div>
-                    <Badge variant="secondary">Concluída</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Clientes Ativos</CardTitle>
-                <CardDescription>
-                  Lista dos clientes com acompanhamento psicológico
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-2 border rounded">
-                    <span className="font-medium">Ana Silva</span>
-                    <Badge variant="outline">Ativo</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-2 border rounded">
-                    <span className="font-medium">João Santos</span>
-                    <Badge variant="outline">Ativo</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-2 border rounded">
-                    <span className="font-medium">Maria Costa</span>
-                    <Badge variant="secondary">Pausa</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
           <ReportsSection />
         </TabsContent>
       </Tabs>
 
-      <EditNextSessionDialog
-        open={showEditNextSessionDialog}
-        onOpenChange={setShowEditNextSessionDialog}
-        clientName="Ana Silva"
-        currentDate="2024-01-22"
-        currentTime="15:00"
-      />
     </div>
   );
 };
