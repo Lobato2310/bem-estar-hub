@@ -7,6 +7,7 @@ import { ProfessionalClientCheckinDialog } from "@/components/psychology/Profess
 import { SessionManagementDialog } from "@/components/psychology/SessionManagementDialog";
 import { GoalsAchievementsDialog } from "@/components/psychology/GoalsAchievementsDialog";
 import { WeeklyHistoryDialog } from "@/components/psychology/WeeklyHistoryDialog";
+import { EditNextSessionDialog } from "@/components/psychology/EditNextSessionDialog";
 
 const ProfessionalPsychologySection = () => {
   const [unlocked, setUnlocked] = useState(false);
@@ -17,6 +18,7 @@ const ProfessionalPsychologySection = () => {
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [showGoalsAchievementsDialog, setShowGoalsAchievementsDialog] = useState(false);
   const [showWeeklyHistoryDialog, setShowWeeklyHistoryDialog] = useState(false);
+  const [showEditNextSessionDialog, setShowEditNextSessionDialog] = useState(false);
 
   const handleUnlock = () => {
     if (pwd === "psicologia123") {
@@ -213,17 +215,27 @@ const ProfessionalPsychologySection = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="font-medium">Ana Silva</p>
-                  <p className="text-sm text-muted-foreground">15/01/2024, 14:00</p>
+                  <p className="text-sm text-muted-foreground">Última: 15/01/2024, 14:00</p>
+                  <p className="text-sm text-muted-foreground">Próxima: 22/01/2024, 15:00</p>
                 </div>
-                <Button 
-                  size="sm"
-                  onClick={() => handleManageSession({
-                    id: "550e8400-e29b-41d4-a716-446655440001",
-                    name: "Ana Silva"
-                  })}
-                >
-                  Ver Relatórios das Sessões
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowEditNextSessionDialog(true)}
+                  >
+                    Editar Próxima Sessão
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={() => handleManageSession({
+                      id: "550e8400-e29b-41d4-a716-446655440001",
+                      name: "Ana Silva"
+                    })}
+                  >
+                    Ver Relatórios das Sessões
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -336,6 +348,14 @@ const ProfessionalPsychologySection = () => {
           />
         </>
       )}
+      
+      <EditNextSessionDialog
+        open={showEditNextSessionDialog}
+        onOpenChange={setShowEditNextSessionDialog}
+        clientName="Ana Silva"
+        currentDate="2024-01-22"
+        currentTime="15:00"
+      />
     </div>
   );
 };
