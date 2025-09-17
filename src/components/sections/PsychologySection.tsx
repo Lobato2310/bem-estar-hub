@@ -174,12 +174,10 @@ const PsychologySection = () => {
                 </div>
                 
               </div>
-              {session.status === 'Agendada' && (
-                <Button variant="outline" className="w-full" onClick={() => setShowEditNextSessionDialog(true)}>
+              {session.status === 'Agendada' && <Button variant="outline" className="w-full" onClick={() => setShowEditNextSessionDialog(true)}>
                   <Calendar className="h-4 w-4 mr-2" />
                   Editar Próxima Sessão
-                </Button>
-              )}
+                </Button>}
               {session.status === 'Concluída' && <Button variant="outline" className="w-full" onClick={() => setShowSessionReportsDialog(true)}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Ver Relatórios das Sessões
@@ -220,79 +218,74 @@ const PsychologySection = () => {
         
         {/* Dias da Semana */}
         <div className="grid grid-cols-7 gap-2 md:gap-4 mb-6">
-          {moodData.map((day, index) => (
-            <div key={index} className="text-center">
+          {moodData.map((day, index) => <div key={index} className="text-center">
               <p className="text-sm font-bold text-foreground">{day.day}</p>
-            </div>
-          ))}
+            </div>)}
         </div>
 
         {/* HUMOR */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-foreground mb-3 text-center">HUMOR</h3>
+          <h3 className="text-lg font-bold text-foreground mb-3 text-center">HUMOR
+
+        </h3>
           <div className="grid grid-cols-7 gap-2 md:gap-4">
-            {moodData.map((day, index) => (
-              <div key={index} className="flex justify-center">
-                <div className="w-8 bg-secondary rounded-sm relative" style={{ height: '40px' }}>
-                  <div
-                    className="bg-yellow-400 rounded-sm absolute bottom-0 w-full transition-all duration-300"
-                    style={{ 
-                      height: `${(day.mood / 5) * 100}%`,
-                      minHeight: day.mood > 0 ? '4px' : '0px'
-                    }}
-                  />
+            {moodData.map((day, index) => <div key={index} className="flex justify-center">
+                <div className="w-8 bg-secondary rounded-sm relative" style={{
+              height: '40px'
+            }}>
+                  <div className="bg-yellow-400 rounded-sm absolute bottom-0 w-full transition-all duration-300" style={{
+                height: `${day.mood / 5 * 100}%`,
+                minHeight: day.mood > 0 ? '4px' : '0px'
+              }} />
                   <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium">
                     {day.mood}
                   </div>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
 
         {/* ENERGIA */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-foreground mb-3 text-center">ENERGIA</h3>
+          <h3 className="text-lg font-bold text-foreground mb-3 text-center">ENERGIA
+
+        </h3>
           <div className="grid grid-cols-7 gap-2 md:gap-4">
-            {moodData.map((day, index) => (
-              <div key={index} className="flex justify-center">
-                <div className="w-8 bg-secondary rounded-sm relative" style={{ height: '40px' }}>
-                  <div
-                    className="bg-green-500 rounded-sm absolute bottom-0 w-full transition-all duration-300"
-                    style={{ 
-                      height: `${(day.energy / 5) * 100}%`,
-                      minHeight: day.energy > 0 ? '4px' : '0px'
-                    }}
-                  />
+            {moodData.map((day, index) => <div key={index} className="flex justify-center">
+                <div className="w-8 bg-secondary rounded-sm relative" style={{
+              height: '40px'
+            }}>
+                  <div className="bg-green-500 rounded-sm absolute bottom-0 w-full transition-all duration-300" style={{
+                height: `${day.energy / 5 * 100}%`,
+                minHeight: day.energy > 0 ? '4px' : '0px'
+              }} />
                   <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium">
                     {day.energy}
                   </div>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
 
         {/* SONO */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-foreground mb-3 text-center">SONO</h3>
+          <h3 className="text-lg font-bold text-foreground mb-3 text-center">SONO
+
+        </h3>
           <div className="grid grid-cols-7 gap-2 md:gap-4">
-            {moodData.map((day, index) => (
-              <div key={index} className="flex justify-center">
-                <div className="w-8 bg-secondary rounded-sm relative" style={{ height: '40px' }}>
-                  <div
-                    className="bg-blue-500 rounded-sm absolute bottom-0 w-full transition-all duration-300"
-                    style={{ 
-                      height: `${(day.sleep / 12) * 100}%`,
-                      minHeight: day.sleep > 0 ? '4px' : '0px'
-                    }}
-                  />
+            {moodData.map((day, index) => <div key={index} className="flex justify-center">
+                <div className="w-8 bg-secondary rounded-sm relative" style={{
+              height: '40px'
+            }}>
+                  <div className="bg-blue-500 rounded-sm absolute bottom-0 w-full transition-all duration-300" style={{
+                height: `${day.sleep / 12 * 100}%`,
+                minHeight: day.sleep > 0 ? '4px' : '0px'
+              }} />
                   <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium">
                     {day.sleep}h
                   </div>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
 
@@ -343,35 +336,17 @@ const PsychologySection = () => {
       {/* Dialogs */}
       <DailyCheckinDialog open={showCheckinDialog} onOpenChange={setShowCheckinDialog} />
       
-      <GoalsAchievementsDialog 
-        open={showGoalsAchievementsDialog} 
-        onOpenChange={setShowGoalsAchievementsDialog}
-        clientId="current-user" // Para cliente atual
-        clientName="Você"
-        isProfessional={true} // Permitir que cliente também adicione metas/conquistas
-      />
+      <GoalsAchievementsDialog open={showGoalsAchievementsDialog} onOpenChange={setShowGoalsAchievementsDialog} clientId="current-user" // Para cliente atual
+    clientName="Você" isProfessional={true} // Permitir que cliente também adicione metas/conquistas
+    />
       
       <PsychologyCheckinHistoryDialog open={showPsychologyHistoryDialog} onOpenChange={setShowPsychologyHistoryDialog} />
       
-      <WeeklyHistoryDialog 
-        open={showWeeklyHistoryDialog} 
-        onOpenChange={setShowWeeklyHistoryDialog}
-        clientId="current-user"
-        clientName="Você"
-      />
+      <WeeklyHistoryDialog open={showWeeklyHistoryDialog} onOpenChange={setShowWeeklyHistoryDialog} clientId="current-user" clientName="Você" />
       
-      <ClientSessionReportsDialog 
-        open={showSessionReportsDialog} 
-        onOpenChange={setShowSessionReportsDialog}
-      />
+      <ClientSessionReportsDialog open={showSessionReportsDialog} onOpenChange={setShowSessionReportsDialog} />
       
-      <EditNextSessionDialog
-        open={showEditNextSessionDialog}
-        onOpenChange={setShowEditNextSessionDialog}
-        clientName="Você"
-        currentDate="2024-01-25"
-        currentTime="15:00"
-      />
+      <EditNextSessionDialog open={showEditNextSessionDialog} onOpenChange={setShowEditNextSessionDialog} clientName="Você" currentDate="2024-01-25" currentTime="15:00" />
     </div>;
 };
 export default PsychologySection;
