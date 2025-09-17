@@ -45,33 +45,40 @@ const PsychologySection = () => {
     total: 7
   }];
   const moodData = [{
-    day: "Seg",
+    day: "SEG",
     mood: 4,
-    energy: 3
+    energy: 3,
+    sleep: 7
   }, {
-    day: "Ter",
+    day: "TER",
     mood: 5,
-    energy: 4
+    energy: 4,
+    sleep: 8
   }, {
-    day: "Qua",
+    day: "QUA",
     mood: 3,
-    energy: 3
+    energy: 3,
+    sleep: 6
   }, {
-    day: "Qui",
+    day: "QUI",
     mood: 4,
-    energy: 5
+    energy: 5,
+    sleep: 7
   }, {
-    day: "Sex",
+    day: "SEX",
     mood: 5,
-    energy: 4
+    energy: 4,
+    sleep: 8
   }, {
-    day: "Sab",
+    day: "SAB",
     mood: 4,
-    energy: 3
+    energy: 3,
+    sleep: 9
   }, {
-    day: "Dom",
+    day: "DOM",
     mood: 4,
-    energy: 4
+    energy: 4,
+    sleep: 8
   }];
 
   // Fetch daily motivational phrase
@@ -204,38 +211,94 @@ const PsychologySection = () => {
         </div>
       </Card>
 
-      {/* Humor e Energia */}
+      {/* Humor - Energia - Sono */}
       <Card className="p-6">
-        <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center space-x-2">
-          <TrendingUp className="h-5 w-5" />
-          <span>Humor e Energia - Esta Semana</span>
-        </h2>
-        <div className="grid grid-cols-7 gap-2 md:gap-4">
-          {moodData.map((day, index) => <div key={index} className="text-center space-y-2">
-              <p className="text-xs md:text-sm font-medium text-foreground">{day.day}</p>
-              <div className="space-y-2">
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Humor</p>
-                  <div className="w-full bg-secondary rounded-full h-3 md:h-4">
-                    <div className="bg-yellow-400 h-3 md:h-4 rounded-full transition-all duration-300" style={{
-                  width: `${day.mood / 5 * 100}%`
-                }}></div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Energia</p>
-                  <div className="w-full bg-secondary rounded-full h-3 md:h-4">
-                    <div className="bg-primary h-3 md:h-4 rounded-full transition-all duration-300" style={{
-                  width: `${day.energy / 5 * 100}%`
-                }}></div>
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Humor – Energia – Sono</h2>
+          <p className="text-lg font-semibold text-primary">Esta Semana</p>
+        </div>
+        
+        {/* Dias da Semana */}
+        <div className="grid grid-cols-7 gap-2 md:gap-4 mb-6">
+          {moodData.map((day, index) => (
+            <div key={index} className="text-center">
+              <p className="text-sm font-bold text-foreground">{day.day}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* HUMOR */}
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-foreground mb-3 text-center">HUMOR</h3>
+          <div className="grid grid-cols-7 gap-2 md:gap-4">
+            {moodData.map((day, index) => (
+              <div key={index} className="flex justify-center">
+                <div className="w-8 bg-secondary rounded-sm relative" style={{ height: '40px' }}>
+                  <div
+                    className="bg-yellow-400 rounded-sm absolute bottom-0 w-full transition-all duration-300"
+                    style={{ 
+                      height: `${(day.mood / 5) * 100}%`,
+                      minHeight: day.mood > 0 ? '4px' : '0px'
+                    }}
+                  />
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium">
+                    {day.mood}
                   </div>
                 </div>
               </div>
-            </div>)}
+            ))}
+          </div>
         </div>
-          <Button variant="outline" className="w-full mt-4" onClick={() => setShowWeeklyHistoryDialog(true)}>
-            Ver Histórico
-          </Button>
+
+        {/* ENERGIA */}
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-foreground mb-3 text-center">ENERGIA</h3>
+          <div className="grid grid-cols-7 gap-2 md:gap-4">
+            {moodData.map((day, index) => (
+              <div key={index} className="flex justify-center">
+                <div className="w-8 bg-secondary rounded-sm relative" style={{ height: '40px' }}>
+                  <div
+                    className="bg-green-500 rounded-sm absolute bottom-0 w-full transition-all duration-300"
+                    style={{ 
+                      height: `${(day.energy / 5) * 100}%`,
+                      minHeight: day.energy > 0 ? '4px' : '0px'
+                    }}
+                  />
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium">
+                    {day.energy}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SONO */}
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-foreground mb-3 text-center">SONO</h3>
+          <div className="grid grid-cols-7 gap-2 md:gap-4">
+            {moodData.map((day, index) => (
+              <div key={index} className="flex justify-center">
+                <div className="w-8 bg-secondary rounded-sm relative" style={{ height: '40px' }}>
+                  <div
+                    className="bg-blue-500 rounded-sm absolute bottom-0 w-full transition-all duration-300"
+                    style={{ 
+                      height: `${(day.sleep / 12) * 100}%`,
+                      minHeight: day.sleep > 0 ? '4px' : '0px'
+                    }}
+                  />
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium">
+                    {day.sleep}h
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Button variant="outline" className="w-full" onClick={() => setShowWeeklyHistoryDialog(true)}>
+          VER HISTÓRICO
+        </Button>
       </Card>
 
       {/* Recursos de bem-estar */}
