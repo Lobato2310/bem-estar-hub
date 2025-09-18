@@ -314,18 +314,8 @@ const PsychologySection = () => {
           </div>
         </div>
 
-        <Button 
-          variant="outline" 
-          className="w-full" 
-          onClick={() => {
-            if (userProfile?.user_type === "professional") {
-              setShowWeeklyHistoryDialog(true);
-            } else {
-              setShowCheckinDialog(true);
-            }
-          }}
-        >
-          {userProfile?.user_type === "professional" ? "VER HISTÓRICO" : "REGISTRAR"}
+        <Button variant="outline" className="w-full" onClick={() => setShowCheckinDialog(true)}>
+          REGISTRAR
         </Button>
       </Card>
 
