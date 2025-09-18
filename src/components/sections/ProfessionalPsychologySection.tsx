@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { SessionManagementDialog } from "@/components/psychology/SessionManageme
 import { GoalsAchievementsDialog } from "@/components/psychology/GoalsAchievementsDialog";
 import { WeeklyHistoryDialog } from "@/components/psychology/WeeklyHistoryDialog";
 import { EditNextSessionDialog } from "@/components/psychology/EditNextSessionDialog";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfessionalPsychologySection = () => {
   const [unlocked, setUnlocked] = useState(false);
@@ -19,13 +21,76 @@ const ProfessionalPsychologySection = () => {
   const [showGoalsAchievementsDialog, setShowGoalsAchievementsDialog] = useState(false);
   const [showWeeklyHistoryDialog, setShowWeeklyHistoryDialog] = useState(false);
   const [showEditNextSessionDialog, setShowEditNextSessionDialog] = useState(false);
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  const { user } = useAuth();
 
   const handleUnlock = () => {
     if (pwd === "psicologia123") {
       setUnlocked(true);
       setError("");
+      loadRealClients();
     } else {
       setError("Senha incorreta. Tente novamente.");
+    }
+  };
+
+  const loadRealClients = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      // Buscar todos os clientes do tipo 'client'
+      const { data: allClients, error: clientsError } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email')
+        .eq('user_type', 'client');
+
+      if (clientsError) throw clientsError;
+
+      // Buscar dados adicionais de cada cliente (últimas sessões, check-ins, etc.)
+      const clientsWithData = await Promise.all(
+        (allClients || []).map(async (profile: any) => {
+          const clientId = profile.user_id;
+
+          // Buscar última sessão
+          const { data: lastSession } = await supabase
+            .from('psychology_sessions')
+            .select('session_date')
+            .eq('client_id', clientId)
+            .order('session_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          // Buscar último check-in para humor
+          const { data: lastCheckin } = await supabase
+            .from('client_checkins')
+            .select('mood')
+            .eq('client_id', clientId)
+            .not('mood', 'is', null)
+            .order('checkin_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          return {
+            id: clientId,
+            name: profile.display_name || profile.email?.split('@')[0] || 'Cliente',
+            email: profile.email,
+            lastSession: lastSession?.session_date || null,
+            nextSession: null, // Pode ser implementado posteriormente
+            status: 'active',
+            mood: lastCheckin?.mood || 0,
+            progress: 0 // Pode ser calculado baseado em metas
+          };
+        })
+      );
+
+      setClients(clientsWithData);
+    } catch (error) {
+      console.error('Erro ao carregar clientes:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,36 +119,6 @@ const ProfessionalPsychologySection = () => {
     );
   }
 
-  const clients = [
-    {
-      id: "550e8400-e29b-41d4-a716-446655440001",
-      name: "Ana Silva",
-      lastSession: "2024-01-15",
-      nextSession: "2024-01-22",
-      status: "active",
-      mood: 4.2,
-      progress: 75
-    },
-    {
-      id: "550e8400-e29b-41d4-a716-446655440002",
-      name: "Carlos Santos",
-      lastSession: "2024-01-14",
-      nextSession: "2024-01-21",
-      status: "active",
-      mood: 3.8,
-      progress: 60
-    },
-    {
-      id: "550e8400-e29b-41d4-a716-446655440003",
-      name: "Maria Oliveira",
-      lastSession: "2024-01-10",
-      nextSession: "2024-01-24",
-      status: "pending",
-      mood: 4.5,
-      progress: 85
-    }
-  ];
-
   const handleViewCheckins = (client: any) => {
     setSelectedClient(client);
     setShowCheckinDialog(true);
@@ -105,10 +140,10 @@ const ProfessionalPsychologySection = () => {
   };
 
   const psychologyStats = [
-    { label: "Clientes Ativos", value: "12", icon: Users },
-    { label: "Sessões desta Semana", value: "8", icon: Calendar },
-    { label: "Taxa de Engajamento", value: "92%", icon: TrendingUp },
-    { label: "Satisfação Média", value: "4.3", icon: Heart }
+    { label: "Clientes Ativos", value: clients.length.toString(), icon: Users },
+    { label: "Sessões desta Semana", value: "0", icon: Calendar },
+    { label: "Taxa de Engajamento", value: "0%", icon: TrendingUp },
+    { label: "Satisfação Média", value: "0", icon: Heart }
   ];
 
   return (
@@ -141,66 +176,80 @@ const ProfessionalPsychologySection = () => {
           <Users className="h-5 w-5" />
           <span>Clientes em Acompanhamento</span>
         </h2>
-        <div className="space-y-4">
-          {clients.map((client) => (
-            <div key={client.id} className="p-4 bg-accent/50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <h3 className="font-medium">{client.name}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      client.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {client.status === 'active' ? 'Ativo' : 'Pendente'}
-                    </span>
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Carregando clientes...</p>
+          </div>
+        ) : clients.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Nenhum cliente encontrado.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {clients.map((client) => (
+              <div key={client.id} className="p-4 bg-accent/50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-medium">{client.name}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        client.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {client.status === 'active' ? 'Ativo' : 'Pendente'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                      <span>Email: {client.email}</span>
+                      {client.lastSession && (
+                        <span>Última sessão: {new Date(client.lastSession).toLocaleDateString('pt-BR')}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-6 text-sm">
+                      {client.mood > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3 w-3 text-pink-500" />
+                          Humor: {client.mood}/5
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Target className="h-3 w-3 text-primary" />
+                        Progresso: {client.progress}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                    <span>Última sessão: {new Date(client.lastSession).toLocaleDateString('pt-BR')}</span>
-                    <span>Próxima: {new Date(client.nextSession).toLocaleDateString('pt-BR')}</span>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleManageSession(client)}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Sessões
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewGoalsAchievements(client)}
+                    >
+                      <Award className="h-4 w-4 mr-2" />
+                      Metas
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewWeeklyHistory(client)}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Histórico
+                    </Button>
                   </div>
-                  <div className="flex items-center gap-6 text-sm">
-                    <span className="flex items-center gap-1">
-                      <Heart className="h-3 w-3 text-pink-500" />
-                      Humor: {client.mood}/5
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Target className="h-3 w-3 text-primary" />
-                      Progresso: {client.progress}%
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleManageSession(client)}
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Sessões
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleViewGoalsAchievements(client)}
-                  >
-                    <Award className="h-4 w-4 mr-2" />
-                    Metas
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleViewWeeklyHistory(client)}
-                  >
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Histórico
-                  </Button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Última Sessão */}
@@ -211,33 +260,37 @@ const ProfessionalPsychologySection = () => {
             <span>Última Sessão</span>
           </h3>
           <div className="space-y-3">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium">Ana Silva</p>
-                  <p className="text-sm text-muted-foreground">Última: 15/01/2024, 14:00</p>
-                  <p className="text-sm text-muted-foreground">Próxima: 22/01/2024, 15:00</p>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowEditNextSessionDialog(true)}
-                  >
-                    Editar Próxima Sessão
-                  </Button>
-                  <Button 
-                    size="sm"
-                    onClick={() => handleManageSession({
-                      id: "550e8400-e29b-41d4-a716-446655440001",
-                      name: "Ana Silva"
-                    })}
-                  >
-                    Ver Relatórios das Sessões
-                  </Button>
+            {clients.length > 0 && clients[0].lastSession ? (
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">{clients[0].name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Última: {new Date(clients[0].lastSession).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowEditNextSessionDialog(true)}
+                    >
+                      Editar Próxima Sessão
+                    </Button>
+                    <Button 
+                      size="sm"
+                      onClick={() => handleManageSession(clients[0])}
+                    >
+                      Ver Relatórios das Sessões
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground">Nenhuma sessão registrada ainda.</p>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -250,19 +303,19 @@ const ProfessionalPsychologySection = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Taxa de Conclusão de Metas</span>
-                <span>78%</span>
+                <span>0%</span>
               </div>
               <div className="w-full bg-secondary rounded-full h-2">
-                <div className="bg-primary h-2 rounded-full" style={{ width: '78%' }}></div>
+                <div className="bg-primary h-2 rounded-full" style={{ width: '0%' }}></div>
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Satisfação dos Clientes</span>
-                <span>4.3/5</span>
+                <span>0/5</span>
               </div>
               <div className="w-full bg-secondary rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: '86%' }}></div>
+                <div className="bg-green-500 h-2 rounded-full" style={{ width: '0%' }}></div>
               </div>
             </div>
           </div>
@@ -295,7 +348,7 @@ const ProfessionalPsychologySection = () => {
               variant="outline" 
               className="w-full"
               onClick={() => handleViewGoalsAchievements({
-                id: "550e8400-e29b-41d4-a716-446655440001",
+                id: "geral",
                 name: "Clientes Geral"
               })}
             >
@@ -352,7 +405,7 @@ const ProfessionalPsychologySection = () => {
       <EditNextSessionDialog
         open={showEditNextSessionDialog}
         onOpenChange={setShowEditNextSessionDialog}
-        clientName="Ana Silva"
+        clientName={clients.length > 0 ? clients[0].name : "Cliente"}
         currentDate="2024-01-22"
         currentTime="15:00"
       />
