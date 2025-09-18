@@ -9,7 +9,6 @@ import PersonalSection from "@/components/sections/PersonalSection";
 import NutritionSection from "@/components/sections/NutritionSection";
 import CaloriesSection from "@/components/sections/CaloriesSection";
 import PsychologySection from "@/components/sections/PsychologySection";
-import ProfessionalPsychologySection from "@/components/sections/ProfessionalPsychologySection";
 import MeasurementsSection from "@/components/sections/MeasurementsSection";
 import SubscriptionSection from "@/components/sections/SubscriptionSection";
 import ProfessionalDashboard from "@/components/ProfessionalDashboard";
@@ -87,7 +86,7 @@ const Index = () => {
       case "calories":
         return <CaloriesSection />;
       case "psychology":
-        return userProfile?.user_type === "professional" ? <ProfessionalPsychologySection /> : <PsychologySection />;
+        return <PsychologySection />;
       case "subscription":
         return <SubscriptionSection />;
       default:

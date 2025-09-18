@@ -9,7 +9,10 @@ import { WeeklyHistoryDialog } from "@/components/psychology/WeeklyHistoryDialog
 import { ClientSessionReportsDialog } from "@/components/psychology/ClientSessionReportsDialog";
 import { EditNextSessionDialog } from "@/components/psychology/EditNextSessionDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 const PsychologySection = () => {
+  const { user } = useAuth();
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [showCheckinDialog, setShowCheckinDialog] = useState(false);
   const [showGoalsAchievementsDialog, setShowGoalsAchievementsDialog] = useState(false);
   const [showPsychologyHistoryDialog, setShowPsychologyHistoryDialog] = useState(false);
@@ -134,6 +137,28 @@ const PsychologySection = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Load user profile
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+        setUserProfile(data);
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, [user]);
   return <div className="max-w-6xl mx-auto p-6 space-y-8">
       {/* Header */}
       <div className="text-center space-y-4">
@@ -289,8 +314,18 @@ const PsychologySection = () => {
           </div>
         </div>
 
-        <Button variant="outline" className="w-full" onClick={() => setShowCheckinDialog(true)}>
-          REGISTRAR
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={() => {
+            if (userProfile?.user_type === "professional") {
+              setShowWeeklyHistoryDialog(true);
+            } else {
+              setShowCheckinDialog(true);
+            }
+          }}
+        >
+          {userProfile?.user_type === "professional" ? "VER HISTÓRICO" : "REGISTRAR"}
         </Button>
       </Card>
 
