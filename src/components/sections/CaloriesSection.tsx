@@ -171,14 +171,14 @@ const CaloriesSection = () => {
   }, { protein: 0, carbs: 0, fat: 0, fiber: 0 });
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center space-x-3">
-          <Calculator className="h-10 w-10 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Contador de Calorias</h1>
+      <div className="text-center space-y-3 md:space-y-4 px-4">
+        <div className="flex items-center justify-center space-x-2 md:space-x-3">
+          <Calculator className="h-8 w-8 md:h-10 md:w-10 text-primary" />
+          <h1 className="text-xl md:text-3xl font-bold text-foreground">Contador de Calorias</h1>
         </div>
-        <p className="text-lg text-muted-foreground">
+        <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
           Acompanhe sua ingestão diária de calorias e nutrientes
         </p>
       </div>
@@ -191,24 +191,24 @@ const CaloriesSection = () => {
       </Card>
 
       {/* Meta diária */}
-      <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary-light/20 border-primary/20">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card className="p-4 md:p-6 bg-gradient-to-r from-primary/10 to-primary-light/20 border-primary/20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <div className="text-center space-y-2">
-            <Target className="h-8 w-8 text-primary mx-auto" />
-            <p className="text-2xl font-bold text-foreground">{dailyGoal}</p>
-            <p className="text-sm text-muted-foreground">Meta Diária</p>
+            <Target className="h-6 w-6 md:h-8 md:w-8 text-primary mx-auto" />
+            <p className="text-xl md:text-2xl font-bold text-foreground">{dailyGoal}</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Meta Diária</p>
           </div>
           <div className="text-center space-y-2">
-            <Utensils className="h-8 w-8 text-primary mx-auto" />
-            <p className="text-2xl font-bold text-foreground">{consumedToday}</p>
-            <p className="text-sm text-muted-foreground">Consumidas</p>
+            <Utensils className="h-6 w-6 md:h-8 md:w-8 text-primary mx-auto" />
+            <p className="text-xl md:text-2xl font-bold text-foreground">{consumedToday}</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Consumidas</p>
           </div>
           <div className="text-center space-y-2">
-            <Clock className="h-8 w-8 text-primary mx-auto" />
-            <p className={`text-2xl font-bold ${remaining >= 0 ? 'text-primary' : 'text-destructive'}`}>
+            <Clock className="h-6 w-6 md:h-8 md:w-8 text-primary mx-auto" />
+            <p className={`text-xl md:text-2xl font-bold ${remaining >= 0 ? 'text-primary' : 'text-destructive'}`}>
               {remaining >= 0 ? remaining : `+${Math.abs(remaining)}`}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               {remaining >= 0 ? 'Restantes' : 'Excesso'}
             </p>
           </div>
@@ -230,24 +230,24 @@ const CaloriesSection = () => {
 
 
       {/* Refeições de hoje */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Refeições de Hoje</h2>
+      <div className="space-y-4 md:space-y-6">
+        <h2 className="text-lg md:text-2xl font-semibold text-foreground">Refeições de Hoje</h2>
         
         {todayMeals.map((meal, index) => (
-          <Card key={index} className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">{meal.mealType}</h3>
-              <p className="text-lg font-bold text-primary">{meal.totalNutrition.calories} kcal</p>
+          <Card key={index} className="p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+              <h3 className="text-base md:text-lg font-semibold text-foreground">{meal.mealType}</h3>
+              <p className="text-base md:text-lg font-bold text-primary">{meal.totalNutrition.calories} kcal</p>
             </div>
             
             <div className="space-y-2">
               {meal.foods.map((food, foodIndex) => (
-                <div key={foodIndex} className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
-                  <div>
-                    <p className="text-foreground">{food.food.name}</p>
-                    <p className="text-sm text-muted-foreground">{food.quantity}g</p>
+                <div key={foodIndex} className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-border last:border-b-0 gap-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm md:text-base text-foreground truncate">{food.food.name}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">{food.quantity}g</p>
                   </div>
-                  <p className="font-medium text-foreground">{food.calculatedNutrition.calories} kcal</p>
+                  <p className="font-medium text-sm md:text-base text-foreground">{food.calculatedNutrition.calories} kcal</p>
                 </div>
               ))}
             </div>
@@ -255,12 +255,12 @@ const CaloriesSection = () => {
         ))}
 
         {todayMeals.length === 0 && !loading && (
-          <Card className="p-6 text-center">
+          <Card className="p-4 md:p-6 text-center">
             <div className="space-y-4">
-              <Utensils className="h-12 w-12 text-muted-foreground mx-auto" />
+              <Utensils className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto" />
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Nenhuma refeição registrada</h3>
-                <p className="text-muted-foreground">Comece adicionando um alimento acima ou criando uma refeição completa</p>
+                <h3 className="text-base md:text-lg font-semibold text-foreground">Nenhuma refeição registrada</h3>
+                <p className="text-sm md:text-base text-muted-foreground">Comece adicionando um alimento acima ou criando uma refeição completa</p>
               </div>
             </div>
           </Card>
@@ -268,47 +268,47 @@ const CaloriesSection = () => {
 
         {/* Adicionar refeição */}
         <Card 
-          className="p-6 border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer"
+          className="p-4 md:p-6 border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer"
           onClick={() => setShowAddMeal(true)}
         >
           <div className="text-center space-y-4">
-            <Plus className="h-12 w-12 text-muted-foreground mx-auto" />
+            <Plus className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto" />
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Adicionar Refeição</h3>
-              <p className="text-muted-foreground">Clique para registrar uma nova refeição</p>
+              <h3 className="text-base md:text-lg font-semibold text-foreground">Adicionar Refeição</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Clique para registrar uma nova refeição</p>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Resumo nutricional */}
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Resumo Nutricional</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <Card className="p-4 md:p-6">
+        <h2 className="text-lg md:text-xl font-semibold text-foreground mb-4">Resumo Nutricional</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">{Math.round(dailyNutrition.protein)}g</p>
-            <p className="text-sm text-muted-foreground">Proteínas</p>
+            <p className="text-lg md:text-2xl font-bold text-primary">{Math.round(dailyNutrition.protein)}g</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Proteínas</p>
             <div className="w-full bg-secondary rounded-full h-2">
               <div className="bg-primary h-2 rounded-full" style={{ width: `${Math.min((dailyNutrition.protein / 150) * 100, 100)}%` }}></div>
             </div>
           </div>
           <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">{Math.round(dailyNutrition.carbs)}g</p>
-            <p className="text-sm text-muted-foreground">Carboidratos</p>
+            <p className="text-lg md:text-2xl font-bold text-primary">{Math.round(dailyNutrition.carbs)}g</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Carboidratos</p>
             <div className="w-full bg-secondary rounded-full h-2">
               <div className="bg-primary h-2 rounded-full" style={{ width: `${Math.min((dailyNutrition.carbs / 250) * 100, 100)}%` }}></div>
             </div>
           </div>
           <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">{Math.round(dailyNutrition.fat)}g</p>
-            <p className="text-sm text-muted-foreground">Gorduras</p>
+            <p className="text-lg md:text-2xl font-bold text-primary">{Math.round(dailyNutrition.fat)}g</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Gorduras</p>
             <div className="w-full bg-secondary rounded-full h-2">
               <div className="bg-primary h-2 rounded-full" style={{ width: `${Math.min((dailyNutrition.fat / 80) * 100, 100)}%` }}></div>
             </div>
           </div>
           <div className="text-center space-y-2">
-            <p className="text-2xl font-bold text-primary">{Math.round(dailyNutrition.fiber)}g</p>
-            <p className="text-sm text-muted-foreground">Fibras</p>
+            <p className="text-lg md:text-2xl font-bold text-primary">{Math.round(dailyNutrition.fiber)}g</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Fibras</p>
             <div className="w-full bg-secondary rounded-full h-2">
               <div className="bg-primary h-2 rounded-full" style={{ width: `${Math.min((dailyNutrition.fiber / 25) * 100, 100)}%` }}></div>
             </div>

@@ -142,15 +142,15 @@ Cores: branco, verde claro, preto - sistema intuitivo e simples
     
     /* Improved text legibility on mobile */
     h1 {
-      @apply text-2xl;
-    }
-    
-    h2 {
       @apply text-xl;
     }
     
-    h3 {
+    h2 {
       @apply text-lg;
+    }
+    
+    h3 {
+      @apply text-base;
     }
     
     /* Better mobile spacing and layout */
@@ -161,6 +161,45 @@ Cores: branco, verde claro, preto - sistema intuitivo e simples
     /* Improved form controls for mobile */
     input, textarea, select {
       font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Mobile-friendly card padding */
+    .card {
+      @apply p-4;
+    }
+    
+    /* Better button spacing on mobile */
+    .button-group {
+      @apply space-y-2 flex-col;
+    }
+    
+    /* Ensure content doesn't overflow on small screens */
+    .overflow-ellipsis {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    /* Responsive text scaling */
+    .responsive-text {
+      @apply text-sm;
+    }
+    
+    /* Better mobile button layout */
+    .mobile-button-stack {
+      @apply flex-col space-y-2;
+    }
+    
+    /* Mobile-friendly grid spacing */
+    .mobile-grid-gap {
+      @apply gap-3;
+    }
+    
+    /* Prevent horizontal overflow */
+    .prevent-overflow {
+      min-width: 0;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
   }
 }

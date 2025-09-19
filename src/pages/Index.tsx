@@ -112,10 +112,12 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <main className="pb-4 md:pb-8">
-        {renderSection()}
+      <main className="safe-pb min-w-0">
+        <div className="min-w-0 w-full">
+          {renderSection()}
+        </div>
       </main>
     </div>
   );

@@ -147,33 +147,33 @@ const ProfessionalPsychologySection = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center space-x-3">
-          <Brain className="h-10 w-10 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Psicologia - Área Profissional</h1>
+      <div className="text-center space-y-3 md:space-y-4 px-4">
+        <div className="flex items-center justify-center space-x-2 md:space-x-3">
+          <Brain className="h-8 w-8 md:h-10 md:w-10 text-primary" />
+          <h1 className="text-xl md:text-3xl font-bold text-foreground">Psicologia - Área Profissional</h1>
         </div>
-        <p className="text-lg text-muted-foreground">
+        <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
           Gerencie o acompanhamento psicológico dos seus clientes
         </p>
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
         {psychologyStats.map((stat, index) => (
-          <Card key={index} className="p-6 text-center">
-            <stat.icon className="h-8 w-8 text-primary mx-auto mb-3" />
-            <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-            <p className="text-sm text-muted-foreground">{stat.label}</p>
+          <Card key={index} className="p-4 md:p-6 text-center">
+            <stat.icon className="h-6 w-6 md:h-8 md:w-8 text-primary mx-auto mb-2 md:mb-3" />
+            <p className="text-lg md:text-2xl font-bold text-foreground">{stat.value}</p>
+            <p className="text-xs md:text-sm text-muted-foreground">{stat.label}</p>
           </Card>
         ))}
       </div>
 
       {/* Lista de Clientes */}
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center space-x-2">
-          <Users className="h-5 w-5" />
+      <Card className="p-4 md:p-6">
+        <h2 className="text-lg md:text-xl font-semibold text-foreground mb-4 flex items-center space-x-2">
+          <Users className="h-4 w-4 md:h-5 md:w-5" />
           <span>Clientes em Acompanhamento</span>
         </h2>
         {loading ? (
@@ -187,12 +187,13 @@ const ProfessionalPsychologySection = () => {
         ) : (
           <div className="space-y-4">
             {clients.map((client) => (
-              <div key={client.id} className="p-4 bg-accent/50 rounded-lg">
-                <div className="flex items-center justify-between">
+              <div key={client.id} className="p-3 md:p-4 bg-accent/50 rounded-lg">
+                <div className="space-y-3 md:space-y-2">
+                  {/* Client Info - Stack on mobile, side by side on desktop */}
                   <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-medium">{client.name}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                      <h3 className="font-medium text-base">{client.name}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium w-fit ${
                         client.status === 'active' 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-yellow-100 text-yellow-800'
@@ -200,13 +201,13 @@ const ProfessionalPsychologySection = () => {
                         {client.status === 'active' ? 'Ativo' : 'Pendente'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                      <span>Email: {client.email}</span>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      <div className="break-all">Email: {client.email}</div>
                       {client.lastSession && (
-                        <span>Última sessão: {new Date(client.lastSession).toLocaleDateString('pt-BR')}</span>
+                        <div>Última sessão: {new Date(client.lastSession).toLocaleDateString('pt-BR')}</div>
                       )}
                     </div>
-                    <div className="flex items-center gap-6 text-sm">
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
                       {client.mood > 0 && (
                         <span className="flex items-center gap-1">
                           <Heart className="h-3 w-3 text-pink-500" />
@@ -219,10 +220,13 @@ const ProfessionalPsychologySection = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  
+                  {/* Action Buttons - Stack on mobile */}
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border/50">
                     <Button 
                       variant="outline" 
                       size="sm"
+                      className="w-full sm:w-auto justify-start"
                       onClick={() => handleManageSession(client)}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
@@ -231,6 +235,7 @@ const ProfessionalPsychologySection = () => {
                     <Button 
                       variant="outline" 
                       size="sm"
+                      className="w-full sm:w-auto justify-start"
                       onClick={() => handleViewGoalsAchievements(client)}
                     >
                       <Award className="h-4 w-4 mr-2" />
@@ -239,6 +244,7 @@ const ProfessionalPsychologySection = () => {
                     <Button 
                       variant="outline" 
                       size="sm"
+                      className="w-full sm:w-auto justify-start"
                       onClick={() => handleViewWeeklyHistory(client)}
                     >
                       <BarChart3 className="h-4 w-4 mr-2" />
@@ -253,16 +259,16 @@ const ProfessionalPsychologySection = () => {
       </Card>
 
       {/* Última Sessão */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
-            <Calendar className="h-5 w-5" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <Card className="p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
+            <Calendar className="h-4 w-4 md:h-5 md:w-5" />
             <span>Última Sessão</span>
           </h3>
           <div className="space-y-3">
             {clients.length > 0 && clients[0].lastSession ? (
               <div className="p-3 bg-primary/10 rounded-lg">
-                <div className="flex justify-between items-center">
+                <div className="space-y-3">
                   <div>
                     <p className="font-medium">{clients[0].name}</p>
                     <p className="text-sm text-muted-foreground">
@@ -273,12 +279,14 @@ const ProfessionalPsychologySection = () => {
                     <Button 
                       size="sm"
                       variant="outline"
+                      className="w-full justify-start"
                       onClick={() => setShowEditNextSessionDialog(true)}
                     >
                       Editar Próxima Sessão
                     </Button>
                     <Button 
                       size="sm"
+                      className="w-full justify-start"
                       onClick={() => handleManageSession(clients[0])}
                     >
                       Ver Relatórios das Sessões
@@ -294,9 +302,9 @@ const ProfessionalPsychologySection = () => {
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
-            <TrendingUp className="h-5 w-5" />
+        <Card className="p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
+            <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
             <span>Progresso Geral</span>
           </h3>
           <div className="space-y-4">
@@ -323,27 +331,27 @@ const ProfessionalPsychologySection = () => {
       </div>
 
       {/* Recursos e Ferramentas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
-          <div className="text-center space-y-4">
-            <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
-              <BookOpen className="h-6 w-6 text-primary-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <Card className="p-4 md:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+          <div className="text-center space-y-3 md:space-y-4">
+            <div className="p-2 md:p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
+              <BookOpen className="h-5 w-5 md:h-6 md:w-6 text-primary-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">Biblioteca de Exercícios</h3>
-            <p className="text-muted-foreground">Técnicas de mindfulness e exercícios terapêuticos</p>
+            <h3 className="text-base md:text-lg font-semibold text-foreground">Biblioteca de Exercícios</h3>
+            <p className="text-sm md:text-base text-muted-foreground">Técnicas de mindfulness e exercícios terapêuticos</p>
             <Button variant="outline" className="w-full">
               Acessar
             </Button>
           </div>
         </Card>
 
-        <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
-          <div className="text-center space-y-4">
-            <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
-              <Award className="h-6 w-6 text-primary-foreground" />
+        <Card className="p-4 md:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+          <div className="text-center space-y-3 md:space-y-4">
+            <div className="p-2 md:p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
+              <Award className="h-5 w-5 md:h-6 md:w-6 text-primary-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">Conquistas e Metas</h3>
-            <p className="text-muted-foreground">Gerencie conquistas e defina metas para os clientes</p>
+            <h3 className="text-base md:text-lg font-semibold text-foreground">Conquistas e Metas</h3>
+            <p className="text-sm md:text-base text-muted-foreground">Gerencie conquistas e defina metas para os clientes</p>
             <Button 
               variant="outline" 
               className="w-full"
@@ -357,13 +365,13 @@ const ProfessionalPsychologySection = () => {
           </div>
         </Card>
 
-        <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
-          <div className="text-center space-y-4">
-            <div className="p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
-              <BarChart3 className="h-6 w-6 text-primary-foreground" />
+        <Card className="p-4 md:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+          <div className="text-center space-y-3 md:space-y-4">
+            <div className="p-2 md:p-3 bg-primary rounded-lg group-hover:scale-110 transition-transform duration-300 w-fit mx-auto">
+              <BarChart3 className="h-5 w-5 md:h-6 md:w-6 text-primary-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">Relatórios</h3>
-            <p className="text-muted-foreground">Gere relatórios de progresso e evolução</p>
+            <h3 className="text-base md:text-lg font-semibold text-foreground">Relatórios</h3>
+            <p className="text-sm md:text-base text-muted-foreground">Gere relatórios de progresso e evolução</p>
             <Button variant="outline" className="w-full">
               Ver Relatórios
             </Button>
