@@ -101,12 +101,12 @@ const MealDetailsDialog = ({ isOpen, onClose, mealType, mealData }: MealDetailsD
       if (plan.meals && Array.isArray(plan.meals)) {
         const meal = plan.meals.find((m: any) => m.type === mealType || m.name === getMealTitle(mealType));
         if (meal) {
-          return {
-            name: meal.name,
-            time: meal.time,
-            foods: meal.foods || [],
-            calories: plan.daily_calories ? Math.round(plan.daily_calories / plan.meals.length) : 0
-          };
+        return {
+          name: meal.name,
+          time: meal.time,
+          foods: meal.foods || [],
+          calories: meal.calories || (plan.daily_calories ? Math.round(plan.daily_calories / plan.meals.length) : 0)
+        };
         }
       }
     }

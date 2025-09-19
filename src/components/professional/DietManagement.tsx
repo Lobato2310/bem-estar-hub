@@ -26,6 +26,7 @@ interface Meal {
   time: string;
   foods: FoodItem[];
   observations: string;
+  calories?: number;
 }
 
 interface DietPlan {
@@ -53,7 +54,8 @@ const DietManagement = () => {
     name: "",
     time: "",
     foods: [],
-    observations: ""
+    observations: "",
+    calories: 0
   });
   const [currentFood, setCurrentFood] = useState<FoodItem>({
     id: "",
@@ -181,7 +183,7 @@ const DietManagement = () => {
       }));
     }
 
-    setCurrentMeal({ id: "", name: "", time: "", foods: [], observations: "" });
+    setCurrentMeal({ id: "", name: "", time: "", foods: [], observations: "", calories: 0 });
     setIsAddMealDialogOpen(false);
     toast.success('Refeição salva com sucesso');
   };
@@ -333,7 +335,7 @@ const DietManagement = () => {
                 </div>
                 <Dialog open={isAddMealDialogOpen} onOpenChange={setIsAddMealDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => setCurrentMeal({ id: "", name: "", time: "", foods: [], observations: "" })}>
+                    <Button onClick={() => setCurrentMeal({ id: "", name: "", time: "", foods: [], observations: "", calories: 0 })}>
                       <Plus className="h-4 w-4 mr-2" />
                       Nova Refeição
                     </Button>
@@ -361,6 +363,16 @@ const DietManagement = () => {
                           type="time"
                           value={currentMeal.time}
                           onChange={(e) => setCurrentMeal(prev => ({ ...prev, time: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="meal-calories">Calorias da Refeição (kcal)</Label>
+                        <Input
+                          id="meal-calories"
+                          type="number"
+                          placeholder="Ex: 350"
+                          value={currentMeal.calories || ''}
+                          onChange={(e) => setCurrentMeal(prev => ({ ...prev, calories: parseInt(e.target.value) || 0 }))}
                         />
                       </div>
 
@@ -452,6 +464,11 @@ const DietManagement = () => {
                             <Clock className="h-3 w-3" />
                             <span>{meal.time}</span>
                           </Badge>
+                          {meal.calories && meal.calories > 0 && (
+                            <Badge variant="secondary" className="flex items-center space-x-1">
+                              <span>{meal.calories} kcal</span>
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex space-x-2">
                           <Button size="sm" variant="outline" onClick={() => editMeal(meal)}>

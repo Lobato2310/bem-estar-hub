@@ -25,6 +25,14 @@ interface Meal {
   observations: string;
 }
 
+interface Meal {
+  id: string;
+  name: string;
+  time: string;
+  foods: FoodItem[];
+  calories?: number;
+}
+
 interface DayMeal {
   id: string;
   name: string;
@@ -95,7 +103,7 @@ const NutritionSection = () => {
             name: meal.name,
             type: meal.name.toLowerCase().replace(/\s/g, '_'),
             time: meal.time,
-            calories: caloriesPerMeal,
+            calories: meal.calories || caloriesPerMeal,
             completed: completedMeals.has(meal.id),
             foods: meal.foods || []
           }));
