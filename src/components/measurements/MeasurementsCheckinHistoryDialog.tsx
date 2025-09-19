@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { translateGoal } from "@/lib/goalTranslations";
 
 interface MeasurementsCheckinHistoryDialogProps {
   open: boolean;
@@ -278,7 +279,7 @@ const MeasurementsCheckinHistoryDialog = ({ open, onOpenChange }: MeasurementsCh
                   Meta para o Próximo Check-in
                 </h3>
                 <p className="text-muted-foreground">
-                  {selectedCheckin.next_goal}
+                  {translateGoal(selectedCheckin.next_goal)}
                 </p>
               </Card>
             )}

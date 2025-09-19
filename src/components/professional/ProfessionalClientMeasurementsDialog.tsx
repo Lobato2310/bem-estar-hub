@@ -6,6 +6,7 @@ import { Scale, Calendar, ArrowLeft, Image } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
+import { translateGoal } from "@/lib/goalTranslations";
 
 interface ProfessionalClientMeasurementsDialogProps {
   open: boolean;
@@ -229,7 +230,7 @@ export const ProfessionalClientMeasurementsDialog = ({
               {selectedCheckin.next_goal && (
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Próximo Objetivo</h3>
-                  <p className="text-foreground">{selectedCheckin.next_goal}</p>
+                  <p className="text-foreground">{translateGoal(selectedCheckin.next_goal)}</p>
                 </Card>
               )}
 
