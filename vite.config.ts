@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: "./", // <-- necessário para Capacitor (paths relativos)
+  base: "./", // <-- necessário para Capacitor (paths relativos)  
   build: {
     target: "esnext",
     sourcemap: false,
@@ -28,8 +28,18 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           supabase: ['@supabase/supabase-js'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
         },
       },
     },
+    // Otimizações de performance
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.logs em produção
+        drop_debugger: true
+      }
+    },
+    // Chunk size limite
+    chunkSizeWarningLimit: 1000,
   },
 }));
