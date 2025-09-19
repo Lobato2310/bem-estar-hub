@@ -24,6 +24,7 @@ import ClientSelector from "@/components/professional/ClientSelector";
 import ClientPlanManagement from "@/components/professional/ClientPlanManagement";
 import ClientAnamnesis from "@/components/professional/ClientAnamnesis";
 import ReportsSection from "@/components/sections/ReportsSection";
+import { AdminSubscriptionManagement } from "@/components/admin/AdminSubscriptionManagement";
 
 
 interface Client {
@@ -201,6 +202,7 @@ const ProfessionalDashboard = () => {
           <TabsTrigger value="clients">Clientes</TabsTrigger>
           <TabsTrigger value="plans">Planos</TabsTrigger>
           <TabsTrigger value="nutrition">Nutrição</TabsTrigger>
+          <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
           <TabsTrigger value="analytics">Relatórios</TabsTrigger>
         </TabsList>
 
@@ -382,6 +384,10 @@ const ProfessionalDashboard = () => {
           )}
         </TabsContent>
 
+
+        <TabsContent value="subscriptions" className="space-y-6">
+          <AdminSubscriptionManagement />
+        </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
           <ReportsSection />
