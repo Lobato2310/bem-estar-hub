@@ -11,6 +11,8 @@ import Anamnesis from "./pages/Anamnesis";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { initializeDeepLinks } from "./capacitor";
+import { OfflineNotice } from "@/components/OfflineNotice";
+import { ThemeProvider } from "next-themes";
 
 const queryClient = new QueryClient();
 
@@ -22,11 +24,13 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      <AuthProvider>
+        <TooltipProvider>
+          <OfflineNotice />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             <Route
               path="/"
@@ -58,6 +62,7 @@ const App = () => {
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
   );
 };

@@ -43,12 +43,19 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Permissões com descrições claras -->
 	<key>NSCameraUsageDescription</key>
-	<string>This app uses the camera to take photos for fitness tracking.</string>
+	<string>MyFitLife precisa acessar a câmera para que você possa tirar fotos dos seus treinos e refeições para acompanhar seu progresso fitness.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app accesses your photo library to select images for fitness tracking.</string>
+	<string>MyFitLife precisa acessar suas fotos para que você possa selecionar imagens dos seus treinos e refeições para acompanhar seu progresso fitness.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app uses location for fitness tracking features.</string>
+	<string>MyFitLife pode usar sua localização para encontrar academias e locais para atividades físicas próximos a você.</string>
+	
+	<!-- Idade mínima e classificação -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.healthcare-fitness</string>
 	
 	<!-- URL Schemes for Deep Linking -->
 	<key>CFBundleURLTypes</key>

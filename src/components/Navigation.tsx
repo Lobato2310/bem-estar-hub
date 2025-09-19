@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { ClientUpdatesDialog } from "@/components/ClientUpdatesDialog";
+import { SettingsDialog } from "@/components/SettingsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -135,6 +136,8 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
               <ClientUpdatesDialog />
             )}
             
+            <SettingsDialog />
+            
             <Button
               variant="ghost"
               size="sm"
@@ -196,6 +199,8 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
               {userProfile?.user_type === 'client' && (
                 <ClientUpdatesDialog />
               )}
+              
+              <SettingsDialog />
               
               <Button
                 variant="ghost"

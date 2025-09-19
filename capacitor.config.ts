@@ -21,7 +21,8 @@ const config: CapacitorConfig = {
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
       splashFullScreen: true,
-      splashImmersive: true
+      splashImmersive: true,
+      useDialog: true
     },
     App: {
       scheme: 'myfitlife',
@@ -30,6 +31,13 @@ const config: CapacitorConfig = {
     StatusBar: {
       backgroundColor: "#ffffff",
       style: "DARK"
+    },
+    Permissions: {
+      // Definir permissões específicas que o app solicita
+      permissions: [
+        'camera',
+        'storage'
+      ]
     }
   },
   ios: {
@@ -38,7 +46,11 @@ const config: CapacitorConfig = {
     buildOptions: {
       releaseScheme: 'MyFitLife',
       developmentTeam: 'YOUR_TEAM_ID' // Substituir pelo Team ID real
-    }
+    },
+    // Configurações específicas para App Store
+    contentInset: 'automatic',
+    allowsLinkPreview: false,
+    handleApplicationURL: true
   },
   android: {
     path: 'android',
@@ -46,7 +58,11 @@ const config: CapacitorConfig = {
       keystorePath: 'release-key.keystore',
       keystoreAlias: 'myfitlife-key',
       releaseType: 'AAB' // Android App Bundle
-    }
+    },
+    // Configurações específicas para Google Play
+    allowMixedContent: false,
+    captureInput: true,
+    webContentsDebuggingEnabled: false
   }
 };
 
