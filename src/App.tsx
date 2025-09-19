@@ -9,10 +9,18 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Anamnesis from "./pages/Anamnesis";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
+import { initializeDeepLinks } from "./capacitor";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    // Initialize deep links for mobile
+    initializeDeepLinks();
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
@@ -51,6 +59,7 @@ const App = () => (
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
