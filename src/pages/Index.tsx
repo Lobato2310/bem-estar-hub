@@ -12,6 +12,7 @@ import PsychologySection from "@/components/sections/PsychologySection";
 import ProfessionalPsychologySection from "@/components/sections/ProfessionalPsychologySection";
 import MeasurementsSection from "@/components/sections/MeasurementsSection";
 import SubscriptionSection from "@/components/sections/SubscriptionSection";
+import WorkoutSection from "@/components/sections/WorkoutSection";
 import ProfessionalDashboard from "@/components/ProfessionalDashboard";
 
 
@@ -79,7 +80,7 @@ const Index = () => {
       case "home":
         return <HomeSection onNavigate={setActiveTab} userProfile={userProfile} />;
       case "personal":
-        return <PersonalSection />;
+        return userProfile?.user_type === "client" ? <WorkoutSection /> : <PersonalSection />;
       case "nutrition":
         return <NutritionSection />;
       case "measurements":

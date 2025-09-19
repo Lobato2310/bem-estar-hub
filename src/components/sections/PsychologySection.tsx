@@ -31,7 +31,7 @@ const PsychologySection = () => {
     type: "Definição de Metas",
     status: "Concluída"
   }];
-  const weeklyGoals = [{
+  const [weeklyGoals, setWeeklyGoals] = useState([{
     goal: "Fazer exercícios 4x na semana",
     progress: 75,
     completed: 3,
@@ -46,8 +46,8 @@ const PsychologySection = () => {
     progress: 60,
     completed: 4,
     total: 7
-  }];
-  const moodData = [{
+  }]);
+  const [moodData, setMoodData] = useState([{
     day: "SEG",
     mood: 4,
     energy: 3,
@@ -82,7 +82,13 @@ const PsychologySection = () => {
     mood: 4,
     energy: 4,
     sleep: 8
-  }];
+  }]);
+  const [progressStats, setProgressStats] = useState({
+    sessionsCompleted: 0,
+    goalsAchieved: 75,
+    averageMood: 4.2,
+    consecutiveDays: 0
+  });
 
   // Fetch daily motivational phrase
   useEffect(() => {
@@ -158,6 +164,89 @@ const PsychologySection = () => {
     };
 
     loadUserProfile();
+  }, [user]);
+
+  // Carregar dados reais do banco
+  useEffect(() => {
+    const loadPsychologyData = async () => {
+      if (!user) return;
+      
+      try {
+        // Carregar check-ins da última semana
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        
+        const { data: checkins, error } = await supabase
+          .from('client_checkins')
+          .select('*')
+          .eq('client_id', user.id)
+          .gte('checkin_date', weekAgo.toISOString().split('T')[0])
+          .order('checkin_date', { ascending: true });
+
+        if (!error && checkins) {
+          // Processar dados dos últimos 7 dias
+          const weekDays = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
+          const today = new Date();
+          const moodDataFromDB = [];
+          
+          for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dayName = weekDays[date.getDay()];
+            const dateStr = date.toISOString().split('T')[0];
+            
+            const dayCheckin = checkins.find(c => c.checkin_date === dateStr);
+            
+            moodDataFromDB.push({
+              day: dayName,
+              mood: dayCheckin?.mood || 0,
+              energy: dayCheckin?.energy || 0,
+              sleep: dayCheckin?.sleep_hours || 0
+            });
+          }
+          
+          setMoodData(moodDataFromDB);
+          
+          // Calcular estatísticas
+          const totalMood = checkins.reduce((sum, c) => sum + (c.mood || 0), 0);
+          const avgMood = checkins.length > 0 ? (totalMood / checkins.length) : 0;
+          
+          setProgressStats(prev => ({
+            ...prev,
+            averageMood: Math.round(avgMood * 10) / 10,
+            consecutiveDays: checkins.length
+          }));
+        }
+
+        // Carregar metas psicológicas
+        const { data: goals, error: goalsError } = await supabase
+          .from('psychology_goals')
+          .select('*')
+          .eq('client_id', user.id)
+          .eq('status', 'active');
+
+        if (!goalsError && goals && goals.length > 0) {
+          const goalsData = goals.map(goal => ({
+            goal: goal.goal_title,
+            progress: goal.progress || 0,
+            completed: Math.round((goal.progress || 0) / 100 * 7),
+            total: 7
+          }));
+          setWeeklyGoals(goalsData);
+          
+          const avgProgress = goals.reduce((sum, g) => sum + (g.progress || 0), 0) / goals.length;
+          setProgressStats(prev => ({
+            ...prev,
+            goalsAchieved: Math.round(avgProgress)
+          }));
+        }
+
+      } catch (error) {
+        console.error('Erro ao carregar dados psicológicos:', error);
+      }
+    };
+
+    loadPsychologyData();
   }, [user]);
   return <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 md:space-y-8">
       {/* Header */}
@@ -340,19 +429,19 @@ const PsychologySection = () => {
         <h2 className="text-xl font-semibold text-accent-foreground mb-4 text-center">Seu Progresso Geral</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
           <div className="space-y-2">
-            <p className="text-2xl font-bold text-accent-foreground">0</p>
+            <p className="text-2xl font-bold text-accent-foreground">{progressStats.sessionsCompleted}</p>
             <p className="text-sm text-accent-foreground/80">Sessões Concluídas</p>
           </div>
           <div className="space-y-2">
-            <p className="text-2xl font-bold text-accent-foreground">75%</p>
+            <p className="text-2xl font-bold text-accent-foreground">{progressStats.goalsAchieved}%</p>
             <p className="text-sm text-accent-foreground/80">Metas Atingidas</p>
           </div>
           <div className="space-y-2">
-            <p className="text-2xl font-bold text-accent-foreground">4.2</p>
+            <p className="text-2xl font-bold text-accent-foreground">{progressStats.averageMood}</p>
             <p className="text-sm text-accent-foreground/80">Humor Médio</p>
           </div>
           <div className="space-y-2">
-            <p className="text-2xl font-bold text-accent-foreground">0</p>
+            <p className="text-2xl font-bold text-accent-foreground">{progressStats.consecutiveDays}</p>
             <p className="text-sm text-accent-foreground/80">Dias Consecutivos</p>
           </div>
         </div>

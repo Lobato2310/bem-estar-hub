@@ -5,33 +5,75 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface WorkoutFeedbackDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (feedback: {
+  workoutDuration?: number;
+  onSubmit?: (feedback: {
     intensityLevel: number;
     difficultyLevel: number;
     notes: string;
   }) => void;
 }
 
-const WorkoutFeedbackDialog = ({ isOpen, onClose, onSubmit }: WorkoutFeedbackDialogProps) => {
+const WorkoutFeedbackDialog = ({ isOpen, onClose, workoutDuration, onSubmit }: WorkoutFeedbackDialogProps) => {
+  const { user } = useAuth();
   const [intensityLevel, setIntensityLevel] = useState([5]);
   const [difficultyLevel, setDifficultyLevel] = useState([5]);
   const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    onSubmit({
-      intensityLevel: intensityLevel[0],
-      difficultyLevel: difficultyLevel[0],
-      notes
-    });
+  const handleSubmit = async () => {
+    if (!user) return;
     
-    // Reset form
-    setIntensityLevel([5]);
-    setDifficultyLevel([5]);
-    setNotes("");
+    setIsSubmitting(true);
+    try {
+      // Salvar feedback no banco de dados
+      await supabase.from('client_checkins').insert({
+        client_id: user.id,
+        checkin_date: new Date().toISOString().split('T')[0],
+        checkin_type: 'workout_feedback',
+        energy: intensityLevel[0],
+        mood: difficultyLevel[0],
+        notes: notes || null,
+        status: 'completed'
+      });
+
+      // Incrementar estatísticas de treino se houver duração
+      if (workoutDuration) {
+        await supabase.rpc('increment_workout_stats', {
+          workout_duration_minutes: Math.round(workoutDuration / 60)
+        });
+      }
+
+      toast.success('Feedback registrado com sucesso!');
+      
+      // Callback opcional para compatibilidade
+      if (onSubmit) {
+        onSubmit({
+          intensityLevel: intensityLevel[0],
+          difficultyLevel: difficultyLevel[0],
+          notes
+        });
+      }
+      
+      onClose();
+      
+      // Reset form
+      setIntensityLevel([5]);
+      setDifficultyLevel([5]);
+      setNotes("");
+      
+    } catch (error) {
+      console.error('Erro ao salvar feedback:', error);
+      toast.error('Erro ao registrar feedback');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getIntensityLabel = (value: number) => {
@@ -106,11 +148,11 @@ const WorkoutFeedbackDialog = ({ isOpen, onClose, onSubmit }: WorkoutFeedbackDia
           </div>
 
           <div className="flex space-x-2">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+            <Button variant="outline" onClick={onClose} className="flex-1" disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit} className="flex-1">
-              Finalizar Treino
+            <Button onClick={handleSubmit} className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? "Salvando..." : "Finalizar Treino"}
             </Button>
           </div>
         </div>
