@@ -190,62 +190,7 @@ export const ClientNutritionPlan = () => {
         </CardContent>
       </Card>
 
-      {/* Refeições */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Suas Refeições</h3>
-        {nutritionPlan.meals && nutritionPlan.meals.length > 0 ? (
-          <div className="grid gap-4">
-            {nutritionPlan.meals.map((meal: Meal) => (
-              <Card key={meal.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{meal.name}</CardTitle>
-                    <Badge variant="outline" className="flex items-center space-x-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{meal.time}</span>
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Alimentos:</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {meal.foods.map((food: FoodItem) => (
-                        <div key={food.id} className="flex items-center space-x-2 p-2 bg-muted rounded-lg">
-                          <span className="font-medium">{food.name}</span>
-                          <span className="text-sm text-muted-foreground">
-                            {food.quantity} {food.unit}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {meal.observations && (
-                    <>
-                      <Separator />
-                      <div>
-                        <h4 className="font-medium mb-2">Observações:</h4>
-                        <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-                          {meal.observations}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="text-center py-8">
-              <p className="text-muted-foreground">
-                Nenhuma refeição encontrada neste plano.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {/* Apenas exibir informações do plano, sem duplicar as refeições que já aparecem em "Refeições de Hoje" */}
     </div>
   );
 };

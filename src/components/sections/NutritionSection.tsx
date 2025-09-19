@@ -1,17 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Apple, Scale, FileText, Calendar, TrendingUp, CheckCircle, Eye } from "lucide-react";
+import { Apple, Scale, FileText, Calendar, TrendingUp, CheckCircle, Eye, Clock, Utensils } from "lucide-react";
 import MealDetailsDialog from "@/components/nutrition/MealDetailsDialog";
 import { NutritionPlanDialog } from "@/components/nutrition/NutritionPlanDialog";
 import { MealHistoryDialog } from "@/components/nutrition/MealHistoryDialog";
 import { ClientNutritionPlan } from "@/components/ClientNutritionPlan";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+
+interface FoodItem {
+  id: string;
+  name: string;
+  quantity: string;
+  unit: string;
+}
+
+interface Meal {
+  id: string;
+  name: string;
+  time: string;
+  foods: FoodItem[];
+  observations: string;
+}
+
+interface DayMeal {
+  id: string;
+  name: string;
+  type: string;
+  time: string;
+  calories: number;
+  completed: boolean;
+  foods: FoodItem[];
+}
 
 const NutritionSection = () => {
+  const { user } = useAuth();
   const [showMealDialog, setShowMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState("");
+  const [selectedMeal, setSelectedMeal] = useState<DayMeal | null>(null);
   const [showNutritionPlan, setShowNutritionPlan] = useState(false);
   const [showMealHistory, setShowMealHistory] = useState(false);
+  const [todayMeals, setTodayMeals] = useState<DayMeal[]>([]);
+  const [completedMeals, setCompletedMeals] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
   const nutritionServices = [
     {
       title: "Medidas",
@@ -20,7 +53,7 @@ const NutritionSection = () => {
       status: "Disponível"
     },
     {
-      title: "Plano Alimentar",
+      title: "Plano Alimentar", 
       description: "Dieta personalizada baseada em seus objetivos",
       icon: FileText,
       status: "Disponível"
@@ -33,17 +66,104 @@ const NutritionSection = () => {
     }
   ];
 
-  const todayMeals = [
-    { meal: "Café da Manhã", type: "cafe_da_manha", time: "07:00", calories: 350, completed: true },
-    { meal: "Lanche da Manhã", type: "lanche_da_manha", time: "10:00", calories: 150, completed: false },
-    { meal: "Almoço", type: "almoco", time: "12:30", calories: 450, completed: false },
-    { meal: "Lanche da Tarde", type: "lanche_da_tarde", time: "15:30", calories: 200, completed: false },
-    { meal: "Jantar", type: "jantar", time: "19:00", calories: 400, completed: false },
-  ];
+  // Carregar refeições do plano nutricional ativo
+  useEffect(() => {
+    const loadTodayMeals = async () => {
+      if (!user) return;
 
-  const handleMealClick = (mealType: string) => {
-    setSelectedMealType(mealType);
+      try {
+        const { data: planData, error: planError } = await supabase
+          .from('nutrition_plans')
+          .select('meals, daily_calories')
+          .eq('client_id', user.id)
+          .eq('status', 'active')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (planError && planError.code !== 'PGRST116') throw planError;
+
+        if (planData && planData.meals) {
+          const meals = Array.isArray(planData.meals) ? (planData.meals as unknown as Meal[]) : [];
+          
+          // Calcular calorias estimadas por refeição
+          const totalCalories = planData.daily_calories || 2000;
+          const caloriesPerMeal = Math.round(totalCalories / Math.max(meals.length, 1));
+          
+          const transformedMeals: DayMeal[] = meals.map((meal) => ({
+            id: meal.id,
+            name: meal.name,
+            type: meal.name.toLowerCase().replace(/\s/g, '_'),
+            time: meal.time,
+            calories: caloriesPerMeal,
+            completed: completedMeals.has(meal.id),
+            foods: meal.foods || []
+          }));
+
+          setTodayMeals(transformedMeals);
+        } else {
+          // Plano padrão caso não tenha plano ativo
+          setTodayMeals([
+            { id: "1", name: "Café da Manhã", type: "cafe_da_manha", time: "07:00", calories: 350, completed: false, foods: [] },
+            { id: "2", name: "Lanche da Manhã", type: "lanche_da_manha", time: "10:00", calories: 150, completed: false, foods: [] },
+            { id: "3", name: "Almoço", type: "almoco", time: "12:30", calories: 450, completed: false, foods: [] },
+            { id: "4", name: "Lanche da Tarde", type: "lanche_da_tarde", time: "15:30", calories: 200, completed: false, foods: [] },
+            { id: "5", name: "Jantar", type: "jantar", time: "19:00", calories: 400, completed: false, foods: [] },
+          ]);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar refeições:', error);
+        toast.error('Erro ao carregar refeições do plano');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTodayMeals();
+
+    // Setup realtime subscription para planos nutricionais
+    if (user) {
+      const channel = supabase
+        .channel('nutrition_plans_updates_meals')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'nutrition_plans',
+            filter: `client_id=eq.${user.id}`,
+          },
+          () => {
+            toast.success('Suas refeições foram atualizadas!');
+            loadTodayMeals();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user, completedMeals]);
+
+  const handleMealClick = (meal: DayMeal) => {
+    setSelectedMeal(meal);
+    setSelectedMealType(meal.type);
     setShowMealDialog(true);
+  };
+
+  const handleMarkMeal = (mealId: string) => {
+    setCompletedMeals(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(mealId)) {
+        newSet.delete(mealId);
+        toast.success('Refeição desmarcada');
+      } else {
+        newSet.add(mealId);
+        toast.success('Refeição marcada como consumida');
+      }
+      return newSet;
+    });
   };
 
   const handleServiceClick = (serviceTitle: string) => {
@@ -63,7 +183,7 @@ const NutritionSection = () => {
   };
 
   const totalCalories = todayMeals.reduce((sum, meal) => sum + meal.calories, 0);
-  const completedCalories = todayMeals.filter(meal => meal.completed)
+  const completedCalories = todayMeals.filter(meal => completedMeals.has(meal.id))
     .reduce((sum, meal) => sum + meal.calories, 0);
 
   return (
@@ -115,45 +235,79 @@ const NutritionSection = () => {
         </div>
       </Card>
 
-      {/* Refeições do dia */}
+      {/* Refeições de Hoje - baseadas no plano nutricional ativo */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Refeições de Hoje</h2>
-        <div className="space-y-3">
-          {todayMeals.map((meal, index) => (
-            <Card key={index} className={`p-4 transition-all duration-300 ${meal.completed ? 'bg-accent/50' : 'hover:shadow-md'}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-full ${meal.completed ? 'bg-primary' : 'bg-secondary'}`}>
-                    <CheckCircle className={`h-4 w-4 ${meal.completed ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
-                  </div>
+        <h2 className="text-2xl font-semibold text-foreground flex items-center space-x-2">
+          <Utensils className="h-6 w-6 text-primary" />
+          <span>Refeições de Hoje</span>
+        </h2>
+        
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Carregando suas refeições...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {todayMeals.length > 0 ? (
+              todayMeals.map((meal) => {
+                const isCompleted = completedMeals.has(meal.id);
+                return (
+                  <Card key={meal.id} className={`p-4 transition-all duration-300 ${isCompleted ? 'bg-accent/50 border-primary/30' : 'hover:shadow-md'}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-2 rounded-full ${isCompleted ? 'bg-primary' : 'bg-secondary'}`}>
+                          <CheckCircle className={`h-4 w-4 ${isCompleted ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{meal.name}</p>
+                          <p className="text-sm text-muted-foreground flex items-center space-x-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{meal.time}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <p className="font-semibold text-foreground">{meal.calories} kcal</p>
+                        <div className="flex space-x-1">
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleMealClick(meal)}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            Ver
+                          </Button>
+                          <Button 
+                            variant={isCompleted ? "secondary" : "outline"} 
+                            size="sm"
+                            onClick={() => handleMarkMeal(meal.id)}
+                          >
+                            {isCompleted ? "✓" : "Marcar"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })
+            ) : (
+              <Card className="p-8">
+                <div className="text-center space-y-4">
+                  <Utensils className="h-12 w-12 text-muted-foreground/50 mx-auto" />
                   <div>
-                    <p className="font-medium text-foreground">{meal.meal}</p>
-                    <p className="text-sm text-muted-foreground">{meal.time}</p>
+                    <h3 className="text-lg font-medium text-foreground">Nenhuma Refeição Encontrada</h3>
+                    <p className="text-muted-foreground">
+                      Você ainda não possui um plano nutricional ativo. Entre em contato com seu profissional para criar um plano personalizado.
+                    </p>
                   </div>
                 </div>
-                <div className="text-right space-y-1">
-                  <p className="font-semibold text-foreground">{meal.calories} kcal</p>
-                  <div className="flex space-x-1">
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleMealClick(meal.type)}
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      Ver
-                    </Button>
-                    <Button 
-                      variant={meal.completed ? "secondary" : "outline"} 
-                      size="sm"
-                    >
-                      {meal.completed ? "✓" : "Marcar"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Serviços nutricionais */}
@@ -218,8 +372,12 @@ const NutritionSection = () => {
       {/* Dialogs */}
       <MealDetailsDialog
         isOpen={showMealDialog}
-        onClose={() => setShowMealDialog(false)}
+        onClose={() => {
+          setShowMealDialog(false);
+          setSelectedMeal(null);
+        }}
         mealType={selectedMealType}
+        mealData={selectedMeal}
       />
       
       <NutritionPlanDialog
