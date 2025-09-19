@@ -32,15 +32,14 @@ const WorkoutFeedbackDialog = ({ isOpen, onClose, workoutDuration, onSubmit }: W
     
     setIsSubmitting(true);
     try {
-      // Salvar feedback no banco de dados
-      await supabase.from('client_checkins').insert({
+      // Salvar feedback específico de treino
+      await supabase.from('workout_feedback').insert({
         client_id: user.id,
-        checkin_date: new Date().toISOString().split('T')[0],
-        checkin_type: 'workout_feedback',
-        energy: intensityLevel[0],
-        mood: difficultyLevel[0],
-        notes: notes || null,
-        status: 'completed'
+        workout_date: new Date().toISOString().split('T')[0],
+        intensity_level: intensityLevel[0],
+        difficulty_level: difficultyLevel[0],
+        workout_duration_seconds: workoutDuration || null,
+        notes: notes || null
       });
 
       // Incrementar estatísticas de treino se houver duração

@@ -695,6 +695,42 @@ export type Database = {
         }
         Relationships: []
       }
+      workout_feedback: {
+        Row: {
+          client_id: string
+          created_at: string
+          difficulty_level: number
+          id: string
+          intensity_level: number
+          notes: string | null
+          updated_at: string
+          workout_date: string
+          workout_duration_seconds: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          difficulty_level: number
+          id?: string
+          intensity_level: number
+          notes?: string | null
+          updated_at?: string
+          workout_date?: string
+          workout_duration_seconds?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          difficulty_level?: number
+          id?: string
+          intensity_level?: number
+          notes?: string | null
+          updated_at?: string
+          workout_date?: string
+          workout_duration_seconds?: number | null
+        }
+        Relationships: []
+      }
       workout_plans: {
         Row: {
           client_id: string
