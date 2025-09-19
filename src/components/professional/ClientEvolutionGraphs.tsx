@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, Activity, Brain, Download } from "lucide-react";
 import { toast } from "sonner";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ClientEvolutionGraphsProps {
   clientId: string;
@@ -34,6 +36,8 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
   const [disciplineData, setDisciplineData] = useState<DisciplineData[]>([]);
   const [mentalHealthData, setMentalHealthData] = useState<MentalHealthData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (clientId) {
@@ -148,6 +152,41 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
     }
   };
 
+  const exportToPDF = async () => {
+    if (!reportRef.current) return;
+    
+    setExportingPDF(true);
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 30;
+      
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      pdf.save(`relatorio-${clientName.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      toast.success('Relatório exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast.error('Erro ao exportar relatório em PDF');
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-400 to-teal-600 p-6">
@@ -166,51 +205,56 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-400 to-teal-600 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div ref={reportRef} className="min-h-screen bg-gradient-to-br from-teal-400 to-teal-600 p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="text-white">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                 <span className="text-teal-600 font-bold text-lg">♥</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold">MyFitLife</h1>
-                <p className="text-sm opacity-90">Dashboard de Progresso</p>
+                <h1 className="text-xl sm:text-2xl font-bold">MyFitLife</h1>
+                <p className="text-xs sm:text-sm opacity-90">Dashboard de Progresso</p>
               </div>
             </div>
           </div>
-          <Button variant="secondary" className="gap-2">
+          <Button 
+            variant="secondary" 
+            className="gap-2 w-full sm:w-auto" 
+            onClick={exportToPDF}
+            disabled={exportingPDF}
+          >
             <Download className="h-4 w-4" />
-            Exportar PDF
+            {exportingPDF ? 'Exportando...' : 'Exportar PDF'}
           </Button>
         </div>
 
         {/* Gráficos principais */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Evolução Física */}
           <Card className="bg-white shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <TrendingUp className="h-5 w-5 text-teal-600" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600" />
                 Evolução Física
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 Peso e % de gordura corporal
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
+            <CardContent className="p-3 sm:p-6">
+              <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={physicalData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="day" 
-                    tick={{ fontSize: 11, fill: '#666' }}
+                    tick={{ fontSize: 10, fill: '#666' }}
                     axisLine={{ stroke: '#e0e0e0' }}
                   />
                   <YAxis 
-                    tick={{ fontSize: 11, fill: '#666' }}
+                    tick={{ fontSize: 10, fill: '#666' }}
                     axisLine={{ stroke: '#e0e0e0' }}
                   />
                   <Tooltip 
@@ -218,7 +262,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
                       backgroundColor: 'white',
                       border: '1px solid #ddd',
                       borderRadius: '8px',
-                      fontSize: '12px'
+                      fontSize: '11px'
                     }}
                   />
                   <Line 
@@ -227,7 +271,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
                     stroke="#14b8a6" 
                     strokeWidth={2}
                     name="Peso (kg)"
-                    dot={{ fill: '#14b8a6', strokeWidth: 2 }}
+                    dot={{ fill: '#14b8a6', strokeWidth: 2, r: 3 }}
                   />
                   <Line 
                     type="monotone" 
@@ -235,7 +279,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
                     stroke="#f97316" 
                     strokeWidth={2}
                     name="% Gordura"
-                    dot={{ fill: '#f97316', strokeWidth: 2 }}
+                    dot={{ fill: '#f97316', strokeWidth: 2, r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -244,27 +288,27 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
 
           {/* Índice de Disciplina */}
           <Card className="bg-white shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Activity className="h-5 w-5 text-orange-600" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
                 Índice de Disciplina
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 % de treinos realizados por semana
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
+            <CardContent className="p-3 sm:p-6">
+              <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={disciplineData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="week" 
-                    tick={{ fontSize: 11, fill: '#666' }}
+                    tick={{ fontSize: 10, fill: '#666' }}
                     axisLine={{ stroke: '#e0e0e0' }}
                   />
                   <YAxis 
                     domain={[50, 100]}
-                    tick={{ fontSize: 11, fill: '#666' }}
+                    tick={{ fontSize: 10, fill: '#666' }}
                     axisLine={{ stroke: '#e0e0e0' }}
                   />
                   <Tooltip 
@@ -272,7 +316,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
                       backgroundColor: 'white',
                       border: '1px solid #ddd',
                       borderRadius: '8px',
-                      fontSize: '12px'
+                      fontSize: '11px'
                     }}
                     formatter={(value) => [`${typeof value === 'number' ? value.toFixed(1) : value}%`, 'Disciplina']}
                   />
@@ -282,7 +326,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
                     stroke="#f97316" 
                     strokeWidth={2}
                     name="Disciplina (%)"
-                    dot={{ fill: '#f97316', strokeWidth: 2 }}
+                    dot={{ fill: '#f97316', strokeWidth: 2, r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -291,27 +335,27 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
 
           {/* Saúde Mental */}
           <Card className="bg-white shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Brain className="h-5 w-5 text-teal-600" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600" />
                 Saúde Mental
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 Sono, humor e energia diários
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
+            <CardContent className="p-3 sm:p-6">
+              <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={mentalHealthData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="day" 
-                    tick={{ fontSize: 11, fill: '#666' }}
+                    tick={{ fontSize: 10, fill: '#666' }}
                     axisLine={{ stroke: '#e0e0e0' }}
                   />
                   <YAxis 
                     domain={[0, 10]}
-                    tick={{ fontSize: 11, fill: '#666' }}
+                    tick={{ fontSize: 10, fill: '#666' }}
                     axisLine={{ stroke: '#e0e0e0' }}
                   />
                   <Tooltip 
@@ -319,7 +363,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
                       backgroundColor: 'white',
                       border: '1px solid #ddd',
                       borderRadius: '8px',
-                      fontSize: '12px'
+                      fontSize: '11px'
                     }}
                   />
                   <Line 
@@ -328,7 +372,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
                     stroke="#374151" 
                     strokeWidth={2}
                     name="Horas de Sono"
-                    dot={{ fill: '#374151', strokeWidth: 2 }}
+                    dot={{ fill: '#374151', strokeWidth: 2, r: 3 }}
                   />
                   <Line 
                     type="monotone" 
@@ -336,7 +380,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
                     stroke="#14b8a6" 
                     strokeWidth={2}
                     name="Humor (1-5)"
-                    dot={{ fill: '#14b8a6', strokeWidth: 2 }}
+                    dot={{ fill: '#14b8a6', strokeWidth: 2, r: 3 }}
                   />
                   <Line 
                     type="monotone" 
@@ -344,7 +388,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
                     stroke="#f59e0b" 
                     strokeWidth={2}
                     name="Energia (1-5)"
-                    dot={{ fill: '#f59e0b', strokeWidth: 2 }}
+                    dot={{ fill: '#f59e0b', strokeWidth: 2, r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -353,15 +397,15 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
         </div>
 
         {/* Resumo dos Gráficos */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-white">Resumo dos Gráficos</h2>
+        <div className="space-y-3 sm:space-y-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-white">Resumo dos Gráficos</h2>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Evolução Física */}
             <Card className="bg-white shadow-lg">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-teal-600 mb-3">Evolução Física</h3>
-                <p className="text-gray-700 leading-relaxed">
+              <CardContent className="p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-teal-600 mb-2 sm:mb-3">Evolução Física</h3>
+                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                   Os dados mostram uma evolução positiva e consistente ao longo de 15 dias. O peso corporal reduziu de 85,2kg para 82,8kg (redução de 2,4kg), enquanto o percentual de gordura 
                   corporal diminuiu de 18,5% para 16,2% (redução de 2,3 pontos percentuais). Esta tendência indica que o programa de exercícios e alimentação está sendo efetivo, com perda 
                   gradual e saudável de gordura corporal.
@@ -371,9 +415,9 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
 
             {/* Índice de Disciplina */}
             <Card className="bg-white shadow-lg">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-teal-600 mb-3">Índice de Disciplina</h3>
-                <p className="text-gray-700 leading-relaxed">
+              <CardContent className="p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-teal-600 mb-2 sm:mb-3">Índice de Disciplina</h3>
+                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                   A análise dos treinos realizados nas últimas 8 semanas demonstra alta consistência, com média de 88,5% de aderência. Os picos de disciplina ocorreram nas semanas 4 e 7 (95% e 
                   97% respectivamente), indicando que o cliente mantém motivação elevada. A menor aderência foi na semana 3 (78%), possivelmente devido a fatores externos. O padrão geral 
                   sugere comprometimento sólido com a rotina de exercícios.
@@ -383,9 +427,9 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
 
             {/* Saúde Mental */}
             <Card className="bg-white shadow-lg">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-teal-600 mb-3">Saúde Mental</h3>
-                <p className="text-gray-700 leading-relaxed">
+              <CardContent className="p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-teal-600 mb-2 sm:mb-3">Saúde Mental</h3>
+                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                   Os indicadores mentais mostram correlação positiva entre qualidade do sono, humor e níveis de energia. O sono médio de 7,9 horas está dentro do ideal recomendado. Os picos 
                   de bem-estar ocorrem nos fins de semana (humor e energia em 5/5), enquanto meio da semana apresenta ligeira queda (quarta-feira com sono reduzido a 6,5h). Esta análise 
                   sugere que a rotina de exercícios está contribuindo positivamente para o equilíbrio mental e qualidade do sono.
