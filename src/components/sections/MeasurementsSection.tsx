@@ -1,9 +1,10 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import ProfessionalMeasurementsSection from "@/components/professional/ProfessionalMeasurementsSection";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Scale, TrendingUp, Calendar, History } from "lucide-react";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import CheckinCalendar from "@/components/measurements/CheckinCalendar";
 import MeasurementsCheckinHistoryDialog from "@/components/measurements/MeasurementsCheckinHistoryDialog";
 
@@ -15,10 +16,15 @@ const MeasurementsSection = () => {
 
   useEffect(() => {
     if (user) {
-      fetchMeasurements();
       fetchUserProfile();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (userProfile?.user_type === 'client') {
+      fetchMeasurements();
+    }
+  }, [userProfile]);
 
   const fetchUserProfile = async () => {
     try {
@@ -49,6 +55,11 @@ const MeasurementsSection = () => {
       console.error('Error fetching measurements:', error);
     }
   };
+
+  // Se for profissional, usar o componente específico
+  if (userProfile?.user_type === 'professional') {
+    return <ProfessionalMeasurementsSection />;
+  }
 
   const latestMeasurement = measurements[0] || {};
 
@@ -88,7 +99,7 @@ const MeasurementsSection = () => {
           </div>
           <div className="text-center space-y-2">
             <p className="text-2xl font-bold text-primary">
-              {latestMeasurement.body_fat_percentage ? `${latestMeasurement.body_fat_percentage}%` : '--'}
+              {latestMeasurement.body_fat ? `${latestMeasurement.body_fat}%` : '--'}
             </p>
             <p className="text-sm text-muted-foreground">% Gordura</p>
           </div>
@@ -122,7 +133,7 @@ const MeasurementsSection = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Braço:</span>
-              <span className="font-medium">{latestMeasurement.arm ? `${latestMeasurement.arm}cm` : '--'}</span>
+              <span className="font-medium">{latestMeasurement.arms ? `${latestMeasurement.arms}cm` : '--'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Coxa:</span>
@@ -191,7 +202,7 @@ const MeasurementsSection = () => {
                         {new Date(measurement.created_at).toLocaleDateString('pt-BR')}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Peso: {measurement.weight}kg | % Gordura: {measurement.body_fat_percentage || '--'}%
+                        Peso: {measurement.weight}kg | % Gordura: {measurement.body_fat || '--'}%
                       </p>
                     </div>
                     {index === 0 && (
