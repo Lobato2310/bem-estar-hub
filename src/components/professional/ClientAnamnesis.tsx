@@ -239,12 +239,12 @@ const ClientAnamnesis = ({
           </CardContent>
         </Card>
 
-        {/* Histórico Médico */}
+        {/* Histórico de Saúde */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Heart className="h-5 w-5" />
-              Histórico Médico
+              Histórico de Saúde
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

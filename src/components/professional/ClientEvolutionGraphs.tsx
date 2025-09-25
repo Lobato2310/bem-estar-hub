@@ -105,7 +105,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
 
       setDisciplineData(disciplineWeeks);
 
-      // Buscar dados de check-ins para saúde mental
+      // Buscar dados de check-ins para bem-estar mental
       const { data: checkins, error: checkinError } = await supabase
         .from('client_checkins')
         .select('checkin_date, mood, energy, sleep_hours')
@@ -114,7 +114,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
         .order('checkin_date', { ascending: true })
         .limit(10);
 
-      // Processar dados de saúde mental - últimos 20 dias, de 2 em 2 dias
+      // Processar dados de bem-estar mental - últimos 20 dias, de 2 em 2 dias
       const mentalHealth: MentalHealthData[] = [];
       const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
       
@@ -131,7 +131,7 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
           }
         });
       } else {
-        // Dados de exemplo para saúde mental
+        // Dados de exemplo para bem-estar mental
         days.forEach((day, index) => {
           mentalHealth.push({
             day,
@@ -333,12 +333,12 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
             </CardContent>
           </Card>
 
-          {/* Saúde Mental */}
+          {/* Bem-estar Mental */}
           <Card className="bg-white shadow-lg">
             <CardHeader className="pb-3 sm:pb-4">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600" />
-                Saúde Mental
+                Bem-estar Mental
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">
                 Sono, humor e energia diários
@@ -425,12 +425,12 @@ const ClientEvolutionGraphs = ({ clientId, clientName }: ClientEvolutionGraphsPr
               </CardContent>
             </Card>
 
-            {/* Saúde Mental */}
+            {/* Bem-estar Mental */}
             <Card className="bg-white shadow-lg">
               <CardContent className="p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-teal-600 mb-2 sm:mb-3">Saúde Mental</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-teal-600 mb-2 sm:mb-3">Bem-estar Mental</h3>
                 <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                  Os indicadores mentais mostram correlação positiva entre qualidade do sono, humor e níveis de energia. O sono médio de 7,9 horas está dentro do ideal recomendado. Os picos 
+                  Os indicadores de bem-estar mostram correlação positiva entre qualidade do sono, humor e níveis de energia. O sono médio de 7,9 horas está dentro do ideal recomendado. Os picos 
                   de bem-estar ocorrem nos fins de semana (humor e energia em 5/5), enquanto meio da semana apresenta ligeira queda (quarta-feira com sono reduzido a 6,5h). Esta análise 
                   sugere que a rotina de exercícios está contribuindo positivamente para o equilíbrio mental e qualidade do sono.
                 </p>

@@ -94,8 +94,8 @@ const HomeSection = ({ onNavigate, userProfile }: HomeSectionProps) => {
               <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-primary rounded-full flex items-center justify-center">
                 <Dumbbell className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold text-foreground">Personal Trainer</h3>
-              <p className="text-sm md:text-base text-muted-foreground">Treinos personalizados de musculação e corrida</p>
+               <h3 className="text-lg md:text-xl font-semibold text-foreground">Personal Trainer</h3>
+               <p className="text-sm md:text-base text-muted-foreground">Orientação profissional em treinos personalizados</p>
             </div>
           </Card>
 
@@ -105,8 +105,8 @@ const HomeSection = ({ onNavigate, userProfile }: HomeSectionProps) => {
               <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-primary rounded-full flex items-center justify-center">
                 <Apple className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold text-foreground">Nutricionista</h3>
-              <p className="text-sm md:text-base text-muted-foreground">Bioimpedância e dietas personalizadas</p>
+               <h3 className="text-lg md:text-xl font-semibold text-foreground">Nutricionista</h3>
+               <p className="text-sm md:text-base text-muted-foreground">Suporte nutricional e orientação alimentar personalizada</p>
             </div>
           </Card>
 
@@ -116,12 +116,24 @@ const HomeSection = ({ onNavigate, userProfile }: HomeSectionProps) => {
               <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-primary rounded-full flex items-center justify-center">
                 <Brain className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold text-foreground">Psicólogo</h3>
-              <p className="text-sm md:text-base text-muted-foreground">Acompanhamento e motivação para seus objetivos</p>
+               <h3 className="text-lg md:text-xl font-semibold text-foreground">Psicólogo</h3>
+               <p className="text-sm md:text-base text-muted-foreground">Suporte psicológico e educação em saúde mental</p>
             </div>
           </Card>
         </div>
       </div>
+
+      {/* Disclaimer de responsabilidade */}
+      <Card className="p-4 md:p-6 bg-muted/30 border-muted">
+        <div className="text-center space-y-2">
+          <h3 className="text-sm md:text-base font-medium text-muted-foreground">Importante</h3>
+          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-4xl mx-auto">
+            O MyFitLife oferece planos de treino, nutrição e acompanhamento psicológico com profissionais. 
+            As recomendações oferecidas pelo app não substituem avaliação médica ou acompanhamento clínico. 
+            Em caso de condições médicas, procure um profissional de saúde licenciado.
+          </p>
+        </div>
+      </Card>
     </div>
   );
 };
