@@ -6,16 +6,12 @@ workflows:
       node: 20
       cocoapods: default
       xcode: latest
-      # Vars do app
       vars:
         APP_BUNDLE_ID: com.lobato.myfitlife
         APP_NAME: MyFitLife
         DEVELOPMENT_TEAM: N7379U738N
-      # Assinatura iOS automática (requer integração do App Store Connect no Codemagic)
-      ios_signing:
-        distribution_type: appstore
-        bundle_identifier: $APP_BUNDLE_ID
-        team_id: $DEVELOPMENT_TEAM
+    ios_signing:
+      distribution_type: app_store
 
     cache:
       cache_paths:
@@ -35,10 +31,8 @@ workflows:
 
       - name: Sync Capacitor iOS
         script: |
-          # copia/sincroniza a pasta ios e plugins
           npx cap copy ios
           npx cap sync ios
-          # garante o alvo mínimo do iOS no Podfile
           if [ -f ios/App/Podfile ]; then
             sed -i '' "s/platform :ios, '.*'/platform :ios, '13.0'/" ios/App/Podfile || true
           fi
@@ -96,9 +90,4 @@ workflows:
 
     publishing:
       app_store_connect:
-        # usa a integração configurada no painel do Codemagic
-        auth: integration
         submit_to_testflight: true
-        # opcional:
-        # beta_groups:
-        #   - Internal Testers
