@@ -1,14 +1,32 @@
 workflows:
   ios-build:
     name: Build iOS (App Store)
+    max_build_duration: 120
     environment:
       node: 20
       cocoapods: default
       xcode: latest
+      # Vars do app
+      vars:
+        APP_BUNDLE_ID: com.lobato.myfitlife
+        APP_NAME: MyFitLife
+        DEVELOPMENT_TEAM: N7379U738N
+      # Assinatura iOS automática (requer integração do App Store Connect no Codemagic)
+      ios_signing:
+        distribution_type: appstore
+        bundle_identifier: $APP_BUNDLE_ID
+        team_id: $DEVELOPMENT_TEAM
+
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ~/Library/Caches/CocoaPods
+        - ios/Pods
+
     scripts:
       - name: Install dependencies
         script: |
-          npm install --legacy-peer-deps
+          npm ci --legacy-peer-deps
 
       - name: Build web (production)
         script: |
@@ -17,7 +35,13 @@ workflows:
 
       - name: Sync Capacitor iOS
         script: |
+          # copia/sincroniza a pasta ios e plugins
+          npx cap copy ios
           npx cap sync ios
+          # garante o alvo mínimo do iOS no Podfile
+          if [ -f ios/App/Podfile ]; then
+            sed -i '' "s/platform :ios, '.*'/platform :ios, '13.0'/" ios/App/Podfile || true
+          fi
 
       - name: CocoaPods
         script: |
@@ -27,8 +51,54 @@ workflows:
       - name: Archive with xcodebuild
         script: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -archivePath $CM_BUILD_DIR/App.xcarchive archive
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath $CM_BUILD_DIR/App.xcarchive \
+            DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM \
+            PRODUCT_BUNDLE_IDENTIFIER=$APP_BUNDLE_ID \
+            CODE_SIGN_STYLE=Automatic \
+            -allowProvisioningUpdates \
+            clean archive
+
+      - name: Create exportOptions.plist
+        script: |
+          cat > $CM_BUILD_DIR/exportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>${DEVELOPMENT_TEAM}</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
+            <key>destination</key>
+            <string>upload</string>
+          </dict>
+          </plist>
+          EOF
 
       - name: Export IPA
         script: |
-          xcodebuild -exportArchive -archivePath $CM_BUILD_DIR/App.xcarchive -exportOptionsPlist exportOptions.plist -exportPath $CM_EXPORT_DIR
+          xcodebuild -exportArchive \
+            -archivePath $CM_BUILD_DIR/App.xcarchive \
+            -exportOptionsPlist $CM_BUILD_DIR/exportOptions.plist \
+            -exportPath $CM_EXPORT_DIR \
+            -allowProvisioningUpdates
+
+    publishing:
+      app_store_connect:
+        # usa a integração configurada no painel do Codemagic
+        auth: integration
+        submit_to_testflight: true
+        # opcional:
+        # beta_groups:
+        #   - Internal Testers
