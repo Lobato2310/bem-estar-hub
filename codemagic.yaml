@@ -11,6 +11,9 @@ workflows:
         APP_NAME: MyFitLife
         DEVELOPMENT_TEAM: N7379U738N
 
+    integrations:
+      app_store_connect: default   # <- ajuste aqui (troque se o nome for outro)
+
     cache:
       cache_paths:
         - ~/.npm
