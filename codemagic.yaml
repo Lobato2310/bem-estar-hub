@@ -2,7 +2,7 @@ workflows:
   ios-build:
     name: Build iOS (App Store)
     environment:
-      node: 18
+      node: 20
       cocoapods: default
       xcode: latest
     scripts:
