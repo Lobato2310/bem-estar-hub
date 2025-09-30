@@ -10,8 +10,6 @@ workflows:
         APP_BUNDLE_ID: com.lobato.myfitlife
         APP_NAME: MyFitLife
         DEVELOPMENT_TEAM: N7379U738N
-    ios_signing:
-      distribution_type: app_store
 
     cache:
       cache_paths:
@@ -90,4 +88,5 @@ workflows:
 
     publishing:
       app_store_connect:
+        auth: integration
         submit_to_testflight: true
