@@ -8,23 +8,27 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          npm ci
+          npm install --legacy-peer-deps
+
       - name: Build web (production)
         script: |
           export NODE_ENV=production
           npm run build
-      - name: Copy to iOS
+
+      - name: Sync Capacitor iOS
         script: |
-          npx cap copy ios
           npx cap sync ios
+
       - name: CocoaPods
         script: |
           cd ios/App
           pod install --repo-update
+
       - name: Archive with xcodebuild
         script: |
           cd ios/App
           xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -archivePath $CM_BUILD_DIR/App.xcarchive archive
+
       - name: Export IPA
         script: |
           xcodebuild -exportArchive -archivePath $CM_BUILD_DIR/App.xcarchive -exportOptionsPlist exportOptions.plist -exportPath $CM_EXPORT_DIR
