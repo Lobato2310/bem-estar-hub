@@ -45,7 +45,7 @@ const config: CapacitorConfig = {
     path: 'ios',
     buildOptions: {
       releaseScheme: 'MyFitLife',
-      developmentTeam: 'YOUR_TEAM_ID' // Substituir pelo Team ID real
+      developmentTeam: 'N7379U738N' // Substituir pelo Team ID real
     },
     // Configurações específicas para App Store
     contentInset: 'automatic',
