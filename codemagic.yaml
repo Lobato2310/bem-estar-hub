@@ -7,7 +7,7 @@ workflows:
       cocoapods: default
       xcode: latest
       vars:
-        APP_BUNDLE_ID: com.lobato.myfitlife
+        APP_BUNDLE_ID: MyFitLife - com.lobato.myfitlife
         APP_NAME: MyFitLife
         DEVELOPMENT_TEAM: N7379U738N
 
