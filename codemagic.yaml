@@ -2,14 +2,15 @@ workflows:
   ios-build:
     name: Build iOS (App Store)
     max_build_duration: 120
+    automatic_code_signing: apple_dev_portal
     environment:
       node: 20
       cocoapods: default
       xcode: latest
       vars:
-        APP_BUNDLE_ID: MyFitLife - com.lobato.myfitlife
+        APP_BUNDLE_ID: com.lobato.myfitlife
         APP_NAME: MyFitLife
-        DEVELOPMENT_TEAM: N7379U738N
+        DEVELOPMENT_TEAM: N7379U738
 
     integrations:
       app_store_connect: MyFitLife   
