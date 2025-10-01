@@ -12,7 +12,7 @@ workflows:
         DEVELOPMENT_TEAM: N7379U738N
 
     integrations:
-      app_store_connect: MyFitLife   # <--- usando o nome correto da integração
+      app_store_connect: MyFitLife   
 
     cache:
       cache_paths:
