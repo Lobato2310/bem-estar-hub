@@ -12,7 +12,7 @@ workflows:
         DEVELOPMENT_TEAM: N7379U738N
 
     integrations:
-      app_store_connect: default   # <- ajuste aqui (troque se o nome for outro)
+      app_store_connect: MyFitLife   # <--- usando o nome correto da integração
 
     cache:
       cache_paths:
