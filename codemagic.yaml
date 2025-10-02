@@ -89,14 +89,14 @@ workflows:
             -exportOptionsPlist $CM_BUILD_DIR/exportOptions.plist \
             -exportPath $CM_EXPORT_DIR \
             -allowProvisioningUpdates
-    signing:
-      ios:
-        provisioning_profiles:
-          - MyFitLife_App_Store.mobileprovision
-        certificates:
-          - myfitlife.p12
+  signing:
+    ios:
+      provisioning_profiles:
+        - MyFitLife_App_Store.mobileprovision
+      certificates:
+        - myfitlife.p12
 
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
+  publishing:
+    app_store_connect:
+      auth: integration
+      submit_to_testflight: true
