@@ -56,8 +56,7 @@ workflows:
           -archivePath "$CM_BUILD_DIR/App.xcarchive" \
           DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
           PRODUCT_BUNDLE_IDENTIFIER="$APP_BUNDLE_ID" \
-          CODE_SIGN_STYLE="Automatic" \
-          -allowProvisioningUpdates \
+          CODE_SIGN_STYLE="Manual"
           clean archive
 
 
