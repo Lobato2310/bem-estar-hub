@@ -10,6 +10,8 @@ workflows:
         APP_BUNDLE_ID: com.lobato.myfitlife
         APP_NAME: MyFitLife
         DEVELOPMENT_TEAM: N7379U738N
+        CERTIFICATE:  myfitlife.p12
+        PROVISIONING_PROFILE: MyFitLife_App_Store.mobileprovision
 
     integrations:
       app_store_connect: MyFitLife
@@ -19,12 +21,6 @@ workflows:
         - ~/.npm
         - ~/Library/Caches/CocoaPods
         - ios/Pods
-
-    ios_signing:
-      certificates:
-        - myfitlife.p12
-      provisioning_profiles:
-        - MyFitLife_App_Store.mobileprovision
 
     scripts:
       - name: Install dependencies
