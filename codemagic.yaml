@@ -10,7 +10,8 @@ workflows:
         APP_BUNDLE_ID: com.lobato.myfitlife
         APP_NAME: MyFitLife
         DEVELOPMENT_TEAM: N7379U738N
-
+        CERTIFICATE:  myfitlife.p12
+        PROVISIONING_PROFILE: MyFitLife_App_Store.mobileprovision
 
     integrations:
       app_store_connect: MyFitLife
@@ -55,7 +56,8 @@ workflows:
           -archivePath "$CM_BUILD_DIR/App.xcarchive" \
           DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
           PRODUCT_BUNDLE_IDENTIFIER="$APP_BUNDLE_ID" \
-          CODE_SIGN_STYLE="Manual"
+          CODE_SIGN_STYLE="Automatic" \
+          -allowProvisioningUpdates \
           clean archive
 
 
@@ -89,14 +91,8 @@ workflows:
             -exportOptionsPlist $CM_BUILD_DIR/exportOptions.plist \
             -exportPath $CM_EXPORT_DIR \
             -allowProvisioningUpdates
-  signing:
-    ios:
-      provisioning_profiles:
-        - MyFitLife_App_Store.mobileprovision
-      certificates:
-        - myfitlife.p12
 
-  publishing:
-    app_store_connect:
-      auth: integration
-      submit_to_testflight: true
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
