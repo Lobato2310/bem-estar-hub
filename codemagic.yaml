@@ -10,8 +10,6 @@ workflows:
         APP_BUNDLE_ID: com.lobato.myfitlife
         APP_NAME: MyFitLife
         DEVELOPMENT_TEAM: N7379U738N
-        CERTIFICATE:  myfitlife.p12
-        PROVISIONING_PROFILE: MyFitLife_App_Store.mobileprovision
 
     integrations:
       app_store_connect: MyFitLife
@@ -45,6 +43,12 @@ workflows:
           cd ios/App
           pod install --repo-update
 
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
+
       - name: Archive with xcodebuild
         script: |
           cd ios/App
@@ -54,43 +58,19 @@ workflows:
           -configuration "Release" \
           -destination "generic/platform=iOS" \
           -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-          DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
-          PRODUCT_BUNDLE_IDENTIFIER="$APP_BUNDLE_ID" \
-          CODE_SIGN_STYLE="Automatic" \
-          -allowProvisioningUpdates \
+          CODE_SIGN_STYLE="Manual" \
           clean archive
-
-
-      - name: Create exportOptions.plist
-        script: |
-          cat > $CM_BUILD_DIR/exportOptions.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>${DEVELOPMENT_TEAM}</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>compileBitcode</key>
-            <false/>
-            <key>destination</key>
-            <string>upload</string>
-          </dict>
-          </plist>
-          EOF
 
       - name: Export IPA
         script: |
           xcodebuild -exportArchive \
-            -archivePath $CM_BUILD_DIR/App.xcarchive \
-            -exportOptionsPlist $CM_BUILD_DIR/exportOptions.plist \
-            -exportPath $CM_EXPORT_DIR \
+            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
+            -exportOptionsPlist "$CM_BUILD_DIR/ios/App/exportOptions.plist" \
+            -exportPath "$CM_BUILD_DIR" \
             -allowProvisioningUpdates
+
+    artifacts:
+      - build/ios/ipa/*.ipa
 
     publishing:
       app_store_connect:
