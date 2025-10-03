@@ -4,11 +4,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Play, Dumbbell } from "lucide-react";
 
 interface Exercise {
-  id: string;
+  id?: string;
   name: string;
-  description: string;
-  muscle_groups: string[];
-  category: string;
+  description?: string;
+  muscle_groups?: string[];
+  category?: string;
   video_url?: string;
   instructions?: string;
 }

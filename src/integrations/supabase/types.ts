@@ -353,6 +353,59 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_logs: {
+        Row: {
+          client_id: string
+          created_at: string
+          effort_perception: number | null
+          exercise_name: string
+          id: string
+          joint_discomfort: string | null
+          logged_at: string
+          notes: string | null
+          reps: number
+          sets: number
+          weight: number
+          workout_plan_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          effort_perception?: number | null
+          exercise_name: string
+          id?: string
+          joint_discomfort?: string | null
+          logged_at?: string
+          notes?: string | null
+          reps: number
+          sets: number
+          weight: number
+          workout_plan_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          effort_perception?: number | null
+          exercise_name?: string
+          id?: string
+          joint_discomfort?: string | null
+          logged_at?: string
+          notes?: string | null
+          reps?: number
+          sets?: number
+          weight?: number
+          workout_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_logs_workout_plan_id_fkey"
+            columns: ["workout_plan_id"]
+            isOneToOne: false
+            referencedRelation: "workout_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercises: {
         Row: {
           category: string | null

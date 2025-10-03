@@ -3,11 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dumbbell, Clock, Calendar, TrendingUp, Target, Play } from "lucide-react";
-import WorkoutTimer from "@/components/workout/WorkoutTimer";
+import ActiveWorkoutExecution from "@/components/workout/ActiveWorkoutExecution";
 import WorkoutFeedbackDialog from "@/components/workout/WorkoutFeedbackDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface WorkoutPlan {
   id: string;
@@ -19,6 +21,13 @@ interface WorkoutPlan {
   created_at: string;
 }
 
+interface WorkoutSchedule {
+  id: string;
+  workout_plan_id: string;
+  scheduled_date: string;
+  workout_plans?: WorkoutPlan;
+}
+
 interface WorkoutStats {
   total_workouts: number;
   total_time_minutes: number;
@@ -27,8 +36,9 @@ interface WorkoutStats {
 const WorkoutSection = () => {
   const { user } = useAuth();
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
+  const [scheduledToday, setScheduledToday] = useState<WorkoutSchedule[]>([]);
   const [workoutStats, setWorkoutStats] = useState<WorkoutStats>({ total_workouts: 0, total_time_minutes: 0 });
-  const [isWorkoutActive, setIsWorkoutActive] = useState(false);
+  const [activeWorkoutPlan, setActiveWorkoutPlan] = useState<WorkoutPlan | null>(null);
   const [currentWorkoutTime, setCurrentWorkoutTime] = useState(0);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -50,10 +60,22 @@ const WorkoutSection = () => {
         .select('*')
         .eq('client_id', user.id)
         .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .order('training_day', { ascending: true });
 
       if (!plansError && plans) {
         setWorkoutPlans(plans);
+      }
+
+      // Carregar treinos programados para hoje
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const { data: scheduled, error: scheduleError } = await supabase
+        .from('workout_schedules')
+        .select('*, workout_plans(*)')
+        .eq('client_id', user.id)
+        .eq('scheduled_date', today);
+
+      if (!scheduleError && scheduled) {
+        setScheduledToday(scheduled);
       }
 
       // Carregar estatísticas de treino
@@ -74,29 +96,23 @@ const WorkoutSection = () => {
     }
   };
 
-  const handleStartWorkout = () => {
-    setIsWorkoutActive(true);
-    setCurrentWorkoutTime(0);
+  const handleStartWorkout = (plan: WorkoutPlan) => {
+    setActiveWorkoutPlan(plan);
     toast.success('Treino iniciado! Boa sorte!');
   };
 
-  const handlePauseWorkout = () => {
-    toast.info('Treino pausado');
-  };
-
-  const handleStopWorkout = () => {
-    setIsWorkoutActive(false);
+  const handleCompleteWorkout = () => {
+    setActiveWorkoutPlan(null);
     setShowFeedbackDialog(true);
   };
 
-  const handleTimeUpdate = (seconds: number) => {
-    setCurrentWorkoutTime(seconds);
+  const handleCancelWorkout = () => {
+    setActiveWorkoutPlan(null);
+    toast.info('Treino cancelado');
   };
 
   const handleFeedbackClose = () => {
     setShowFeedbackDialog(false);
-    setCurrentWorkoutTime(0);
-    // Recarregar estatísticas após o feedback
     loadWorkoutData();
   };
 
@@ -104,6 +120,25 @@ const WorkoutSection = () => {
     return (
       <div className="flex items-center justify-center h-32">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Se há treino ativo, mostrar tela de execução
+  if (activeWorkoutPlan) {
+    return (
+      <div className="max-w-6xl mx-auto p-4 md:p-6">
+        <ActiveWorkoutExecution
+          workoutPlan={activeWorkoutPlan}
+          onComplete={handleCompleteWorkout}
+          onCancel={handleCancelWorkout}
+        />
+        
+        <WorkoutFeedbackDialog
+          isOpen={showFeedbackDialog}
+          onClose={handleFeedbackClose}
+          workoutDuration={currentWorkoutTime}
+        />
       </div>
     );
   }
@@ -121,14 +156,56 @@ const WorkoutSection = () => {
         </p>
       </div>
 
-      {/* Timer de Treino */}
-      <WorkoutTimer
-        isActive={isWorkoutActive}
-        onStart={handleStartWorkout}
-        onPause={handlePauseWorkout}
-        onStop={handleStopWorkout}
-        onTimeUpdate={handleTimeUpdate}
-      />
+      {/* Treino Programado para Hoje */}
+      {scheduledToday.length > 0 && (
+        <Card className="p-4 md:p-6 bg-gradient-to-r from-primary/10 to-primary/20">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">
+              Treino Programado para Hoje - {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}
+            </h2>
+          </div>
+          
+          <div className="grid gap-3">
+            {scheduledToday.map((schedule) => (
+              <Card key={schedule.id} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-foreground">
+                        {schedule.workout_plans?.name}
+                      </h3>
+                      {schedule.workout_plans?.training_day && (
+                        <Badge variant="secondary">
+                          Treino {schedule.workout_plans.training_day}
+                        </Badge>
+                      )}
+                    </div>
+                    {schedule.workout_plans?.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {schedule.workout_plans.description}
+                      </p>
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Exercícios:</strong> {Array.isArray(schedule.workout_plans?.exercises) 
+                        ? schedule.workout_plans.exercises.length 
+                        : 0}
+                    </p>
+                  </div>
+                  
+                  <Button 
+                    onClick={() => schedule.workout_plans && handleStartWorkout(schedule.workout_plans)}
+                    className="flex items-center gap-2"
+                  >
+                    <Play className="h-4 w-4" />
+                    Iniciar
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
@@ -153,11 +230,11 @@ const WorkoutSection = () => {
         </Card>
       </div>
 
-      {/* Planos de Treino */}
+      {/* Todos os Planos de Treino Disponíveis */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          Seus Planos de Treino
+          <Dumbbell className="h-5 w-5" />
+          Todos os Planos de Treino
         </h2>
         
         {workoutPlans.length > 0 ? (
@@ -187,17 +264,13 @@ const WorkoutSection = () => {
                     </p>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleStartWorkout}
-                      disabled={isWorkoutActive}
-                    >
-                      <Play className="h-4 w-4 mr-1" />
-                      {isWorkoutActive ? 'Em Andamento' : 'Iniciar'}
-                    </Button>
-                  </div>
+                  <Button 
+                    onClick={() => handleStartWorkout(plan)}
+                    className="flex items-center gap-2"
+                  >
+                    <Play className="h-4 w-4" />
+                    Iniciar Treino
+                  </Button>
                 </div>
               </Card>
             ))}
@@ -214,13 +287,6 @@ const WorkoutSection = () => {
           </Card>
         )}
       </div>
-
-      {/* Dialog de Feedback */}
-      <WorkoutFeedbackDialog
-        isOpen={showFeedbackDialog}
-        onClose={handleFeedbackClose}
-        workoutDuration={currentWorkoutTime}
-      />
     </div>
   );
 };
