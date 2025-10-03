@@ -107,6 +107,25 @@ workflows:
             exit 1
           fi
 
+      - name: Remove storyboard references
+        script: |
+          cd ios/App
+          
+          echo "=== Removendo referências aos storyboards do projeto ==="
+          
+          # Remover referências do project.pbxproj
+          sed -i '' '/Main.storyboard/d' App.xcodeproj/project.pbxproj
+          sed -i '' '/LaunchScreen.storyboard/d' App.xcodeproj/project.pbxproj
+          
+          # Verificar Info.plist e remover referências se existirem
+          if [ -f App/Info.plist ]; then
+            /usr/libexec/PlistBuddy -c "Delete :UIMainStoryboardFile" App/Info.plist 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Delete :UILaunchStoryboardName" App/Info.plist 2>/dev/null || true
+          fi
+          
+          echo "=== Storyboards removidos com sucesso ==="
+
+
       - name: Archive with xcodebuild
         script: |
           cd ios/App
