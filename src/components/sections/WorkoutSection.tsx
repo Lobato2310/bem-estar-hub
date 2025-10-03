@@ -49,6 +49,46 @@ const WorkoutSection = () => {
     }
   }, [user]);
 
+  const enrichExercisesWithDetails = async (plans: WorkoutPlan[]) => {
+    // Buscar todos os exercícios da tabela exercises
+    const { data: allExercises, error } = await supabase
+      .from('exercises')
+      .select('*');
+
+    if (error || !allExercises) return plans;
+
+    // Enriquecer cada plano com dados completos dos exercícios
+    return plans.map(plan => {
+      if (!Array.isArray(plan.exercises)) return plan;
+
+      const enrichedExercises = plan.exercises.map((ex: any) => {
+        // Buscar exercício correspondente pelo nome
+        const fullExercise = allExercises.find(
+          e => e.name.toLowerCase() === ex.name.toLowerCase()
+        );
+
+        if (fullExercise) {
+          return {
+            ...ex,
+            description: fullExercise.description,
+            video_url: fullExercise.video_url,
+            instructions: fullExercise.instructions,
+            muscle_groups: fullExercise.muscle_groups,
+            category: fullExercise.category,
+            id: fullExercise.id
+          };
+        }
+
+        return ex;
+      });
+
+      return {
+        ...plan,
+        exercises: enrichedExercises
+      };
+    });
+  };
+
   const loadWorkoutData = async () => {
     if (!user) return;
     
@@ -63,7 +103,9 @@ const WorkoutSection = () => {
         .order('training_day', { ascending: true });
 
       if (!plansError && plans) {
-        setWorkoutPlans(plans);
+        // Enriquecer com dados completos dos exercícios
+        const enrichedPlans = await enrichExercisesWithDetails(plans);
+        setWorkoutPlans(enrichedPlans);
       }
 
       // Carregar treinos programados para hoje
@@ -75,7 +117,20 @@ const WorkoutSection = () => {
         .eq('scheduled_date', today);
 
       if (!scheduleError && scheduled) {
-        setScheduledToday(scheduled);
+        // Enriquecer workout_plans dentro de scheduled
+        const enrichedScheduled = await Promise.all(
+          scheduled.map(async (schedule) => {
+            if (schedule.workout_plans) {
+              const enriched = await enrichExercisesWithDetails([schedule.workout_plans]);
+              return {
+                ...schedule,
+                workout_plans: enriched[0]
+              };
+            }
+            return schedule;
+          })
+        );
+        setScheduledToday(enrichedScheduled);
       }
 
       // Carregar estatísticas de treino
