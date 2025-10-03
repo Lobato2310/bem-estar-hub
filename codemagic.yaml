@@ -49,35 +49,34 @@ workflows:
           echo "=== Inicializando keychain ==="
           keychain initialize
           
-          echo "=== Buscando certificados do App Store Connect ==="
-          app-store-connect fetch-signing-files "$APP_BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
+          echo "=== Criando diretórios necessários ==="
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          mkdir -p ~/Library/MobileDevice/Certificates
+          
+          echo "=== Copiando certificado ==="
+          cp "$CM_BUILD_DIR/myfitlife.p12" ~/Library/MobileDevice/Certificates/
+          ls -la ~/Library/MobileDevice/Certificates/
+          
+          echo "=== Copiando provisioning profile ==="
+          cp "$CM_BUILD_DIR/MyFitLife_App_Store.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
           
           echo "=== Adicionando certificados ao keychain ==="
           keychain add-certificates
+          
+          echo "=== Verificando certificados instalados ==="
+          security find-identity -v -p codesigning
           
           echo "=== Aplicando profiles ao projeto ==="
           cd ios/App
           xcode-project use-profiles
           
-          echo "=== Listando provisioning profiles instalados ==="
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
-          
-          echo "=== Verificando configuração do projeto ==="
-          cat App.xcodeproj/project.pbxproj | grep -A 5 "PROVISIONING_PROFILE"
+          echo "=== Verificando configuração final ==="
+          cat App.xcodeproj/project.pbxproj | grep -A 3 "PROVISIONING_PROFILE_SPECIFIER"
 
       - name: Archive with xcodebuild
         script: |
           cd ios/App
-          
-          # Obter o UUID do provisioning profile
-          PROFILE_PATH=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.mobileprovision" | head -1)
-          if [ -n "$PROFILE_PATH" ]; then
-            PROFILE_UUID=$(grep -aA1 'UUID' "$PROFILE_PATH" | grep -o '[A-Z0-9-]\{36\}' | head -1)
-            echo "Profile UUID encontrado: $PROFILE_UUID"
-          fi
-          
           xcodebuild \
           -workspace "App.xcworkspace" \
           -scheme "App" \
@@ -85,9 +84,6 @@ workflows:
           -destination "generic/platform=iOS" \
           -archivePath "$CM_BUILD_DIR/App.xcarchive" \
           CODE_SIGN_STYLE="Manual" \
-          DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
-          PRODUCT_BUNDLE_IDENTIFIER="$APP_BUNDLE_ID" \
-          ${PROFILE_UUID:+PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID"} \
           clean archive
 
       - name: Export IPA
