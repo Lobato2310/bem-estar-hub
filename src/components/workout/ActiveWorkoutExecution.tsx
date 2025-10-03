@@ -23,9 +23,9 @@ interface Exercise {
   name: string;
   description?: string;
   sets: number;
-  reps: number;
+  reps: string | number;
   weight?: number;
-  rest_time?: number;
+  rest_time?: string | number;
   notes?: string;
   muscle_groups?: string[];
   category?: string;
@@ -261,7 +261,15 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
             setSelectedExerciseIndex(null);
           }}
           exerciseName={workoutPlan.exercises[selectedExerciseIndex].name}
-          exerciseData={workoutPlan.exercises[selectedExerciseIndex]}
+          exerciseData={{
+            ...workoutPlan.exercises[selectedExerciseIndex],
+            reps: typeof workoutPlan.exercises[selectedExerciseIndex].reps === 'string' 
+              ? parseInt(workoutPlan.exercises[selectedExerciseIndex].reps.split('-')[0]) || 8
+              : workoutPlan.exercises[selectedExerciseIndex].reps,
+            rest_time: typeof workoutPlan.exercises[selectedExerciseIndex].rest_time === 'string'
+              ? parseInt(workoutPlan.exercises[selectedExerciseIndex].rest_time.split('-')[0]) || 60
+              : workoutPlan.exercises[selectedExerciseIndex].rest_time
+          }}
           onSubmit={handleExerciseLog}
         />
       )}

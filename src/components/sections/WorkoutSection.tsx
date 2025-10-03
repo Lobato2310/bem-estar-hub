@@ -15,7 +15,20 @@ interface WorkoutPlan {
   id: string;
   name: string;
   description: string;
-  exercises: any;
+  exercises: {
+    id?: string;
+    name: string;
+    description?: string;
+    sets: number;
+    reps: string | number;
+    weight?: number;
+    rest_time?: string | number;
+    notes?: string;
+    video_url?: string;
+    instructions?: string;
+    muscle_groups?: string[];
+    category?: string;
+  }[];
   training_day?: string;
   status: string;
   created_at: string;
@@ -49,7 +62,7 @@ const WorkoutSection = () => {
     }
   }, [user]);
 
-  const enrichExercisesWithDetails = async (plans: WorkoutPlan[]) => {
+  const enrichExercisesWithDetails = async (plans: any[]) => {
     // Buscar todos os exercícios da tabela exercises
     const { data: allExercises, error } = await supabase
       .from('exercises')
@@ -62,27 +75,46 @@ const WorkoutSection = () => {
       if (!Array.isArray(plan.exercises)) return plan;
 
       const enrichedExercises = plan.exercises.map((ex: any) => {
-        // Verificar se o exercício tem nome antes de tentar enriquecer
-        if (!ex || !ex.name) return ex;
+        // Os campos no banco têm prefixo "exercise_"
+        const exerciseName = ex.exercise_name || ex.name;
+        
+        if (!exerciseName) return ex;
 
-        // Buscar exercício correspondente pelo nome
+        // Buscar exercício correspondente pelo ID primeiro, depois pelo nome
         const fullExercise = allExercises.find(
-          e => e.name && e.name.toLowerCase() === ex.name.toLowerCase()
+          e => (ex.exercise_id && e.id === ex.exercise_id) || 
+               (e.name && e.name.toLowerCase() === exerciseName.toLowerCase())
         );
 
         if (fullExercise) {
+          // Retornar no formato esperado pelo componente (sem prefixo exercise_)
           return {
-            ...ex,
-            description: fullExercise.description,
+            id: fullExercise.id,
+            name: fullExercise.name,
+            description: ex.exercise_description || fullExercise.description,
             video_url: fullExercise.video_url,
             instructions: fullExercise.instructions,
             muscle_groups: fullExercise.muscle_groups,
             category: fullExercise.category,
-            id: fullExercise.id
+            sets: parseInt(ex.sets) || 3,
+            reps: ex.reps || '8-12',
+            weight: ex.weight || undefined,
+            rest_time: ex.rest_time || '60-90s',
+            notes: ex.notes || ''
           };
         }
 
-        return ex;
+        // Se não encontrar na tabela exercises, retornar com formatação correta
+        return {
+          id: ex.exercise_id,
+          name: exerciseName,
+          description: ex.exercise_description,
+          sets: parseInt(ex.sets) || 3,
+          reps: ex.reps || '8-12',
+          weight: ex.weight || undefined,
+          rest_time: ex.rest_time || '60-90s',
+          notes: ex.notes || ''
+        };
       });
 
       return {
