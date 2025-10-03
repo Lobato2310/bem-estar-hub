@@ -75,17 +75,29 @@ workflows:
           cat App.xcodeproj/project.pbxproj | grep -A 3 "PROVISIONING_PROFILE_SPECIFIER"
 
 
-      - name: Debug Storyboard issues
+      - name: Remove storyboard references completely
         script: |
-          cd ios/App/App
-          echo "=== Verificando arquivos Storyboard ==="
-          ls -la Base.lproj/
+          cd ios/App
           
-          echo "=== Verificando Main.storyboard ==="
-          file Base.lproj/Main.storyboard
+          echo "=== Criando backup do projeto ==="
+          cp App.xcodeproj/project.pbxproj App.xcodeproj/project.pbxproj.backup
           
-          echo "=== Verificando LaunchScreen.storyboard ==="
-          file Base.lproj/LaunchScreen.storyboard
+          echo "=== Removendo TODAS as referências aos storyboards ==="
+          # Usar perl para remoção mais precisa
+          perl -i -ne 'print unless /storyboard/i' App.xcodeproj/project.pbxproj
+          
+          # Remover do Info.plist
+          if [ -f App/Info.plist ]; then
+            plutil -remove UIMainStoryboardFile App/Info.plist 2>/dev/null || true
+            plutil -remove UILaunchStoryboardName App/Info.plist 2>/dev/null || true
+            echo "Info.plist atualizado"
+          fi
+          
+          # Verificar se as pastas Base.lproj existem e remover
+          rm -rf App/Base.lproj
+          
+          echo "=== Verificando se ainda existem referências ==="
+          grep -i "storyboard" App.xcodeproj/project.pbxproj || echo "Nenhuma referência encontrada - sucesso!"
 
       - name: Archive with xcodebuild
         script: |
