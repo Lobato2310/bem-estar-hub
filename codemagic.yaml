@@ -123,6 +123,36 @@ workflows:
           echo "=== Verificando arquivos criados ==="
           ls -la Base.lproj/
 
+      - name: Fix AppIcon in Assets
+        script: |
+          cd ios/App/App
+          
+          echo "=== Verificando Assets.xcassets ==="
+          ls -la Assets.xcassets/
+          
+          echo "=== Criando AppIcon.appiconset se não existir ==="
+          mkdir -p Assets.xcassets/AppIcon.appiconset
+          
+          # Criar Contents.json para o AppIcon
+          cat > Assets.xcassets/AppIcon.appiconset/Contents.json << 'APPICON_EOF'
+          {
+            "images" : [
+              {
+                "idiom" : "universal",
+                "platform" : "ios",
+                "size" : "1024x1024"
+              }
+            ],
+            "info" : {
+              "author" : "xcode",
+              "version" : 1
+            }
+          }
+          APPICON_EOF
+          
+          echo "=== AppIcon configurado ==="
+          ls -la Assets.xcassets/AppIcon.appiconset/    
+
       - name: Archive with xcodebuild
         script: |
           cd ios/App
