@@ -62,9 +62,12 @@ const WorkoutSection = () => {
       if (!Array.isArray(plan.exercises)) return plan;
 
       const enrichedExercises = plan.exercises.map((ex: any) => {
+        // Verificar se o exercício tem nome antes de tentar enriquecer
+        if (!ex || !ex.name) return ex;
+
         // Buscar exercício correspondente pelo nome
         const fullExercise = allExercises.find(
-          e => e.name.toLowerCase() === ex.name.toLowerCase()
+          e => e.name && e.name.toLowerCase() === ex.name.toLowerCase()
         );
 
         if (fullExercise) {
