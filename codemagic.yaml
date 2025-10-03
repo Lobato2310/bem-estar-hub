@@ -74,6 +74,39 @@ workflows:
           echo "=== Verificando configuração final ==="
           cat App.xcodeproj/project.pbxproj | grep -A 3 "PROVISIONING_PROFILE_SPECIFIER"
 
+
+      - name: Debug Storyboard issues
+        script: |
+          cd ios/App/App
+          echo "=== Verificando arquivos Storyboard ==="
+          ls -la Base.lproj/
+          
+          echo "=== Verificando Main.storyboard ==="
+          file Base.lproj/Main.storyboard
+          
+          echo "=== Verificando LaunchScreen.storyboard ==="
+          file Base.lproj/LaunchScreen.storyboard
+
+      - name: Archive with xcodebuild
+        script: |
+          cd ios/App
+          xcodebuild \
+          -workspace "App.xcworkspace" \
+          -scheme "App" \
+          -configuration "Release" \
+          -destination "generic/platform=iOS" \
+          -archivePath "$CM_BUILD_DIR/App.xcarchive" \
+          CODE_SIGN_STYLE="Manual" \
+          -verbose \
+          clean archive 2>&1 | tee build.log
+          
+          # Se falhar, mostrar os últimos 100 erros
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "=== ERROS DETALHADOS ==="
+            grep -i "error:" build.log | tail -20
+            exit 1
+          fi
+
       - name: Archive with xcodebuild
         script: |
           cd ios/App
