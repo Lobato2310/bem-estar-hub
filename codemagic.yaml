@@ -45,19 +45,24 @@ workflows:
 
       - name: Set up code signing
         script: |
-          set -x  # Ativar modo debug
+          set -x
           echo "=== Inicializando keychain ==="
           keychain initialize
           
-          echo "=== Adicionando certificados ==="
-          keychain add-certificates
+          echo "=== Buscando certificados do App Store Connect ==="
+          app-store-connect fetch-signing-files "$APP_BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
           
-          echo "=== Listando arquivos em CM_KEYSTORE_PATH ==="
-          ls -la $CM_KEYSTORE_PATH || true
+          echo "=== Adicionando certificados ao keychain ==="
+          keychain add-certificates
           
           echo "=== Aplicando profiles ao projeto ==="
           cd ios/App
           xcode-project use-profiles
+          
+          echo "=== Listando provisioning profiles instalados ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
           
           echo "=== Verificando configuração do projeto ==="
           cat App.xcodeproj/project.pbxproj | grep -A 5 "PROVISIONING_PROFILE"
