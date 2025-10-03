@@ -30,192 +30,41 @@ workflows:
           export NODE_ENV=production
           npm run build
 
-      - name: Sync Capacitor iOS
+      - name: Regenerate iOS project cleanly
         script: |
-          npx cap copy ios
-          npx cap sync ios
-          if [ -f ios/App/Podfile ]; then
-            sed -i '' "s/platform :ios, '.*'/platform :ios, '13.0'/" ios/App/Podfile || true
+          # Remover iOS antigo completamente
+          rm -rf ios
+          
+          # Criar projeto iOS limpo
+          npx cap add ios
+          
+          # Copiar ícones se existirem
+          if [ -f "resources/icon.png" ] || [ -f "public/icon.png" ]; then
+            echo "Ícones encontrados, mas precisam ser configurados manualmente depois"
           fi
 
-      - name: CocoaPods
+      - name: Install CocoaPods
         script: |
           cd ios/App
-          pod install --repo-update
+          pod install
 
-      - name: Set up code signing
+      - name: Build and Archive
         script: |
-          set -x
-          echo "=== Inicializando keychain ==="
-          keychain initialize
+          cd ios/App
           
-          echo "=== Criando diretórios necessários ==="
+          # Configurar assinatura
+          keychain initialize
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           mkdir -p ~/Library/MobileDevice/Certificates
-          
-          echo "=== Copiando certificado ==="
           cp "$CM_BUILD_DIR/myfitlife.p12" ~/Library/MobileDevice/Certificates/
-          ls -la ~/Library/MobileDevice/Certificates/
-          
-          echo "=== Copiando provisioning profile ==="
           cp "$CM_BUILD_DIR/MyFitLife_App_Store.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
-          
-          echo "=== Adicionando certificados ao keychain ==="
           keychain add-certificates
-          
-          echo "=== Verificando certificados instalados ==="
-          security find-identity -v -p codesigning
-          
-          echo "=== Aplicando profiles ao projeto ==="
-          cd ios/App
           xcode-project use-profiles
           
-          echo "=== Verificando configuração final ==="
-          cat App.xcodeproj/project.pbxproj | grep -A 3 "PROVISIONING_PROFILE_SPECIFIER"
-
-
-      - name: Create storyboard files
-        script: |
-          cd ios/App/App
-          
-          echo "=== Criando diretório Base.lproj ==="
-          mkdir -p Base.lproj
-          
-          echo "=== Criando LaunchScreen.storyboard ==="
-          cat > Base.lproj/LaunchScreen.storyboard << 'STORYBOARD_EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
-              <device id="retina6_12" orientation="portrait" appearance="light"/>
-              <dependencies>
-                  <deployment identifier="iOS"/>
-                  <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
-                  <capability name="Safe area layout guides" minToolsVersion="9.0"/>
-                  <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
-              </dependencies>
-              <scenes>
-                  <scene sceneID="EHf-IW-A2E">
-                      <objects>
-                          <viewController id="01J-lp-oVM" sceneMemberID="viewController">
-                              <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
-                                  <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
-                                  <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                  <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
-                                  <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                              </view>
-                          </viewController>
-                          <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                      </objects>
-                      <point key="canvasLocation" x="53" y="375"/>
-                  </scene>
-              </scenes>
-              <resources>
-                  <systemColor name="systemBackgroundColor">
-                      <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                  </systemColor>
-              </resources>
-          </document>
-          STORYBOARD_EOF
-          
-          echo "=== Copiando para Main.storyboard ==="
-          cp Base.lproj/LaunchScreen.storyboard Base.lproj/Main.storyboard
-          
-          echo "=== Verificando arquivos criados ==="
-          ls -la Base.lproj/
-
-      - name: Fix AppIcon in Assets
-        script: |
-          cd ios/App/App
-          
-          echo "=== Verificando Assets.xcassets ==="
-          ls -la Assets.xcassets/
-          
-          echo "=== Criando AppIcon.appiconset se não existir ==="
-          mkdir -p Assets.xcassets/AppIcon.appiconset
-          
-          # Criar Contents.json para o AppIcon
-          cat > Assets.xcassets/AppIcon.appiconset/Contents.json << 'APPICON_EOF'
-          {
-            "images" : [
-              {
-                "idiom" : "universal",
-                "platform" : "ios",
-                "size" : "1024x1024"
-              }
-            ],
-            "info" : {
-              "author" : "xcode",
-              "version" : 1
-            }
-          }
-          APPICON_EOF
-          
-          echo "=== AppIcon configurado ==="
-          ls -la Assets.xcassets/AppIcon.appiconset/    
-
-      - name: Archive with xcodebuild
-        script: |
-          cd ios/App
-          xcodebuild \
-          -workspace "App.xcworkspace" \
-          -scheme "App" \
-          -configuration "Release" \
-          -destination "generic/platform=iOS" \
-          -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-          CODE_SIGN_STYLE="Manual" \
-          -verbose \
-          clean archive 2>&1 | tee build.log
-          
-          # Se falhar, mostrar os últimos 100 erros
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "=== ERROS DETALHADOS ==="
-            grep -i "error:" build.log | tail -20
-            exit 1
-          fi
-
-      - name: Remove storyboard references
-        script: |
-          cd ios/App
-          
-          echo "=== Removendo referências aos storyboards do projeto ==="
-          
-          # Remover referências do project.pbxproj
-          sed -i '' '/Main.storyboard/d' App.xcodeproj/project.pbxproj
-          sed -i '' '/LaunchScreen.storyboard/d' App.xcodeproj/project.pbxproj
-          
-          # Verificar Info.plist e remover referências se existirem
-          if [ -f App/Info.plist ]; then
-            /usr/libexec/PlistBuddy -c "Delete :UIMainStoryboardFile" App/Info.plist 2>/dev/null || true
-            /usr/libexec/PlistBuddy -c "Delete :UILaunchStoryboardName" App/Info.plist 2>/dev/null || true
-          fi
-          
-          echo "=== Storyboards removidos com sucesso ==="
-
-
-      - name: Archive with xcodebuild
-        script: |
-          cd ios/App
-          xcodebuild \
-          -workspace "App.xcworkspace" \
-          -scheme "App" \
-          -configuration "Release" \
-          -destination "generic/platform=iOS" \
-          -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-          CODE_SIGN_STYLE="Manual" \
-          clean archive
-
-      - name: Export IPA
-        script: |
-          xcodebuild -exportArchive \
+          # Build
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-            -exportOptionsPlist "$CM_BUILD_DIR/ios/App/exportOptions.plist" \
-            -exportPath "$CM_BUILD_DIR" \
-            -allowProvisioningUpdates
-
-    artifacts:
-      - build/ios/ipa/*.ipa
-
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
+            clean archive
