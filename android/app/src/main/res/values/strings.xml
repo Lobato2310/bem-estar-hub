@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MyFitLife</string>
+    <string name="title_activity_main">MyFitLife</string>
+    <string name="package_name">com.lobato.myfitlife</string>
+    <string name="custom_url_scheme">com.lobato.myfitlife</string>
+</resources>

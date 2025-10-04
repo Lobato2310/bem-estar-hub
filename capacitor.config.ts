@@ -9,9 +9,9 @@ const config: CapacitorConfig = {
   bundledWebRuntime: false,
   ...(isDev && {
     server: {
-      url: 'https://5bbadde6-f01e-4a77-92ad-cfd2520ff0cb.lovableproject.com?forceHideBadge=true',
-      cleartext: true
+      androidScheme: "https"
     }
+
   }),
   plugins: {
     SplashScreen: {
