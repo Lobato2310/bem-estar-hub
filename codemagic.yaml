@@ -2,27 +2,24 @@ workflows:
   ios-release:
     name: iOS Release - MyFitLife
     max_build_duration: 120
-    instance_type: mac_mini_m1
+    instance_type: mac_mini_m2
     
     integrations:
       app_store_connect: codemagic
     
     environment:
+      groups:
+        - no group
+      
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.lobato.myfitlife
       
-      groups:
-        - no group
-      
       vars:
-        BUNDLE_ID: "com.lobato.myfitlife"
         APP_STORE_ID: "6753171808"
-        XCODE_WORKSPACE: "App.xcworkspace"
-        XCODE_SCHEME: "App"
       
       node: 18.17.0
-      xcode: 15.0
+      xcode: 15.2
       cocoapods: default
     
     scripts:
@@ -40,23 +37,19 @@ workflows:
       
       - name: Set up code signing
         script: |
-          # Fetch signing files
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
+          xcode-project use-profiles
       
-      - name: Set build number
+      - name: Increment build number
         script: |
           cd ios/App
-          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_ID")
-          agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+          BUILD_NUMBER=$(($BUILD_NUMBER + 1))
+          agvtool new-version -all $BUILD_NUMBER
       
       - name: Build iOS IPA
         script: |
           xcode-project build-ipa \
             --workspace ios/App/App.xcworkspace \
-            --scheme App \
-            --config Release
+            --scheme App
     
     artifacts:
       - build/ios/ipa/*.ipa
@@ -74,10 +67,3 @@ workflows:
         auth: integration
         submit_to_testflight: true
         submit_to_app_store: false
-        
-      slack:
-        channel: '#builds'
-        notify_on_build_start: false
-        notify:
-          success: true
-          failure: true
