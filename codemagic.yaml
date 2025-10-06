@@ -40,32 +40,28 @@ workflows:
           cd ios/App
           pod install
 
-      - name: Build and Archive
+            - name: Build and Archive
         script: |
           cd ios/App
           
-          # Inicializa keychain temporário
           keychain initialize
-          
-          # Cria diretórios necessários
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           mkdir -p ~/Library/MobileDevice/Certificates
           
-          # Copia certificados e perfis para o ambiente
+          echo "📦 Copiando certificados e perfis..."
           cp "$CM_BUILD_DIR/myfitlife.p12" ~/Library/MobileDevice/Certificates/
           cp "$CM_BUILD_DIR/MyFitLife_App_Store.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/
           
-          # Importa o certificado .p12 para o keychain (sem senha)
+          echo "🔐 Importando certificado..."
           security import ~/Library/MobileDevice/Certificates/myfitlife.p12 -k ~/Library/Keychains/login.keychain-db -T /usr/bin/codesign
           
-          # Verifica se o certificado foi adicionado
-          echo "Certificados disponíveis:"
-          security find-identity -p codesigning -v
+          echo "✅ Listando certificados disponíveis:"
+          security find-identity -v -p codesigning
           
-          # Usa o perfil de provisionamento
+          keychain add-certificates
           xcode-project use-profiles
           
-          # Compila e arquiva
+          echo "🚀 Iniciando build e archive..."
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -73,29 +69,29 @@ workflows:
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
             clean archive
 
-
       - name: Export IPA
         script: |
           cd ios/App
           
-          # Obter UUID do provisioning profile
           PROFILE_PATH=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.mobileprovision" | head -1)
           PROFILE_UUID=$(grep -aA1 'UUID' "$PROFILE_PATH" | grep -o '[A-Z0-9-]\{36\}' | head -1)
+          CERT_NAME=$(security find-identity -v -p codesigning | grep "Apple Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
           
-          # Obter nome do certificado
-          CERT_NAME=$(security find-identity -v -p codesigning | grep "Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "🔎 Profile UUID: $PROFILE_UUID"
+          echo "🔎 Certificate found: $CERT_NAME"
           
-          echo "Profile UUID: $PROFILE_UUID"
-          echo "Certificate: $CERT_NAME"
+          if [ -z "$CERT_NAME" ]; then
+            echo "❌ Nenhum certificado de distribuição encontrado. Abortando exportação."
+            exit 1
+          fi
           
-          # Criar exportOptions.plist com as informações corretas
           cat > /tmp/exportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
               <key>method</key>
-              <string>app-store</string>
+              <string>app-store-connect</string>
               <key>teamID</key>
               <string>$DEVELOPMENT_TEAM</string>
               <key>provisioningProfiles</key>
@@ -103,6 +99,8 @@ workflows:
                   <key>$APP_BUNDLE_ID</key>
                   <string>$PROFILE_UUID</string>
               </dict>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
               <key>signingStyle</key>
               <string>manual</string>
               <key>uploadSymbols</key>
@@ -113,13 +111,14 @@ workflows:
           </plist>
           EOF
           
-          # Exportar IPA
           cd "$CM_BUILD_DIR"
+          echo "📦 Exportando IPA..."
           xcodebuild -exportArchive \
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
             -exportPath "$CM_BUILD_DIR" \
             -exportOptionsPlist /tmp/exportOptions.plist
           
-          echo "IPA criado:"
+          echo "✅ IPA criado:"
           ls -lh "$CM_BUILD_DIR"/*.ipa
+
           
