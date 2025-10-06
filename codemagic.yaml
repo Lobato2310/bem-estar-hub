@@ -12,6 +12,9 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.lobato.myfitlife
       
+      groups:
+        - no group
+      
       vars:
         BUNDLE_ID: "com.lobato.myfitlife"
         APP_STORE_ID: "6753171808"
@@ -37,7 +40,10 @@ workflows:
       
       - name: Set up code signing
         script: |
-          xcode-project use-profiles
+          # Fetch signing files
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
       
       - name: Set build number
         script: |
