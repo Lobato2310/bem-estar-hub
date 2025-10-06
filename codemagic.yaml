@@ -44,20 +44,35 @@ workflows:
         script: |
           cd ios/App
           
+          # Inicializa keychain temporário
           keychain initialize
+          
+          # Cria diretórios necessários
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           mkdir -p ~/Library/MobileDevice/Certificates
+          
+          # Copia certificados e perfis para o ambiente
           cp "$CM_BUILD_DIR/myfitlife.p12" ~/Library/MobileDevice/Certificates/
           cp "$CM_BUILD_DIR/MyFitLife_App_Store.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/
-          keychain add-certificates
+          
+          # Importa o certificado .p12 para o keychain (sem senha)
+          security import ~/Library/MobileDevice/Certificates/myfitlife.p12 -k ~/Library/Keychains/login.keychain-db -T /usr/bin/codesign
+          
+          # Verifica se o certificado foi adicionado
+          echo "Certificados disponíveis:"
+          security find-identity -p codesigning -v
+          
+          # Usa o perfil de provisionamento
           xcode-project use-profiles
           
+          # Compila e arquiva
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
             clean archive
+
 
       - name: Export IPA
         script: |
