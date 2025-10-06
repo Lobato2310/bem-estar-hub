@@ -1,124 +1,77 @@
 workflows:
-  ios-build:
-    name: Build iOS (App Store)
+  ios-release:
+    name: iOS Release - MyFitLife
     max_build_duration: 120
-    environment:
-      node: 20
-      cocoapods: default
-      xcode: latest
-      vars:
-        APP_BUNDLE_ID: com.lobato.myfitlife
-        APP_NAME: MyFitLife
-        DEVELOPMENT_TEAM: N7379U738N
-
+    instance_type: mac_mini_m1
+    
     integrations:
-      app_store_connect: MyFitLife
-
-    cache:
-      cache_paths:
-        - ~/.npm
-        - ~/Library/Caches/CocoaPods
-        - ios/Pods
-
+      app_store_connect: codemagic
+    
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.lobato.myfitlife
+      
+      vars:
+        BUNDLE_ID: "com.lobato.myfitlife"
+        APP_STORE_ID: "6753171808"
+        XCODE_WORKSPACE: "App.xcworkspace"
+        XCODE_SCHEME: "App"
+      
+      node: 18.17.0
+      xcode: 15.0
+      cocoapods: default
+    
     scripts:
-      - name: Install dependencies
+      - name: Install npm dependencies
         script: |
-          npm ci --legacy-peer-deps
-
-      - name: Build web (production)
+          npm ci
+      
+      - name: Build web assets
         script: |
-          export NODE_ENV=production
           npm run build
-
-      - name: Regenerate iOS project cleanly
+      
+      - name: Sync Capacitor with iOS
         script: |
-          rm -rf ios
-          npx cap add ios
-
-      - name: Install CocoaPods
+          npx cap sync ios
+      
+      - name: Set up code signing
         script: |
-          cd ios/App
-          pod install
-
-            - name: Build and Archive
-        script: |
-          cd ios/App
-          
-          keychain initialize
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          mkdir -p ~/Library/MobileDevice/Certificates
-          
-          echo "📦 Copiando certificados e perfis..."
-          cp "$CM_BUILD_DIR/myfitlife.p12" ~/Library/MobileDevice/Certificates/
-          cp "$CM_BUILD_DIR/MyFitLife_App_Store.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/
-          
-          echo "🔐 Importando certificado..."
-          security import ~/Library/MobileDevice/Certificates/myfitlife.p12 -k ~/Library/Keychains/login.keychain-db -T /usr/bin/codesign
-          
-          echo "✅ Listando certificados disponíveis:"
-          security find-identity -v -p codesigning
-          
-          keychain add-certificates
           xcode-project use-profiles
-          
-          echo "🚀 Iniciando build e archive..."
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -destination "generic/platform=iOS" \
-            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-            clean archive
-
-      - name: Export IPA
+      
+      - name: Set build number
         script: |
           cd ios/App
-          
-          PROFILE_PATH=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.mobileprovision" | head -1)
-          PROFILE_UUID=$(grep -aA1 'UUID' "$PROFILE_PATH" | grep -o '[A-Z0-9-]\{36\}' | head -1)
-          CERT_NAME=$(security find-identity -v -p codesigning | grep "Apple Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
-          
-          echo "🔎 Profile UUID: $PROFILE_UUID"
-          echo "🔎 Certificate found: $CERT_NAME"
-          
-          if [ -z "$CERT_NAME" ]; then
-            echo "❌ Nenhum certificado de distribuição encontrado. Abortando exportação."
-            exit 1
-          fi
-          
-          cat > /tmp/exportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store-connect</string>
-              <key>teamID</key>
-              <string>$DEVELOPMENT_TEAM</string>
-              <key>provisioningProfiles</key>
-              <dict>
-                  <key>$APP_BUNDLE_ID</key>
-                  <string>$PROFILE_UUID</string>
-              </dict>
-              <key>signingCertificate</key>
-              <string>Apple Distribution</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>uploadSymbols</key>
-              <true/>
-              <key>compileBitcode</key>
-              <false/>
-          </dict>
-          </plist>
-          EOF
-          
-          cd "$CM_BUILD_DIR"
-          echo "📦 Exportando IPA..."
-          xcodebuild -exportArchive \
-            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-            -exportPath "$CM_BUILD_DIR" \
-            -exportOptionsPlist /tmp/exportOptions.plist
-          
-          echo "✅ IPA criado:"
-          ls -lh "$CM_BUILD_DIR"/*.ipa
-
-          
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_ID")
+          agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+      
+      - name: Build iOS IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme App \
+            --config Release
+    
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    
+    publishing:
+      email:
+        recipients:
+          - lucaslobsoouza@gmail.com
+        notify:
+          success: true
+          failure: true
+      
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
+        
+      slack:
+        channel: '#builds'
+        notify_on_build_start: false
+        notify:
+          success: true
+          failure: true
