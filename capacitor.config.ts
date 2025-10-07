@@ -11,12 +11,12 @@ const config: CapacitorConfig = {
     server: {
       androidScheme: "https"
     }
-
   }),
+
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: "#ffffff",
+      backgroundColor: "#fcf7f7ff",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
