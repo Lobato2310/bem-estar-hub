@@ -18,7 +18,7 @@ workflows:
       vars:
         APP_STORE_ID: "6753171808"
       
-      node: 18.17.0
+      node: 20
       xcode: 15.2
       cocoapods: default
     
