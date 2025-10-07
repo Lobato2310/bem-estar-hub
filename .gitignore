@@ -12,6 +12,19 @@ dist
 dist-ssr
 *.local
 
+#credentials
+# iOS Certificates
+*.p12
+*.mobileprovision
+*.cer
+*.certSigningRequest
+*.key
+*.csr
+*.p8
+
+# Codemagic
+codemagic.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
