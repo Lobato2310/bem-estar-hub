@@ -9,7 +9,7 @@ workflows:
     
     environment:
       groups:
-        - no group
+        - No group
       
       ios_signing:
         distribution_type: app_store
