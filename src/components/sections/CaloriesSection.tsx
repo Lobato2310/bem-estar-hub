@@ -54,6 +54,30 @@ const CaloriesSection = () => {
   const [dailyGoal, setDailyGoal] = useState(2000);
   const [loading, setLoading] = useState(true);
 
+  // Carregar meta diária do plano nutricional
+  const loadDailyGoal = async () => {
+    if (!user) return;
+
+    try {
+      const { data: planData, error: planError } = await supabase
+        .from('nutrition_plans')
+        .select('daily_calories')
+        .eq('client_id', user.id)
+        .eq('status', 'active')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (planError) throw planError;
+
+      if (planData && planData.daily_calories) {
+        setDailyGoal(planData.daily_calories);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar meta diária:', error);
+      // Mantém o valor padrão de 2000 em caso de erro
+    }
+  };
 
   // Carregar refeições do dia atual
   const loadTodayMeals = async () => {
@@ -117,7 +141,31 @@ const CaloriesSection = () => {
   };
 
   useEffect(() => {
+    loadDailyGoal();
     loadTodayMeals();
+
+    // Setup realtime subscription para atualizar meta quando plano nutricional mudar
+    if (user) {
+      const channel = supabase
+        .channel('nutrition_plans_calories_sync')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'nutrition_plans',
+            filter: `client_id=eq.${user.id}`,
+          },
+          () => {
+            loadDailyGoal();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [user]);
 
   const handleAddMeal = async (meal: {
