@@ -192,7 +192,7 @@ const WorkoutSection = () => {
   };
 
   const handleCompleteWorkout = () => {
-    setActiveWorkoutPlan(null);
+    // Não limpa o activeWorkoutPlan ainda, mantém para mostrar o feedback
     setShowFeedbackDialog(true);
   };
 
@@ -203,6 +203,7 @@ const WorkoutSection = () => {
 
   const handleFeedbackClose = () => {
     setShowFeedbackDialog(false);
+    setActiveWorkoutPlan(null); // Limpa o treino ativo após fechar o feedback
     loadWorkoutData();
   };
 
@@ -214,15 +215,17 @@ const WorkoutSection = () => {
     );
   }
 
-  // Se há treino ativo, mostrar tela de execução
+  // Se há treino ativo, mostrar tela de execução ou feedback
   if (activeWorkoutPlan) {
     return (
       <div className="max-w-6xl mx-auto p-4 md:p-6">
-        <ActiveWorkoutExecution
-          workoutPlan={activeWorkoutPlan}
-          onComplete={handleCompleteWorkout}
-          onCancel={handleCancelWorkout}
-        />
+        {!showFeedbackDialog && (
+          <ActiveWorkoutExecution
+            workoutPlan={activeWorkoutPlan}
+            onComplete={handleCompleteWorkout}
+            onCancel={handleCancelWorkout}
+          />
+        )}
         
         <WorkoutFeedbackDialog
           isOpen={showFeedbackDialog}

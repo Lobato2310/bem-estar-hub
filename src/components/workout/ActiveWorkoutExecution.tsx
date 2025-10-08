@@ -12,7 +12,6 @@ import {
   Video
 } from "lucide-react";
 import WorkoutTimer from "./WorkoutTimer";
-import ExerciseLogDialog from "./ExerciseLogDialog";
 import ExerciseDetailsDialog from "./ExerciseDetailsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,8 +50,6 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set());
-  const [selectedExerciseIndex, setSelectedExerciseIndex] = useState<number | null>(null);
-  const [showLogDialog, setShowLogDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedExerciseForDetails, setSelectedExerciseForDetails] = useState<Exercise | null>(null);
 
@@ -74,47 +71,18 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
     setCurrentTime(seconds);
   };
 
-  const handleExerciseClick = (index: number) => {
-    setSelectedExerciseIndex(index);
-    setShowLogDialog(true);
-  };
-
-  const handleExerciseLog = async (data: {
-    sets: number;
-    reps: number;
-    weight: number;
-    effortPerception: number;
-    jointDiscomfort: string;
-    notes: string;
-  }) => {
-    if (!user || selectedExerciseIndex === null) return;
-
-    const exercise = workoutPlan.exercises[selectedExerciseIndex];
-
-    const { error } = await supabase
-      .from('exercise_logs')
-      .insert({
-        client_id: user.id,
-        workout_plan_id: workoutPlan.id,
-        exercise_name: exercise.name,
-        sets: data.sets,
-        reps: data.reps,
-        weight: data.weight,
-        effort_perception: data.effortPerception,
-        joint_discomfort: data.jointDiscomfort || null,
-        notes: data.notes || null
-      });
-
-    if (error) {
-      toast.error("Erro ao salvar exercício");
-      return;
-    }
-
-    // Mark exercise as completed
-    setCompletedExercises(prev => new Set(prev).add(selectedExerciseIndex));
-    toast.success(`${exercise.name} registrado!`);
-    setShowLogDialog(false);
-    setSelectedExerciseIndex(null);
+  const handleExerciseToggle = (index: number) => {
+    setCompletedExercises(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+        toast.info("Exercício desmarcado");
+      } else {
+        newSet.add(index);
+        toast.success("Exercício concluído!");
+      }
+      return newSet;
+    });
   };
 
   const handleShowDetails = (exercise: Exercise) => {
@@ -193,7 +161,7 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
                       )}
                     </div>
                     
-                    <div className="flex-1" onClick={() => handleExerciseClick(index)}>
+                    <div className="flex-1" onClick={() => handleExerciseToggle(index)}>
                       <h5 className="font-medium text-foreground">{exercise.name}</h5>
                       {exercise.description && (
                         <p className="text-sm text-muted-foreground mt-1">
@@ -251,28 +219,6 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
           </div>
         </ScrollArea>
       </Card>
-
-      {/* Exercise Log Dialog */}
-      {selectedExerciseIndex !== null && (
-        <ExerciseLogDialog
-          isOpen={showLogDialog}
-          onClose={() => {
-            setShowLogDialog(false);
-            setSelectedExerciseIndex(null);
-          }}
-          exerciseName={workoutPlan.exercises[selectedExerciseIndex].name}
-          exerciseData={{
-            ...workoutPlan.exercises[selectedExerciseIndex],
-            reps: typeof workoutPlan.exercises[selectedExerciseIndex].reps === 'string' 
-              ? parseInt(workoutPlan.exercises[selectedExerciseIndex].reps.split('-')[0]) || 8
-              : workoutPlan.exercises[selectedExerciseIndex].reps,
-            rest_time: typeof workoutPlan.exercises[selectedExerciseIndex].rest_time === 'string'
-              ? parseInt(workoutPlan.exercises[selectedExerciseIndex].rest_time.split('-')[0]) || 60
-              : workoutPlan.exercises[selectedExerciseIndex].rest_time
-          }}
-          onSubmit={handleExerciseLog}
-        />
-      )}
 
       {/* Exercise Details Dialog */}
       <ExerciseDetailsDialog
