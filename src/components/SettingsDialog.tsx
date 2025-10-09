@@ -139,21 +139,18 @@ export const SettingsDialog = () => {
             </CardContent>
           </Card>
 
-          {/* Pagamentos */}
+          {/* Visite nosso site */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">💳 Pagamentos</CardTitle>
-              <CardDescription className="text-xs">
-                Este app não processa pagamentos internamente
-              </CardDescription>
+              <CardTitle className="text-base">🌐 Visite nosso site</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => openExternalLink('https://myfitlife.lovable.app/checkout')}
+                onClick={() => openExternalLink('https://myfitlife.social.br')}
               >
-                Acessar Área de Pagamento
+                Acessar Site
                 <ExternalLink className="h-3 w-3 ml-auto" />
               </Button>
             </CardContent>

@@ -43,6 +43,21 @@ export const useSubscription = () => {
         return;
       }
 
+      // Verificar se o cliente tem acesso liberado
+      const { data: clientAccess } = await supabase
+        .from('profiles')
+        .select('access_granted')
+        .eq('user_id', user.id)
+        .single();
+
+      // Se não tiver acesso liberado, cliente não está subscrito
+      if (!clientAccess?.access_granted) {
+        console.log("Client access not granted");
+        setIsSubscribed(false);
+        setLoading(false);
+        return;
+      }
+
       console.log("User is client, checking subscription...");
 
       const { data, error } = await supabase

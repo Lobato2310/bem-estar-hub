@@ -65,7 +65,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
   ];
 
   const rightTabs = [
-    { id: "subscription", label: "Assinatura", icon: CreditCard },
+    { id: "subscription", label: "Minha conta", icon: CreditCard },
   ];
 
   return (

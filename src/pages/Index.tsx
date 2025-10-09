@@ -40,8 +40,14 @@ const Index = () => {
         if (profile) {
           setUserProfile(profile);
 
-          // Se é cliente, verificar assinatura e anamnese
+          // Se é cliente, verificar acesso, assinatura e anamnese
           if (profile.user_type === "client" && !subscriptionLoading) {
+            // Verificar se o acesso foi liberado
+            if (!profile.access_granted) {
+              navigate("/access-pending");
+              return;
+            }
+
             // Verificar anamnese
             const { data: anamnesis } = await supabase
               .from("client_anamnesis")

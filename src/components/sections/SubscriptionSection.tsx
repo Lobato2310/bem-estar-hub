@@ -44,10 +44,7 @@ const SubscriptionSection = () => {
     <div className="container mx-auto px-4 py-6 space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold">Minha Assinatura</h1>
-        <p className="text-muted-foreground">
-          Gerencie seu plano de acompanhamento profissional
-        </p>
+        <h1 className="text-2xl font-bold">Minha Conta</h1>
       </div>
 
       {/* Status Card */}
@@ -61,19 +58,13 @@ const SubscriptionSection = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {subscription && (
+          {subscription && isSubscribed && (
             <div className="grid grid-cols-1 gap-4">
-              {subscription.plano && (
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <CreditCard className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Plano Atual</p>
-                    <p className="text-sm text-muted-foreground capitalize">
-                      {subscription.plano}
-                    </p>
-                  </div>
-                </div>
-              )}
+              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                <Badge variant="default" className="text-sm">
+                  Conta Ativa
+                </Badge>
+              </div>
 
               {subscription.data_expiracao && (
                 <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
@@ -82,18 +73,6 @@ const SubscriptionSection = () => {
                     <p className="font-medium">Data de Expiração</p>
                     <p className="text-sm text-muted-foreground">
                       {new Date(subscription.data_expiracao).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {subscription.valor_pago && (
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <DollarSign className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Último Pagamento</p>
-                    <p className="text-sm text-muted-foreground">
-                      R$ {subscription.valor_pago.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -145,13 +124,16 @@ const SubscriptionSection = () => {
       {/* Info Card */}
       <Card className="border-dashed">
         <CardContent className="pt-6">
-          <div className="text-center space-y-2">
-            <h3 className="font-medium">Como funciona?</h3>
-            <p className="text-sm text-muted-foreground">
-              Contrate profissionais qualificados (nutricionista, personal trainer e psicólogo) para acompanhamento online. 
-              Clique em "Contratar Plano Profissional" para ser redirecionado ao nosso site seguro de pagamento. 
-              O aplicativo é uma ferramenta de apoio gratuita, inclusa sem custo adicional, para você acompanhar os serviços contratados.
-            </p>
+          <div className="text-center space-y-3">
+            <h3 className="font-medium">Acesse nosso site</h3>
+            <Button 
+              onClick={() => window.open('https://myfitlife.social.br', '_blank')}
+              variant="outline"
+              className="w-full"
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Visitar MyFitLife
+            </Button>
           </div>
         </CardContent>
       </Card>
