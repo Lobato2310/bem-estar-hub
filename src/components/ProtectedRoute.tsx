@@ -41,7 +41,13 @@ const ProtectedRoute = ({
         if (profile) {
           setUserProfile(profile);
 
-          // Se é cliente, verificar anamnese
+          // Se é cliente e não tem acesso liberado, redirecionar para página de acesso pendente
+          if (profile.user_type === "client" && !profile.access_granted) {
+            setProfileLoading(false);
+            return; // Não carregar mais dados, deixar o redirecionamento acontecer
+          }
+
+          // Se é cliente com acesso liberado, verificar anamnese
           if (profile.user_type === "client") {
             const { data: anamnesis } = await supabase
               .from("client_anamnesis")
@@ -97,7 +103,12 @@ const ProtectedRoute = ({
     return <Navigate to="/auth" replace />;
   }
 
-  // Verificar assinatura (apenas para clientes)
+  // Verificar acesso liberado (apenas para clientes)
+  if (userProfile.user_type === "client" && !userProfile.access_granted) {
+    return <Navigate to="/access-pending" replace />;
+  }
+
+  // Verificar assinatura (apenas para clientes com acesso liberado)
   if (requireSubscription && userProfile.user_type === "client" && !isSubscribed) {
     // Usar window.location para garantir que a tab seja definida
     window.location.href = "/?tab=subscription";
