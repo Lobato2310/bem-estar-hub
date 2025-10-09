@@ -47,65 +47,36 @@ const SubscriptionSection = () => {
         <h1 className="text-2xl font-bold">Minha Conta</h1>
       </div>
 
-      {/* Status Card */}
+      {/* Status de Acesso Card */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between text-lg">
-            Status do Plano Profissional
-            <Badge variant={isSubscribed ? "default" : "secondary"}>
-              {isSubscribed ? "ATIVA" : "INATIVA"}
-            </Badge>
-          </CardTitle>
+          <CardTitle className="text-lg">Status de Acesso</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {subscription && isSubscribed && (
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <Badge variant="default" className="text-sm">
-                  Conta Ativa
-                </Badge>
-              </div>
-
-              {subscription.data_expiracao && (
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Data de Expiração</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(subscription.data_expiracao).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {!isSubscribed && (
-            <div className="text-center p-6 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800">
-              <div className="space-y-3">
-                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/50 rounded-full flex items-center justify-center mx-auto">
-                  <CreditCard className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-orange-900 dark:text-orange-100">
-                    Plano Profissional Necessário
-                  </h3>
-                  <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
-                    Contrate um plano de acompanhamento profissional para usar esta ferramenta de apoio
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+        <CardContent>
+          <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+            <span className="text-2xl">🟢</span>
+            <span className="font-medium">Acesso liberado</span>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Vinculação de conta Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Vinculação de conta</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <p className="text-foreground">
+              Conectado com seu perfil MyFitLife.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              (Para gerenciar seu acesso, visite o site oficial.)
+            </p>
+          </div>
 
-      {/* Info Card */}
-      <Card className="border-dashed">
-        <CardContent className="pt-6">
-          <div className="text-center space-y-3">
-            <h3 className="font-medium">Acesse nosso site</h3>
+          <div className="pt-2">
+            <h3 className="font-medium mb-3">🔗 Acesse nosso site</h3>
             <Button 
               onClick={() => window.open('https://myfitlife.social.br', '_blank')}
               variant="outline"
