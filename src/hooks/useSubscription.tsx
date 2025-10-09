@@ -43,6 +43,8 @@ export const useSubscription = () => {
         return;
       }
 
+      // Para clientes, verificar a tabela assinaturas
+
       console.log("User is client, checking subscription...");
 
       const { data, error } = await supabase

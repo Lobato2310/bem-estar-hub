@@ -40,14 +40,8 @@ const Index = () => {
         if (profile) {
           setUserProfile(profile);
 
-          // Se é cliente, verificar acesso, assinatura e anamnese
+          // Se é cliente, verificar assinatura e anamnese
           if (profile.user_type === "client" && !subscriptionLoading) {
-            // Verificar se o acesso foi liberado
-            if (!profile.access_granted) {
-              navigate("/access-pending");
-              return;
-            }
-
             // Verificar anamnese
             const { data: anamnesis } = await supabase
               .from("client_anamnesis")
@@ -58,10 +52,9 @@ const Index = () => {
             const isAnamnesisComplete = anamnesis?.is_completed || false;
             setAnamnesisComplete(isAnamnesisComplete);
 
-            // Lógica de redirecionamento para clientes
-            if (!isSubscribed && activeTab !== "subscription") {
-              setActiveTab("subscription");
-            } else if (isSubscribed && !isAnamnesisComplete) {
+            // Se não tem assinatura ativa, redirecionar para acesso pendente já é feito pelo ProtectedRoute
+            // Se tem assinatura mas não completou anamnese, redirecionar
+            if (isSubscribed && !isAnamnesisComplete) {
               navigate("/anamnesis");
             }
           } else if (profile.user_type === "professional") {
@@ -74,7 +67,7 @@ const Index = () => {
     if (!subscriptionLoading) {
       fetchUserData();
     }
-  }, [user, isSubscribed, subscriptionLoading, navigate, activeTab]);
+  }, [user, isSubscribed, subscriptionLoading, navigate]);
 
   const renderSection = () => {
     // Se o usuário for profissional, mostrar dashboard profissional na home
