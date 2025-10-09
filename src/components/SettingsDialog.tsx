@@ -82,7 +82,7 @@ export const SettingsDialog = () => {
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => openExternalLink('https://myfitlife.lovable.app/privacy')}
+              onClick={() => openExternalLink('https://myfitlife.social.br/privacidade')}
             >
               <Shield className="h-4 w-4 mr-2" />
               Política de Privacidade
@@ -92,10 +92,20 @@ export const SettingsDialog = () => {
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => openExternalLink('https://myfitlife.lovable.app/terms')}
+              onClick={() => openExternalLink('https://myfitlife.social.br/termos')}
             >
               <FileText className="h-4 w-4 mr-2" />
               Termos de Uso
+              <ExternalLink className="h-3 w-3 ml-auto" />
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => openExternalLink('https://myfitlife.social.br/exclusao-conta')}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Exclusão de Conta
               <ExternalLink className="h-3 w-3 ml-auto" />
             </Button>
           </div>
