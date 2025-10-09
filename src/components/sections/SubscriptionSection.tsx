@@ -100,26 +100,6 @@ const SubscriptionSection = () => {
         </CardContent>
       </Card>
 
-      {/* Actions */}
-      <div className="space-y-3">
-        <Button 
-          onClick={handleCheckout}
-          className="w-full h-12 text-lg font-medium"
-          variant={isSubscribed ? "outline" : "default"}
-        >
-          <ExternalLink className="mr-2 h-5 w-5" />
-          {isSubscribed ? "Gerenciar Plano Profissional" : "Contratar Plano Profissional"}
-        </Button>
-
-        <Button 
-          onClick={handleRefresh}
-          variant="ghost" 
-          className="w-full h-10"
-        >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Atualizar Status
-        </Button>
-      </div>
 
       {/* Info Card */}
       <Card className="border-dashed">
