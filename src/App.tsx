@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Anamnesis from "./pages/Anamnesis";
+import AccessPending from "./pages/AccessPending";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { initializeDeepLinks } from "./capacitor";
@@ -33,14 +34,6 @@ const App = () => {
           <BrowserRouter>
           <Routes>
             <Route
-              path="/"
-              element={
-                <ProtectedRoute requireAuth>
-                  <Index />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/auth"
               element={
                 <ProtectedRoute requireAuth={false}>
@@ -49,10 +42,26 @@ const App = () => {
               }
             />
             <Route
+              path="/access-pending"
+              element={
+                <ProtectedRoute requireAuth>
+                  <AccessPending />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/anamnesis"
               element={
                 <ProtectedRoute requireAuth requireSubscription>
                   <Anamnesis />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute requireAuth requireSubscription requireAnamnesis>
+                  <Index />
                 </ProtectedRoute>
               }
             />
