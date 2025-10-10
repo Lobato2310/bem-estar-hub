@@ -13,6 +13,7 @@ import {
   ChevronDown
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { ClientUpdatesDialog } from "@/components/ClientUpdatesDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
@@ -31,6 +32,7 @@ interface NavigationProps {
 
 const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
   const { signOut, user } = useAuth();
+  const { isSubscribed } = useSubscription();
   const [userProfile, setUserProfile] = useState<any>(null);
 
   // Carregar perfil do usuário para verificar se é cliente
@@ -55,7 +57,8 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     loadUserProfile();
   }, [user]);
   
-  const servicesTabs = [
+  // Definir tabs disponíveis baseado na assinatura
+  const allServicesTabs = [
     { id: "home", label: "Início", icon: Heart },
     { id: "personal", label: "Personal", icon: Dumbbell },
     { id: "nutrition", label: "Nutrição", icon: Apple },
@@ -63,6 +66,11 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     { id: "calories", label: "Calorias", icon: Calculator },
     { id: "psychology", label: "Psicologia", icon: Brain },
   ];
+
+  // Se for cliente sem assinatura, mostrar apenas Calorias
+  const servicesTabs = userProfile?.user_type === "client" && !isSubscribed
+    ? allServicesTabs.filter(tab => tab.id === "calories")
+    : allServicesTabs;
 
   const rightTabs = [
     { id: "subscription", label: "Minha conta", icon: CreditCard },
@@ -131,8 +139,8 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
               );
             })}
             
-            {/* Atualizações apenas para clientes */}
-            {userProfile?.user_type === 'client' && (
+            {/* Atualizações apenas para clientes com assinatura ativa */}
+            {userProfile?.user_type === 'client' && isSubscribed && (
               <ClientUpdatesDialog />
             )}
             
@@ -196,7 +204,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
                 <CreditCard className="h-5 w-5" />
               </button>
               
-              {userProfile?.user_type === 'client' && (
+              {userProfile?.user_type === 'client' && isSubscribed && (
                 <ClientUpdatesDialog />
               )}
               

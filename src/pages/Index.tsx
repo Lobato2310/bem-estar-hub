@@ -40,26 +40,30 @@ const Index = () => {
         if (profile) {
           setUserProfile(profile);
 
-          // Se é cliente, verificar assinatura e anamnese
-          if (profile.user_type === "client" && !subscriptionLoading) {
-            // Verificar anamnese
-            const { data: anamnesis } = await supabase
-              .from("client_anamnesis")
-              .select("is_completed")
-              .eq("client_id", user.id)
-              .maybeSingle();
-            
-            const isAnamnesisComplete = anamnesis?.is_completed || false;
-            setAnamnesisComplete(isAnamnesisComplete);
+            // Se é cliente, verificar anamnese apenas se tiver assinatura ativa
+            if (profile.user_type === "client" && !subscriptionLoading) {
+              if (isSubscribed) {
+                // Verificar anamnese apenas para clientes com assinatura
+                const { data: anamnesis } = await supabase
+                  .from("client_anamnesis")
+                  .select("is_completed")
+                  .eq("client_id", user.id)
+                  .maybeSingle();
+                
+                const isAnamnesisComplete = anamnesis?.is_completed || false;
+                setAnamnesisComplete(isAnamnesisComplete);
 
-            // Se não tem assinatura ativa, redirecionar para acesso pendente já é feito pelo ProtectedRoute
-            // Se tem assinatura mas não completou anamnese, redirecionar
-            if (isSubscribed && !isAnamnesisComplete) {
-              navigate("/anamnesis");
+                // Se tem assinatura mas não completou anamnese, redirecionar
+                if (!isAnamnesisComplete) {
+                  navigate("/anamnesis");
+                }
+              } else {
+                // Sem assinatura, não precisa de anamnese
+                setAnamnesisComplete(true);
+              }
+            } else if (profile.user_type === "professional") {
+              setAnamnesisComplete(true);
             }
-          } else if (profile.user_type === "professional") {
-            setAnamnesisComplete(true);
-          }
         }
       }
     };
@@ -70,6 +74,19 @@ const Index = () => {
   }, [user, isSubscribed, subscriptionLoading, navigate]);
 
   const renderSection = () => {
+    // Se for cliente sem assinatura, só permite Calorias e Minha Conta
+    if (userProfile?.user_type === "client" && !isSubscribed) {
+      if (activeTab === "calories") {
+        return <CaloriesSection />;
+      }
+      if (activeTab === "subscription") {
+        return <SubscriptionSection />;
+      }
+      // Redirecionar para calorias se tentar acessar outra página
+      setActiveTab("calories");
+      return <CaloriesSection />;
+    }
+
     // Se o usuário for profissional, mostrar dashboard profissional na home
     if (activeTab === "home" && userProfile?.user_type === "professional") {
       return <ProfessionalDashboard />;

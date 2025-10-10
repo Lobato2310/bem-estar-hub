@@ -27,40 +27,40 @@ const PremiumWrapper = ({ children, feature, description }: PremiumWrapperProps)
 
   if (!isSubscribed) {
     return (
-      <Card className="border-amber-200 dark:border-amber-800">
+      <Card className="border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-amber-900 dark:text-amber-100">
+          <CardTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5" />
-            Funcionalidade Premium
+            Funcionalidade Bloqueada
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-center space-y-4 p-6 bg-amber-50 dark:bg-amber-950/20 rounded-lg">
-            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/50 rounded-full flex items-center justify-center mx-auto">
-              <Crown className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+          <div className="text-center space-y-4 p-6 bg-muted/50 rounded-lg">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+              <Lock className="h-8 w-8 text-muted-foreground" />
             </div>
             
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100">
+              <h3 className="text-lg font-semibold">
                 {feature}
               </h3>
-              <p className="text-sm text-amber-700 dark:text-amber-300">
-                {description || `Esta funcionalidade requer uma assinatura premium ativa.`}
+              <p className="text-sm text-muted-foreground">
+                {description || `Esta funcionalidade está disponível para usuários com acesso completo.`}
               </p>
             </div>
 
             <Button 
               onClick={openExternalCheckout}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              variant="outline"
             >
               <ExternalLink className="mr-2 h-4 w-4" />
-              Ativar Premium
+              Acessar site
             </Button>
           </div>
 
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
-              Acesse todas as funcionalidades avançadas com uma assinatura premium
+              Visite nosso site para mais informações
             </p>
           </div>
         </CardContent>

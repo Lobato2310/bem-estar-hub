@@ -98,15 +98,9 @@ const ProtectedRoute = ({
     return <Navigate to="/auth" replace />;
   }
 
-  // Verificar assinatura ativa (apenas para clientes)
-  // Se não tem assinatura ativa, redirecionar para página de acesso pendente
-  // Mas não redirecionar se já estiver na página de acesso pendente (evitar loop)
-  if (userProfile.user_type === "client" && !isSubscribed && location.pathname !== "/access-pending") {
-    return <Navigate to="/access-pending" replace />;
-  }
-
   // Verificar anamnese (apenas para clientes com assinatura ativa)
-  if (requireAnamnesis && userProfile.user_type === "client" && !anamnesisComplete) {
+  // Clientes sem assinatura podem acessar o app (apenas contador de calorias)
+  if (requireAnamnesis && userProfile.user_type === "client" && isSubscribed && !anamnesisComplete) {
     return <Navigate to="/anamnesis" replace />;
   }
 
