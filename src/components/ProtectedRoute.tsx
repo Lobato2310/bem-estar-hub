@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ const ProtectedRoute = ({
   requireSubscription = false, 
   requireAnamnesis = false 
 }: ProtectedRouteProps) => {
+  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const { isSubscribed, loading: subscriptionLoading } = useSubscription();
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -99,7 +100,8 @@ const ProtectedRoute = ({
 
   // Verificar assinatura ativa (apenas para clientes)
   // Se não tem assinatura ativa, redirecionar para página de acesso pendente
-  if (userProfile.user_type === "client" && !isSubscribed) {
+  // Mas não redirecionar se já estiver na página de acesso pendente (evitar loop)
+  if (userProfile.user_type === "client" && !isSubscribed && location.pathname !== "/access-pending") {
     return <Navigate to="/access-pending" replace />;
   }
 
