@@ -8,11 +8,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Settings, ExternalLink, Shield, FileText, Info, Moon, Sun } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Settings, ExternalLink, Shield, FileText, Moon, Sun } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useTheme } from "next-themes";
-import { Badge } from "@/components/ui/badge";
 
 export const SettingsDialog = () => {
   const [open, setOpen] = useState(false);
@@ -110,51 +109,6 @@ export const SettingsDialog = () => {
             </Button>
           </div>
 
-          <Separator />
-
-          {/* Informações do App */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Info className="h-4 w-4" />
-                Sobre o MyFitLife
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Versão</span>
-                <Badge variant="secondary">1.0.0</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Classificação</span>
-                <Badge variant="outline">12+ anos</Badge>
-              </div>
-              <div className="text-xs text-muted-foreground mt-3 p-3 bg-muted/50 rounded-lg">
-                <p className="font-medium mb-1">⚠️ Importante para menores de idade:</p>
-                <p>
-                  Se você tem menos de 18 anos, certifique-se de ter autorização 
-                  dos seus pais ou responsáveis antes de usar este aplicativo.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Visite nosso site */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">🌐 Visite nosso site</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => openExternalLink('https://myfitlife.social.br')}
-              >
-                Acessar Site
-                <ExternalLink className="h-3 w-3 ml-auto" />
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </DialogContent>
     </Dialog>
