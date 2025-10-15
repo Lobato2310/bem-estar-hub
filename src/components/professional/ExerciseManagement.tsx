@@ -74,9 +74,14 @@ const ExerciseManagement = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       
+      // Upload video without any compression or processing
       const { error: uploadError } = await supabase.storage
         .from('exercise-videos')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type
+        });
 
       if (uploadError) throw uploadError;
 
@@ -461,7 +466,8 @@ const ExerciseManagement = () => {
                   <video
                     src={formData.video_url}
                     controls
-                    className="w-full h-32 rounded-lg object-cover"
+                    className="w-full h-32 rounded-lg object-contain"
+                    preload="metadata"
                   />
                 </div>
               ) : (
