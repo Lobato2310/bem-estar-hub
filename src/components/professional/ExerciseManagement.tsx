@@ -466,8 +466,12 @@ const ExerciseManagement = () => {
                   <video
                     src={formData.video_url}
                     controls
-                    className="w-full h-32 rounded-lg object-contain"
+                    playsInline
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    disablePictureInPicture
+                    className="w-full max-h-80 rounded-lg bg-black"
                     preload="metadata"
+                    style={{ objectFit: 'contain' }}
                   />
                 </div>
               ) : (

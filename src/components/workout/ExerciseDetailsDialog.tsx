@@ -41,12 +41,16 @@ const ExerciseDetailsDialog = ({ isOpen, onClose, exercise }: ExerciseDetailsDia
                   <Play className="h-4 w-4 text-primary" />
                   <span>Vídeo Demonstrativo</span>
                 </h3>
-                <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                  <iframe
+                <div className="bg-black rounded-lg overflow-hidden">
+                  <video
                     src={exercise.video_url}
-                    className="w-full h-full"
-                    allowFullScreen
-                    title={`Vídeo demonstrativo do exercício ${exercise.name}`}
+                    controls
+                    playsInline
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    disablePictureInPicture
+                    className="w-full max-h-96"
+                    preload="metadata"
+                    style={{ objectFit: 'contain' }}
                   />
                 </div>
               </div>
