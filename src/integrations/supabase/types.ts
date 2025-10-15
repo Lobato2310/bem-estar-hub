@@ -573,7 +573,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          access_granted: boolean
           created_at: string
           display_name: string | null
           email: string | null
@@ -583,7 +582,6 @@ export type Database = {
           user_type: string | null
         }
         Insert: {
-          access_granted?: boolean
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -593,7 +591,6 @@ export type Database = {
           user_type?: string | null
         }
         Update: {
-          access_granted?: boolean
           created_at?: string
           display_name?: string | null
           email?: string | null
