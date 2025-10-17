@@ -84,11 +84,15 @@ const ProfessionalDashboard = () => {
     
     setLoading(true);
     try {
-      // Carregar clientes (perfis com user_type = 'client')
+      // Carregar clientes com assinatura ativa
       const { data: clientsData, error: clientsError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('user_type', 'client');
+        .select(`
+          *,
+          assinaturas!inner(assinatura_ativa)
+        `)
+        .eq('user_type', 'client')
+        .eq('assinaturas.assinatura_ativa', true);
 
       if (clientsError) throw clientsError;
       setClients(clientsData || []);
