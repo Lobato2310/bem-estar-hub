@@ -33,10 +33,29 @@ const ClientSelector = ({ onClientSelect, selectedClientId }: ClientSelectorProp
   const fetchClients = async () => {
     setLoading(true);
     try {
+      // Buscar apenas IDs de usuários com assinatura ativa
+      const { data: activeSubscriptions, error: subsError } = await supabase
+        .from('assinaturas')
+        .select('id_usuario')
+        .eq('assinatura_ativa', true);
+
+      if (subsError) throw subsError;
+
+      const activeUserIds = activeSubscriptions?.map(sub => sub.id_usuario) || [];
+
+      // Se não houver clientes ativos, retornar lista vazia
+      if (activeUserIds.length === 0) {
+        setClients([]);
+        setLoading(false);
+        return;
+      }
+
+      // Buscar perfis apenas dos clientes com assinatura ativa
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_type', 'client')
+        .in('user_id', activeUserIds)
         .order('display_name');
 
       if (error) throw error;
