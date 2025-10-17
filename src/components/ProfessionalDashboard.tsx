@@ -36,6 +36,7 @@ interface Client {
 
 interface ClientStats {
   totalClients: number;
+  activeClients: number;
 }
 
 const ProfessionalDashboard = () => {
@@ -45,7 +46,8 @@ const ProfessionalDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [clients, setClients] = useState<Client[]>([]);
   const [stats, setStats] = useState<ClientStats>({
-    totalClients: 0
+    totalClients: 0,
+    activeClients: 0
   });
   const [loading, setLoading] = useState(true);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -84,24 +86,36 @@ const ProfessionalDashboard = () => {
     
     setLoading(true);
     try {
-      // Carregar clientes com assinatura ativa
+      // Carregar total de clientes (todos da tabela assinaturas)
+      const { data: allSubscriptions, error: subsError } = await supabase
+        .from('assinaturas')
+        .select('id_usuario');
+
+      if (subsError) throw subsError;
+
+      // Carregar clientes com assinatura ativa para a lista
+      const { data: activeSubscriptions, error: activeError } = await supabase
+        .from('assinaturas')
+        .select('id_usuario')
+        .eq('assinatura_ativa', true);
+
+      if (activeError) throw activeError;
+
+      const activeUserIds = activeSubscriptions?.map(sub => sub.id_usuario) || [];
+
+      // Carregar perfis apenas dos clientes ativos
       const { data: clientsData, error: clientsError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          assinaturas!inner(assinatura_ativa)
-        `)
+        .select('*')
         .eq('user_type', 'client')
-        .eq('assinaturas.assinatura_ativa', true);
+        .in('user_id', activeUserIds);
 
       if (clientsError) throw clientsError;
       setClients(clientsData || []);
 
-      // Calcular estatísticas básicas
-      const totalClients = clientsData?.length || 0;
-
       setStats({
-        totalClients
+        totalClients: allSubscriptions?.length || 0,
+        activeClients: activeSubscriptions?.length || 0
       });
 
     } catch (error) {
