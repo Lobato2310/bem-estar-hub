@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -178,6 +178,54 @@ const WorkoutPlanDetailEditor = ({ planId }: WorkoutPlanDetailEditorProps) => {
     }
   };
 
+  const moveExerciseUp = async (exerciseIndex: number) => {
+    if (!plan || exerciseIndex === 0) return;
+
+    try {
+      const currentExercises = Array.isArray(plan.exercises) ? [...plan.exercises] : [];
+      [currentExercises[exerciseIndex - 1], currentExercises[exerciseIndex]] = 
+        [currentExercises[exerciseIndex], currentExercises[exerciseIndex - 1]];
+
+      const { error } = await supabase
+        .from("workout_plans")
+        .update({ exercises: currentExercises })
+        .eq("id", planId);
+
+      if (error) throw error;
+
+      toast.success("Ordem alterada!");
+      loadPlan();
+    } catch (error) {
+      console.error("Erro ao mover exercício:", error);
+      toast.error("Erro ao reordenar exercício");
+    }
+  };
+
+  const moveExerciseDown = async (exerciseIndex: number) => {
+    if (!plan) return;
+    
+    const currentExercises = Array.isArray(plan.exercises) ? [...plan.exercises] : [];
+    if (exerciseIndex === currentExercises.length - 1) return;
+
+    try {
+      [currentExercises[exerciseIndex], currentExercises[exerciseIndex + 1]] = 
+        [currentExercises[exerciseIndex + 1], currentExercises[exerciseIndex]];
+
+      const { error } = await supabase
+        .from("workout_plans")
+        .update({ exercises: currentExercises })
+        .eq("id", planId);
+
+      if (error) throw error;
+
+      toast.success("Ordem alterada!");
+      loadPlan();
+    } catch (error) {
+      console.error("Erro ao mover exercício:", error);
+      toast.error("Erro ao reordenar exercício");
+    }
+  };
+
   useEffect(() => {
     loadPlan();
     loadExercises();
@@ -324,13 +372,31 @@ const WorkoutPlanDetailEditor = ({ planId }: WorkoutPlanDetailEditorProps) => {
                       </p>
                     )}
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => removeExercise(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => moveExerciseUp(index)}
+                      disabled={index === 0}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => moveExerciseDown(index)}
+                      disabled={index === planExercises.length - 1}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeExercise(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
