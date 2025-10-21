@@ -51,7 +51,10 @@ const WorkoutSection = () => {
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
   const [scheduledToday, setScheduledToday] = useState<WorkoutSchedule[]>([]);
   const [workoutStats, setWorkoutStats] = useState<WorkoutStats>({ total_workouts: 0, total_time_minutes: 0 });
-  const [activeWorkoutPlan, setActiveWorkoutPlan] = useState<WorkoutPlan | null>(null);
+  const [activeWorkoutPlan, setActiveWorkoutPlan] = useState<WorkoutPlan | null>(() => {
+    const saved = localStorage.getItem('active_workout_plan');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [currentWorkoutTime, setCurrentWorkoutTime] = useState(0);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -188,6 +191,7 @@ const WorkoutSection = () => {
 
   const handleStartWorkout = (plan: WorkoutPlan) => {
     setActiveWorkoutPlan(plan);
+    localStorage.setItem('active_workout_plan', JSON.stringify(plan));
     toast.success('Treino iniciado! Boa sorte!');
   };
 
@@ -198,12 +202,20 @@ const WorkoutSection = () => {
 
   const handleCancelWorkout = () => {
     setActiveWorkoutPlan(null);
+    localStorage.removeItem('active_workout_plan');
+    localStorage.removeItem('workout_timer_active');
+    localStorage.removeItem('workout_timer_seconds');
+    localStorage.removeItem('workout_completed_exercises');
     toast.info('Treino cancelado');
   };
 
   const handleFeedbackClose = () => {
     setShowFeedbackDialog(false);
-    setActiveWorkoutPlan(null); // Limpa o treino ativo após fechar o feedback
+    setActiveWorkoutPlan(null);
+    localStorage.removeItem('active_workout_plan');
+    localStorage.removeItem('workout_timer_active');
+    localStorage.removeItem('workout_timer_seconds');
+    localStorage.removeItem('workout_completed_exercises');
     loadWorkoutData();
   };
 

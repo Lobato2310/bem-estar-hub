@@ -47,11 +47,26 @@ interface ActiveWorkoutExecutionProps {
 
 const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWorkoutExecutionProps) => {
   const { user } = useAuth();
-  const [isTimerActive, setIsTimerActive] = useState(false);
+  const [isTimerActive, setIsTimerActive] = useState(() => {
+    const saved = localStorage.getItem('workout_timer_active');
+    return saved === 'true';
+  });
   const [currentTime, setCurrentTime] = useState(0);
-  const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set());
+  const [completedExercises, setCompletedExercises] = useState<Set<number>>(() => {
+    const saved = localStorage.getItem('workout_completed_exercises');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedExerciseForDetails, setSelectedExerciseForDetails] = useState<Exercise | null>(null);
+
+  // Salvar estado ao mudar
+  useEffect(() => {
+    localStorage.setItem('workout_timer_active', isTimerActive.toString());
+  }, [isTimerActive]);
+
+  useEffect(() => {
+    localStorage.setItem('workout_completed_exercises', JSON.stringify(Array.from(completedExercises)));
+  }, [completedExercises]);
 
   const handleStartTimer = () => {
     setIsTimerActive(true);
@@ -63,6 +78,11 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
 
   const handleStopTimer = () => {
     setIsTimerActive(false);
+    // Limpar estado persistido
+    localStorage.removeItem('workout_timer_active');
+    localStorage.removeItem('workout_timer_seconds');
+    localStorage.removeItem('workout_completed_exercises');
+    localStorage.removeItem('active_workout_plan');
     // Save workout completion
     onComplete();
   };
@@ -93,9 +113,9 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
   const progressPercentage = (completedExercises.size / workoutPlan.exercises.length) * 100;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-6 px-2">
       {/* Header */}
-      <Card className="p-4 bg-gradient-to-r from-primary/10 to-primary/20">
+      <Card className="p-3 md:p-4 bg-gradient-to-r from-primary/10 to-primary/20">
         <div className="flex items-center justify-between mb-2">
           <div>
             <h3 className="text-lg font-semibold text-foreground">
@@ -134,13 +154,13 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
       />
 
       {/* Exercises List */}
-      <Card className="p-4">
-        <h4 className="font-semibold mb-3 flex items-center gap-2">
+      <Card className="p-3 md:p-4">
+        <h4 className="font-semibold mb-3 flex items-center gap-2 text-sm md:text-base">
           <TimerIcon className="h-5 w-5 text-primary" />
           Exercícios do Treino
         </h4>
         
-        <ScrollArea className="h-[400px] pr-4">
+        <ScrollArea className="h-[50vh] md:h-[400px] pr-2 md:pr-4">
           <div className="space-y-3">
             {workoutPlan.exercises.map((exercise, index) => {
               const isCompleted = completedExercises.has(index);
@@ -148,7 +168,7 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
               return (
                 <Card 
                   key={index} 
-                  className={`p-4 cursor-pointer transition-all ${
+                  className={`p-3 md:p-4 cursor-pointer transition-all ${
                     isCompleted ? 'bg-accent/50 border-primary' : 'hover:bg-accent/30'
                   }`}
                 >
