@@ -342,14 +342,14 @@ const WorkoutPlanDetailEditor = ({ planId }: WorkoutPlanDetailEditorProps) => {
         {planExercises.length > 0 ? (
           planExercises.map((exercise: any, index: number) => (
             <Card key={index}>
-              <CardContent className="pt-4">
-                <div className="flex justify-between items-start">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex flex-col gap-3">
                   <div className="flex-1">
                     <h4 className="font-semibold">{exercise.exercise_name}</h4>
                     <p className="text-sm text-muted-foreground mb-2">
                       {exercise.exercise_description}
                     </p>
-                    <div className="flex gap-4 items-center">
+                    <div className="flex flex-wrap gap-2 items-center">
                       <div className="flex items-center gap-2">
                         <Label className="text-xs">Séries:</Label>
                         <Input
@@ -372,7 +372,7 @@ const WorkoutPlanDetailEditor = ({ planId }: WorkoutPlanDetailEditorProps) => {
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 justify-end flex-wrap">
                     <Button
                       variant="outline"
                       size="sm"
