@@ -65,6 +65,8 @@ workflows:
           cd ios/App
           BUILD_NUMBER=$(($BUILD_NUMBER + 1))
           agvtool new-version -all $BUILD_NUMBER
+          agvtool new-marketing-version 1.0.1
+
       
       - name: Build iOS IPA
         script: |
