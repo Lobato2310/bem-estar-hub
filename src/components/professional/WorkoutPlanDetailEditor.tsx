@@ -44,7 +44,7 @@ const WorkoutPlanDetailEditor = ({ planId }: WorkoutPlanDetailEditorProps) => {
     sets: 3,
     reps: "8-12",
     weight: "",
-    rest_time: "60-90s",
+    rest_time: "120-240s",
     notes: ""
   });
 
@@ -118,7 +118,7 @@ const WorkoutPlanDetailEditor = ({ planId }: WorkoutPlanDetailEditorProps) => {
         sets: 3,
         reps: "8-12",
         weight: "",
-        rest_time: "60-90s",
+        rest_time: "120-240s",
         notes: ""
       });
       setShowAddDialog(false);
@@ -316,7 +316,7 @@ const WorkoutPlanDetailEditor = ({ planId }: WorkoutPlanDetailEditorProps) => {
                   <Input
                     value={exerciseForm.rest_time}
                     onChange={(e) => setExerciseForm(prev => ({ ...prev, rest_time: e.target.value }))}
-                    placeholder="Ex: 60-90s"
+                    placeholder="Ex: 120-240s"
                   />
                 </div>
               </div>
