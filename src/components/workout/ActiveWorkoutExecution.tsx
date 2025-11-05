@@ -12,6 +12,7 @@ import {
   Video
 } from "lucide-react";
 import WorkoutTimer from "./WorkoutTimer";
+import RestTimer from "./RestTimer";
 import ExerciseDetailsDialog from "./ExerciseDetailsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -53,6 +54,9 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
   const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set());
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedExerciseForDetails, setSelectedExerciseForDetails] = useState<Exercise | null>(null);
+  const [showRestTimer, setShowRestTimer] = useState(false);
+  const [currentRestTime, setCurrentRestTime] = useState(0);
+  const [lastCompletedExerciseIndex, setLastCompletedExerciseIndex] = useState<number | null>(null);
 
   // Carregar estado inicial
   useEffect(() => {
@@ -115,12 +119,44 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
       if (newSet.has(index)) {
         newSet.delete(index);
         toast.info("Exercício desmarcado");
+        // Se desmarcar, esconder o timer de descanso se estiver ativo
+        if (lastCompletedExerciseIndex === index) {
+          setShowRestTimer(false);
+        }
       } else {
         newSet.add(index);
         toast.success("Exercício concluído!");
+        
+        // Iniciar timer de descanso se houver rest_time definido
+        const exercise = workoutPlan.exercises[index];
+        if (exercise.rest_time) {
+          // Extrair o tempo de descanso (pode estar como "60-90s" ou "60")
+          const restTimeStr = String(exercise.rest_time);
+          let restSeconds = 60; // valor padrão
+          
+          // Tentar extrair o primeiro número
+          const match = restTimeStr.match(/(\d+)/);
+          if (match) {
+            restSeconds = parseInt(match[1]);
+          }
+          
+          setCurrentRestTime(restSeconds);
+          setLastCompletedExerciseIndex(index);
+          setShowRestTimer(true);
+        }
       }
       return newSet;
     });
+  };
+
+  const handleRestComplete = () => {
+    setShowRestTimer(false);
+    toast.success("Descanso concluído! Pronto para o próximo exercício.");
+  };
+
+  const handleRestSkip = () => {
+    setShowRestTimer(false);
+    toast.info("Descanso pulado");
   };
 
   const handleShowDetails = (exercise: Exercise) => {
@@ -170,6 +206,15 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
         onStop={handleStopTimer}
         onTimeUpdate={handleTimeUpdate}
       />
+
+      {/* Rest Timer */}
+      {showRestTimer && (
+        <RestTimer
+          restTime={currentRestTime}
+          onComplete={handleRestComplete}
+          onSkip={handleRestSkip}
+        />
+      )}
 
       {/* Exercises List */}
       <Card className="p-3 md:p-4">
