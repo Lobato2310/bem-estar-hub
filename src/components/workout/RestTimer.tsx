@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Timer, X } from "lucide-react";
+import { Timer, X, Plus, Minus } from "lucide-react";
 
 interface RestTimerProps {
   restTime: number; // em segundos
@@ -11,6 +11,7 @@ interface RestTimerProps {
 
 const RestTimer = ({ restTime, onComplete, onSkip }: RestTimerProps) => {
   const [timeLeft, setTimeLeft] = useState(restTime);
+  const [totalRestTime, setTotalRestTime] = useState(restTime);
   const audioContextRef = useRef<AudioContext | null>(null);
   const hasPlayedSoundRef = useRef(false);
 
@@ -99,7 +100,17 @@ const RestTimer = ({ restTime, onComplete, onSkip }: RestTimerProps) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const percentage = ((restTime - timeLeft) / restTime) * 100;
+  const handleAddTime = () => {
+    setTimeLeft(prev => prev + 10);
+    setTotalRestTime(prev => prev + 10);
+  };
+
+  const handleReduceTime = () => {
+    setTimeLeft(prev => Math.max(5, prev - 10));
+    setTotalRestTime(prev => Math.max(5, prev - 10));
+  };
+
+  const percentage = ((totalRestTime - timeLeft) / totalRestTime) * 100;
 
   return (
     <Card className="p-4 bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/30 animate-pulse">
@@ -124,11 +135,35 @@ const RestTimer = ({ restTime, onComplete, onSkip }: RestTimerProps) => {
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-secondary rounded-full h-2">
+      <div className="w-full bg-secondary rounded-full h-2 mb-3">
         <div 
           className="bg-orange-500 h-2 rounded-full transition-all duration-1000"
           style={{ width: `${percentage}%` }}
         />
+      </div>
+
+      {/* Time Adjustment Controls */}
+      <div className="flex items-center justify-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleReduceTime}
+          disabled={timeLeft <= 5}
+          className="flex items-center gap-1"
+        >
+          <Minus className="h-3 w-3" />
+          <span className="text-xs">10s</span>
+        </Button>
+        <span className="text-xs text-muted-foreground">Ajustar tempo</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAddTime}
+          className="flex items-center gap-1"
+        >
+          <Plus className="h-3 w-3" />
+          <span className="text-xs">10s</span>
+        </Button>
       </div>
     </Card>
   );
