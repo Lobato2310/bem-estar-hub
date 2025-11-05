@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Preferences } from '@capacitor/preferences';
 
 interface WorkoutPlan {
   id: string;
@@ -51,13 +52,22 @@ const WorkoutSection = () => {
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
   const [scheduledToday, setScheduledToday] = useState<WorkoutSchedule[]>([]);
   const [workoutStats, setWorkoutStats] = useState<WorkoutStats>({ total_workouts: 0, total_time_minutes: 0 });
-  const [activeWorkoutPlan, setActiveWorkoutPlan] = useState<WorkoutPlan | null>(() => {
-    const saved = localStorage.getItem('active_workout_plan');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [activeWorkoutPlan, setActiveWorkoutPlan] = useState<WorkoutPlan | null>(null);
   const [currentWorkoutTime, setCurrentWorkoutTime] = useState(0);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Carregar workout ativo do Preferences
+  useEffect(() => {
+    const loadActiveWorkout = async () => {
+      const { value } = await Preferences.get({ key: 'active_workout_plan' });
+      if (value) {
+        setActiveWorkoutPlan(JSON.parse(value));
+      }
+    };
+    
+    loadActiveWorkout();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -189,9 +199,9 @@ const WorkoutSection = () => {
     }
   };
 
-  const handleStartWorkout = (plan: WorkoutPlan) => {
+  const handleStartWorkout = async (plan: WorkoutPlan) => {
     setActiveWorkoutPlan(plan);
-    localStorage.setItem('active_workout_plan', JSON.stringify(plan));
+    await Preferences.set({ key: 'active_workout_plan', value: JSON.stringify(plan) });
     toast.success('Treino iniciado! Boa sorte!');
   };
 
@@ -200,22 +210,26 @@ const WorkoutSection = () => {
     setShowFeedbackDialog(true);
   };
 
-  const handleCancelWorkout = () => {
+  const handleCancelWorkout = async () => {
     setActiveWorkoutPlan(null);
-    localStorage.removeItem('active_workout_plan');
-    localStorage.removeItem('workout_timer_active');
-    localStorage.removeItem('workout_timer_seconds');
-    localStorage.removeItem('workout_completed_exercises');
+    await Preferences.remove({ key: 'active_workout_plan' });
+    await Preferences.remove({ key: 'workout_timer_active' });
+    await Preferences.remove({ key: 'workout_start_time' });
+    await Preferences.remove({ key: 'workout_paused_time' });
+    await Preferences.remove({ key: 'workout_is_paused' });
+    await Preferences.remove({ key: 'workout_completed_exercises' });
     toast.info('Treino cancelado');
   };
 
-  const handleFeedbackClose = () => {
+  const handleFeedbackClose = async () => {
     setShowFeedbackDialog(false);
     setActiveWorkoutPlan(null);
-    localStorage.removeItem('active_workout_plan');
-    localStorage.removeItem('workout_timer_active');
-    localStorage.removeItem('workout_timer_seconds');
-    localStorage.removeItem('workout_completed_exercises');
+    await Preferences.remove({ key: 'active_workout_plan' });
+    await Preferences.remove({ key: 'workout_timer_active' });
+    await Preferences.remove({ key: 'workout_start_time' });
+    await Preferences.remove({ key: 'workout_paused_time' });
+    await Preferences.remove({ key: 'workout_is_paused' });
+    await Preferences.remove({ key: 'workout_completed_exercises' });
     loadWorkoutData();
   };
 

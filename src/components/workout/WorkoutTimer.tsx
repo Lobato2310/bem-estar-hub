@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Square, Timer } from "lucide-react";
+import { Preferences } from '@capacitor/preferences';
+import { App } from '@capacitor/app';
 
 interface WorkoutTimerProps {
   isActive: boolean;
@@ -12,31 +14,90 @@ interface WorkoutTimerProps {
 }
 
 const WorkoutTimer = ({ isActive, onStart, onPause, onStop, onTimeUpdate }: WorkoutTimerProps) => {
-  const [seconds, setSeconds] = useState(() => {
-    const saved = localStorage.getItem('workout_timer_seconds');
-    return saved ? parseInt(saved) : 0;
-  });
+  const [seconds, setSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const startTimeRef = useRef<number | null>(null);
+  const pausedTimeRef = useRef<number>(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Carregar estado inicial do Preferences
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    const loadState = async () => {
+      const { value: startTime } = await Preferences.get({ key: 'workout_start_time' });
+      const { value: pausedTime } = await Preferences.get({ key: 'workout_paused_time' });
+      const { value: isPausedState } = await Preferences.get({ key: 'workout_is_paused' });
+      
+      if (startTime) {
+        startTimeRef.current = parseInt(startTime);
+        pausedTimeRef.current = pausedTime ? parseInt(pausedTime) : 0;
+        setIsPaused(isPausedState === 'true');
+        
+        // Calcular tempo decorrido
+        if (isPausedState !== 'true') {
+          const elapsed = Math.floor((Date.now() - parseInt(startTime)) / 1000) - pausedTimeRef.current;
+          setSeconds(elapsed);
+          onTimeUpdate(elapsed);
+        } else {
+          setSeconds(pausedTimeRef.current);
+          onTimeUpdate(pausedTimeRef.current);
+        }
+      }
+    };
+    
+    loadState();
+  }, []);
 
+  // Listener para quando o app volta do background
+  useEffect(() => {
+    const listener = App.addListener('appStateChange', async ({ isActive: appIsActive }) => {
+      if (appIsActive && isActive && !isPaused && startTimeRef.current) {
+        // App voltou para foreground, recalcular tempo
+        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000) - pausedTimeRef.current;
+        setSeconds(elapsed);
+        onTimeUpdate(elapsed);
+      }
+    });
+
+    return () => {
+      listener.then(l => l.remove());
+    };
+  }, [isActive, isPaused, onTimeUpdate]);
+
+  // Timer principal
+  useEffect(() => {
     if (isActive && !isPaused) {
-      interval = setInterval(() => {
-        setSeconds(seconds => {
-          const newSeconds = seconds + 1;
-          onTimeUpdate(newSeconds);
-          localStorage.setItem('workout_timer_seconds', newSeconds.toString());
-          return newSeconds;
-        });
+      // Se não temos startTime, criar um agora
+      if (!startTimeRef.current) {
+        const now = Date.now();
+        startTimeRef.current = now;
+        Preferences.set({ key: 'workout_start_time', value: now.toString() });
+        Preferences.set({ key: 'workout_paused_time', value: '0' });
+      }
+
+      // Atualizar a cada segundo
+      intervalRef.current = setInterval(() => {
+        if (startTimeRef.current) {
+          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000) - pausedTimeRef.current;
+          setSeconds(elapsed);
+          onTimeUpdate(elapsed);
+        }
       }, 1000);
     } else if (!isActive) {
+      // Timer foi parado completamente
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      startTimeRef.current = null;
+      pausedTimeRef.current = 0;
       setSeconds(0);
-      localStorage.removeItem('workout_timer_seconds');
+      Preferences.remove({ key: 'workout_start_time' });
+      Preferences.remove({ key: 'workout_paused_time' });
+      Preferences.remove({ key: 'workout_is_paused' });
+    } else if (isPaused) {
+      // Timer foi pausado
+      if (intervalRef.current) clearInterval(intervalRef.current);
     }
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isActive, isPaused, onTimeUpdate]);
 
@@ -51,13 +112,34 @@ const WorkoutTimer = ({ isActive, onStart, onPause, onStop, onTimeUpdate }: Work
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handlePause = () => {
-    setIsPaused(!isPaused);
+  const handlePause = async () => {
+    const newPausedState = !isPaused;
+    setIsPaused(newPausedState);
+    
+    if (newPausedState) {
+      // Pausando - salvar tempo atual
+      pausedTimeRef.current = seconds;
+      await Preferences.set({ key: 'workout_paused_time', value: seconds.toString() });
+      await Preferences.set({ key: 'workout_is_paused', value: 'true' });
+    } else {
+      // Despausando - ajustar o startTime para compensar o tempo pausado
+      if (startTimeRef.current) {
+        const pauseDuration = seconds - pausedTimeRef.current;
+        startTimeRef.current = Date.now() - (seconds * 1000);
+        await Preferences.set({ key: 'workout_start_time', value: startTimeRef.current.toString() });
+        await Preferences.set({ key: 'workout_is_paused', value: 'false' });
+      }
+    }
+    
     onPause();
   };
 
-  const handleStop = () => {
+  const handleStop = async () => {
     setIsPaused(false);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    await Preferences.remove({ key: 'workout_start_time' });
+    await Preferences.remove({ key: 'workout_paused_time' });
+    await Preferences.remove({ key: 'workout_is_paused' });
     onStop();
   };
 

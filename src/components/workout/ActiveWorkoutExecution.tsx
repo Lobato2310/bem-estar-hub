@@ -16,6 +16,7 @@ import ExerciseDetailsDialog from "./ExerciseDetailsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Preferences } from '@capacitor/preferences';
 
 interface Exercise {
   id?: string;
@@ -47,25 +48,40 @@ interface ActiveWorkoutExecutionProps {
 
 const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWorkoutExecutionProps) => {
   const { user } = useAuth();
-  const [isTimerActive, setIsTimerActive] = useState(() => {
-    const saved = localStorage.getItem('workout_timer_active');
-    return saved === 'true';
-  });
+  const [isTimerActive, setIsTimerActive] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [completedExercises, setCompletedExercises] = useState<Set<number>>(() => {
-    const saved = localStorage.getItem('workout_completed_exercises');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
+  const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set());
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedExerciseForDetails, setSelectedExerciseForDetails] = useState<Exercise | null>(null);
 
+  // Carregar estado inicial
+  useEffect(() => {
+    const loadState = async () => {
+      const { value: timerActive } = await Preferences.get({ key: 'workout_timer_active' });
+      const { value: completed } = await Preferences.get({ key: 'workout_completed_exercises' });
+      
+      if (timerActive === 'true') {
+        setIsTimerActive(true);
+      }
+      
+      if (completed) {
+        setCompletedExercises(new Set(JSON.parse(completed)));
+      }
+    };
+    
+    loadState();
+  }, []);
+
   // Salvar estado ao mudar
   useEffect(() => {
-    localStorage.setItem('workout_timer_active', isTimerActive.toString());
+    Preferences.set({ key: 'workout_timer_active', value: isTimerActive.toString() });
   }, [isTimerActive]);
 
   useEffect(() => {
-    localStorage.setItem('workout_completed_exercises', JSON.stringify(Array.from(completedExercises)));
+    Preferences.set({ 
+      key: 'workout_completed_exercises', 
+      value: JSON.stringify(Array.from(completedExercises)) 
+    });
   }, [completedExercises]);
 
   const handleStartTimer = () => {
@@ -76,13 +92,15 @@ const ActiveWorkoutExecution = ({ workoutPlan, onComplete, onCancel }: ActiveWor
     // Timer handles its own pause state
   };
 
-  const handleStopTimer = () => {
+  const handleStopTimer = async () => {
     setIsTimerActive(false);
     // Limpar estado persistido
-    localStorage.removeItem('workout_timer_active');
-    localStorage.removeItem('workout_timer_seconds');
-    localStorage.removeItem('workout_completed_exercises');
-    localStorage.removeItem('active_workout_plan');
+    await Preferences.remove({ key: 'workout_timer_active' });
+    await Preferences.remove({ key: 'workout_start_time' });
+    await Preferences.remove({ key: 'workout_paused_time' });
+    await Preferences.remove({ key: 'workout_is_paused' });
+    await Preferences.remove({ key: 'workout_completed_exercises' });
+    await Preferences.remove({ key: 'active_workout_plan' });
     // Save workout completion
     onComplete();
   };
