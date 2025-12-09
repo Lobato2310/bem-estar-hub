@@ -2,6 +2,9 @@
 
 #Fitness app that connects personal trainers, nutritionists, and psychologists, all in one app.
 
+##
+Credentials should be entered in .env.example.
+
 
 ## What technologies are used for this project?
 
