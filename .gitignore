@@ -10,6 +10,16 @@ lerna-debug.log*
 #env
 .env
 
+
+#md
+DEPLOYMENT.md
+FINAL_CHECKLIST.md
+MOBILE_SETUP.md
+READY_FOR_STORES.md
+STORE_COMPLIANCE.md
+
+
+
 node_modules
 dist
 dist-ssr
